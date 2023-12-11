@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <fcntl.h>
 #include <time.h>
-#define SDL_MAIN_HANDLED
 #include <SDL2/SDL.h>
 #include <dwarfstack.h>
 
