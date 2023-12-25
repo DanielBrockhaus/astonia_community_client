@@ -178,15 +178,6 @@ char* load_ascii_file(char *filename,int ID) {
 
 // memory
 
-//#define malloc_proc(size) GlobalAlloc(GPTR,size)
-//#define realloc_proc(ptr,size) GlobalReAlloc(ptr,size,GMEM_MOVEABLE)
-//#define free_proc(ptr) GlobalFree(ptr)
-
-HANDLE myheap;
-#define malloc_proc(size) myheapalloc(size)
-#define realloc_proc(ptr,size) myheaprealloc(ptr,size)
-#define free_proc(ptr) myheapfree(ptr)
-
 int memused=0;
 int memptrused=0;
 
@@ -229,33 +220,10 @@ static char *memname[MAX_MEM]={
     "MEM_TEMP10"
 };
 
-void* myheapalloc(int size) {
-    void *ptr;
-
-    memptrused++;
-    ptr=HeapAlloc(myheap,HEAP_ZERO_MEMORY,size);
-    memused+=HeapSize(myheap,0,ptr);
-
-    return ptr;
-}
-
-void* myheaprealloc(void *ptr,int size) {
-    memused-=HeapSize(myheap,0,ptr);
-    ptr=HeapReAlloc(myheap,HEAP_ZERO_MEMORY,ptr,size);
-    memused+=HeapSize(myheap,0,ptr);
-
-    return ptr;
-}
-
-void myheapfree(void *ptr) {
-    memptrused--;
-    memused-=HeapSize(myheap,0,ptr);
-    HeapFree(myheap,0,ptr);
-}
+unsigned long long get_total_system_memory(void);
 
 void list_mem(void) {
     int i,flag=0;
-    MEMORYSTATUS ms;
     extern long long mem_tex;
 
     note("--mem----------------------");
@@ -270,15 +238,7 @@ void list_mem(void) {
     note("---------------------------");
     note("Texture Cache: %.2fMB",mem_tex/(1024.0*1024.0));
 
-    bzero(&ms,sizeof(ms));
-    ms.dwLength=sizeof(ms);
-    GlobalMemoryStatus(&ms);
-
-    note("UsedMem=%.2fG of %.2fG",(memused+mem_tex)/1024.0/1024.0/1024.0,ms.dwTotalPhys/1024.0/1024.0/1024.0);
-
-    i=HeapValidate(myheap,0,NULL);
-    if (!i) note("validate says: %d",i);
-
+    note("UsedMem=%.2fG of %.2fG",(memused+mem_tex)/1024.0/1024.0/1024.0,get_total_system_memory()/1024.0/1024.0/1024.0);
 }
 
 static int memcheckset=0;
@@ -313,13 +273,16 @@ void* xmalloc(int size,int ID) {
     if (!memcheckset) {
         for (memcheckset=0; memcheckset<sizeof(memcheck); memcheckset++) memcheck[memcheckset]=rrand(256);
         sprintf(memcheck,"!MEMCKECK MIGHT FAIL!");
-        myheap=HeapCreate(0,0,0);
     }
 
     if (!size) return NULL;
 
-    mem=malloc_proc(8+sizeof(memcheck)+size+sizeof(memcheck));
+    memptrused++;
+
+    mem=calloc(1, 8+sizeof(memcheck)+size+sizeof(memcheck));
     if (!mem) { fail("OUT OF MEMORY !!!"); return NULL; }
+
+    memused+=8+sizeof(memcheck)+size+sizeof(memcheck);
 
     if (ID>=MAX_MEM) { fail("xmalloc: ill mem id"); return NULL; }
 
@@ -344,14 +307,6 @@ void* xmalloc(int size,int ID) {
     xmemcheck(rptr);
 
     return rptr;
-}
-
-void* xcalloc(int size,int ID) {
-    void *ptr;
-
-    ptr=xmalloc(size,ID);
-    if (ptr) bzero(ptr,size);
-    return ptr;
 }
 
 char* xstrdup(const char *src,int ID) {
@@ -384,7 +339,10 @@ void xfree(void *ptr) {
     memsize[0]-=mem->size;
     memptrs[0]-=1;
 
-    free_proc(mem);
+    memptrused--;
+    memused-=8+sizeof(memcheck)+mem->size+sizeof(memcheck);
+
+    free(mem);
 }
 
 void xinfo(void *ptr) {
@@ -415,8 +373,12 @@ void* xrealloc(void *ptr,int size,int ID) {
     memsize[0]-=mem->size;
     memptrs[0]-=1;
 
-    mem=realloc_proc(mem,8+sizeof(memcheck)+size+sizeof(memcheck));
+    memused-=8+sizeof(memcheck)+mem->size+sizeof(memcheck);
+
+    mem=realloc(mem,8+sizeof(memcheck)+size+sizeof(memcheck));
     if (!mem) { fail("xrealloc: OUT OF MEMORY !!!"); return NULL; }
+
+    memused+=8+sizeof(memcheck)+size+sizeof(memcheck);
 
     mem->ID=ID;
     mem->size=size;
@@ -443,7 +405,7 @@ void* xrecalloc(void *ptr,int size,int ID) {
     struct memhead *mem;
     unsigned char *head,*tail,*rptr;
 
-    if (!ptr) return xcalloc(size,ID);
+    if (!ptr) return xmalloc(size,ID);
     if (!size) { xfree(ptr); return NULL; }
     if (xmemcheck(ptr)) return NULL;
 
@@ -455,8 +417,12 @@ void* xrecalloc(void *ptr,int size,int ID) {
     memsize[0]-=mem->size;
     memptrs[0]-=1;
 
-    mem=realloc_proc(mem,8+sizeof(memcheck)+size+sizeof(memcheck));
+    memused-=8+sizeof(memcheck)+mem->size+sizeof(memcheck);
+
+    mem=realloc(mem,8+sizeof(memcheck)+size+sizeof(memcheck));
     if (!mem) { fail("xrecalloc: OUT OF MEMORY !!!"); return NULL; }
+
+    memused+=8+sizeof(memcheck)+size+sizeof(memcheck);
 
     if (size-mem->size>0) {
         bzero(((unsigned char *)(mem))+8+sizeof(memcheck)+mem->size,size-mem->size);

@@ -701,7 +701,7 @@ struct letter *text=NULL;
 unsigned short palette[256];
 
 void dd_init_text(void) {
-    text=xcalloc(sizeof(struct letter)*MAXTEXTLINES*MAXTEXTLETTERS,MEM_GLOB);
+    text=xmalloc(sizeof(struct letter)*MAXTEXTLINES*MAXTEXTLETTERS,MEM_GLOB);
     palette[0]=IRGB(31,31,31);    // normal white text (talk, game messages)
     palette[1]=IRGB(16,16,16);    // dark gray text (now entering ...)
     palette[2]=IRGB(16,31,16);    // light green (normal chat)

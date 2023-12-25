@@ -147,7 +147,6 @@ void paranoia(const char *format,...) __attribute__((format(printf, 1, 2)));
 void display_messagebox(char *title,char *text);
 
 void* xmalloc(int size,int ID);
-void* xcalloc(int size,int ID);
 void* xrealloc(void *ptr,int size,int ID);
 void* xrecalloc(void *ptr,int size,int ID);
 void xfree(void *ptr);

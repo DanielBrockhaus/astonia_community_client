@@ -139,16 +139,16 @@ int sdl_init(int width,int height,char *title) {
     }
 
     len=sizeof(struct sdl_image)*MAXSPRITE;
-    sdli=xcalloc(len*1,MEM_SDL_BASE);
+    sdli=xmalloc(len*1,MEM_SDL_BASE);
     if (!sdli) return fail("Out of memory in sdl_init");
 
-    sdlt_cache=xcalloc(MAX_TEXHASH*sizeof(int),MEM_SDL_BASE);
+    sdlt_cache=xmalloc(MAX_TEXHASH*sizeof(int),MEM_SDL_BASE);
     if (!sdlt_cache) return fail("Out of memory in sdl_init");
 
     for (i=0; i<MAX_TEXHASH; i++)
         sdlt_cache[i]=STX_NONE;
 
-    sdlt=xcalloc(MAX_TEXCACHE*sizeof(struct sdl_texture),MEM_SDL_BASE);
+    sdlt=xmalloc(MAX_TEXCACHE*sizeof(struct sdl_texture),MEM_SDL_BASE);
     if (!sdlt) return fail("Out of memory in sdl_init");
 
     for (i=0; i<MAX_TEXCACHE; i++) {
@@ -1783,7 +1783,7 @@ SDL_Texture *sdl_maketext(const char *text,struct ddfont *font,uint32_t color,in
 #ifdef SDL_FAST_MALLOC
     pixel=calloc(sizex*MAXFONTHEIGHT,sizeof(uint32_t));
 #else
-    pixel=xcalloc(sizex*MAXFONTHEIGHT*sizeof(uint32_t),MEM_SDL_PIXEL2);
+    pixel=xmalloc(sizex*MAXFONTHEIGHT*sizeof(uint32_t),MEM_SDL_PIXEL2);
 #endif
     if (pixel==NULL) return NULL;
 
