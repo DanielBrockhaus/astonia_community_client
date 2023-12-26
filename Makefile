@@ -1,5 +1,7 @@
 all: bin/moac.exe
 
+WINDRES=windres
+LDD=ldd
 CC=gcc
 OPT=-O3
 DEBUG=-gdwarf-4
@@ -12,7 +14,7 @@ OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/g
 			src/game/main.o src/game/sprite.o src/game/game.o src/modder/modder.o\
 			src/sdl/sound.o src/game/resource.o src/sdl/sdl.o src/helper/helper.o\
 			src/gui/dots.o src/gui/display.o src/gui/teleport.o src/gui/color.o src/gui/cmd.o\
-			src/gui/questlog.o src/gui/context.o src/gui/hover.c src/modder/sharedmem.o\
+			src/gui/questlog.o src/gui/context.o src/gui/hover.o src/modder/sharedmem.o\
 			src/gui/minimap.o
 
 bin/moac.exe lib/moac.a &:	$(OBJS)
@@ -60,14 +62,13 @@ src/sdl/sdl.o:		src/sdl/sdl.c src/astonia.h src/sdl.h src/sdl/_sdl.h
 src/sdl/sound.o:      	src/sdl/sound.c src/astonia.h src/sdl.h src/sdl/_sdl.h
 
 src/game/resource.o:	src/game/resource.rc src/game/resource.h res/moa3.ico
-			windres -F pe-x86-64 src/game/resource.rc src/game/resource.o
+			$(WINDRES) -F pe-x86-64 src/game/resource.rc src/game/resource.o
 
 clean:
-		-rm src/client/*.o src/game/*.o src/gui/*.o helper/*.o src/sdl/*.o src/amod/*.o
-		-rm bin/*.exe bin/*.dll
+		-rm -f src/*/*.o bin/*.exe bin/*.dll
 
 distrib:
-	ldd bin/moac.exe | grep mingw | awk 'NF == 4 { system("cp " $$3 " bin") }'
+	$(LDD) bin/moac.exe | grep mingw | awk 'NF == 4 { system("cp " $$3 " bin") }'
 	zip windows_client.zip -r bin res create_shortcut.bat eula.txt
 
 
