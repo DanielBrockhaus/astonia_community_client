@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #include "../../src/astonia.h"
 #include "../../src/game.h"
