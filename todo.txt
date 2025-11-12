@@ -76,9 +76,6 @@ Maybe Later
 
 - Move all parts of the client into separate windows, including the different chat channels.
 
-- A Linux port. Once all is SDL it should be possible.
-
-
 Notes:
 ------
 
