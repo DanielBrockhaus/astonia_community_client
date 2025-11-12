@@ -8,11 +8,13 @@
  *
  */
 
-#include <windows.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
 #include <SDL2/SDL.h>
+#ifdef _WIN32
+    #include <windows.h>
+#endif
 
 #include "../../src/astonia.h"
 #include "../../src/game.h"
@@ -575,7 +577,7 @@ int parse_cmd(char *s) {
                 frames_per_second=strtol(s,&end,10);
                 s=end;
             } else if (tolower(*s)=='t') { // -t server port
-                s++;
+                s++;
                 while (isspace(*s)) s++;
                 server_port=strtol(s,&end,10);
                 s=end;
@@ -675,7 +677,9 @@ int main(int argc,char *args[]) {
 
     xlog(errorfp,"Client started with -h%d -w%d -o%d",want_height,want_width,game_options);
 
-    SetProcessDPIAware(); // I hate Windows very much.
+    #ifdef _WIN32
+        SetProcessDPIAware();
+    #endif
 
     // next init (only once)
     if (net_init()==-1) {
