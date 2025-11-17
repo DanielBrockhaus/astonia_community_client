@@ -5,7 +5,7 @@
  *
  * Displays mouse-over (hover) texts.
  *
- * Add "log_char(cn,LOG_SYSTEM,0,"°c5.");" to the very end of int look_item() in tool.c!
+ * Add "log_char(cn,LOG_SYSTEM,0,"ï¿½c5.");" to the very end of int look_item() in tool.c!
  *
  */
 
@@ -102,6 +102,7 @@ static int textlength(char *text) {
 
 int hover_capture_text(char *line) {
     int len;
+    char default_desc[32];
 
     while (isspace(*line)) line++;
 
@@ -126,7 +127,15 @@ int hover_capture_text(char *line) {
         capture=1;
     }
 
+    sprintf(default_desc, "%cc1(no description)", DDT);
+
     if (line[0]==DDT && line[1]=='c' && line[2]=='5' && line[3]=='.') {
+        if (capture && last_line==0 && last_invsel>=0 && last_invsel<INVENTORYSIZE+CONTAINERSIZE) {
+            hi[last_invsel].valid_till=tick+MAXVALID;
+            hi[last_invsel].desc[0]=xstrdup(default_desc, MEM_TEMP11);
+            hi[last_invsel].cnt=1;
+            hi[last_invsel].width=textlength(default_desc);
+        }
         capture=last_look=0;
         last_right_click_invsel=-1;
         return 1;
