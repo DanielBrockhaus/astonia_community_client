@@ -565,12 +565,19 @@ char* dd_create_rawrun(char letter[64][64]) {
 
 void create_shade_font(DDFONT *src,DDFONT *dst) {
     char letter[64][64];
-    int c;
+    int c,x,y;
 
     for (c=0; c<128; c++) {
         bzero(letter,sizeof(letter));
-        dd_create_letter(src[c].raw,sdl_scale*4,sdl_scale*5,2,letter);
-        dd_create_letter(src[c].raw,sdl_scale*5,sdl_scale*4,2,letter);
+        // Create shadow in a diagonal pattern without gaps
+        for (y=0; y<=sdl_scale; y++) {
+            for (x=0; x<=sdl_scale; x++) {
+                if (x>0 || y>0) {  // Don't draw at (0,0)
+                    dd_create_letter(src[c].raw,sdl_scale*4+x,sdl_scale*4+y,2,letter);
+                }
+            }
+        }
+        // Draw the actual character on top
         dd_create_letter(src[c].raw,sdl_scale*4,sdl_scale*4,1,letter);
         dst[c].raw=dd_create_rawrun(letter);
         dst[c].dim=src[c].dim;
