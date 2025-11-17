@@ -457,7 +457,7 @@ void display_keys(void) {
         if (keytab[i].usetime>now-300) col=bluecolor;
         else col=textcolor;
 
-        x=10+u++*((800-20)/10);
+        x=10+u++*((XRES-20)/10);
 
         if (keytab[i].skill==-1) continue;
         if (!value[0][keytab[i].skill]) continue;
@@ -607,7 +607,7 @@ void display_selfspells(void) {
             case 9:
                 step=50-50*(ceffect[nr].bless.stop-tick)/(ceffect[nr].bless.stop-ceffect[nr].bless.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 if (ceffect[nr].bless.stop-tick<24*30 && (tick&4)) dd_copysprite(997,dotx(DOT_SSP)+2*10,doty(DOT_SSP)+step,DDFX_BRIGHT,DD_NORMAL);
                 else dd_copysprite(997,dotx(DOT_SSP)+2*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
@@ -616,7 +616,7 @@ void display_selfspells(void) {
             case 11:
                 step=50-50*(ceffect[nr].freeze.stop-tick)/(ceffect[nr].freeze.stop-ceffect[nr].freeze.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 dd_copysprite(997,dotx(DOT_SSP)+1*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
                 sprintf(hover_freeze_text,"Freeze: %ds to go",(ceffect[nr].freeze.stop-tick)/24);
@@ -625,7 +625,7 @@ void display_selfspells(void) {
             case 14:
                 step=50-50*(ceffect[nr].potion.stop-tick)/(ceffect[nr].potion.stop-ceffect[nr].potion.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 if (step>=40 && (tick&4)) dd_copysprite(997,dotx(DOT_SSP)+0*10,doty(DOT_SSP)+step,DDFX_BRIGHT,DD_NORMAL);
                 else dd_copysprite(997,dotx(DOT_SSP)+0*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
@@ -744,7 +744,7 @@ void display_rage(void) {
 
     step=50-50*rage/value[0][V_RAGE];
     dd_push_clip();
-    dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+    dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
     dd_copysprite(997,dotx(DOT_SSP)+3*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
     dd_pop_clip();
 
