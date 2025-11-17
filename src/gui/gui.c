@@ -1516,10 +1516,12 @@ static void set_cmd_states(void) {
 
         if (itmsel!=-1 &&  vk_item && !vk_char && !csprite && map[itmsel].flags&CMF_USE) lcmd=CMD_ITM_USE;
         if (itmsel!=-1 &&  vk_item && !vk_char && !csprite && map[itmsel].flags&CMF_TAKE) lcmd=CMD_ITM_TAKE;
+        // "Use With" should trump "Give" - check this before character give
         if (itmsel!=-1 &&  vk_item && !vk_char &&  csprite && map[itmsel].flags&CMF_USE) lcmd=CMD_ITM_USE_WITH;
 
+        // Only set Give if we haven't already set Use With (don't override it)
         if (chrsel!=-1 && !vk_item &&  vk_char && !csprite) lcmd=CMD_CHR_ATTACK;
-        if (chrsel!=-1 && !vk_item &&  vk_char &&  csprite) lcmd=CMD_CHR_GIVE;
+        if (chrsel!=-1 && !vk_item &&  vk_char &&  csprite && lcmd!=CMD_ITM_USE_WITH) lcmd=CMD_CHR_GIVE;
     }
 
     set_cmd_invsel();
