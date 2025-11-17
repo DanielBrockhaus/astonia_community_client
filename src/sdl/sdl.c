@@ -120,10 +120,10 @@ int sdl_init(int width,int height,char *title,int monitor) {
     // Check monitor number validity
     num_displays=SDL_GetNumVideoDisplays();
     if (monitor<0 || monitor>=num_displays) {
-        xlog(errorfp,"Invalid monitor %d, using default (0). Available monitors: %d",monitor,num_displays);
+        warn("Invalid monitor %d, using default (0). Available monitors: %d",monitor,num_displays);
         monitor=0;
     } else if (monitor>0) {
-        xlog(errorfp,"Using monitor %d of %d available monitors",monitor,num_displays);
+        warn("Using monitor %d of %d available monitors",monitor,num_displays);
     }
 
     SDL_GetCurrentDisplayMode(monitor, &DM);
@@ -2314,7 +2314,7 @@ void sdl_loop(void) {
                     int x, y;
                     Uint32 mouseState = SDL_GetMouseState(&x, &y);
                     if (mouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) {
-                        gui_sdl_draghack();                        
+                        gui_sdl_draghack();
                     }
                 }
                 break;
@@ -2760,7 +2760,7 @@ int sdl_tex_yres(int stx) {
 }
 
 void sdl_render_circle(int32_t centreX, int32_t centreY, int32_t radius,uint32_t color) {
-    
+
     SDL_Point pts[((radius * 8 * 35 / 49) + (8 - 1)) & -8];
     int32_t dC = 0;
 
@@ -2771,7 +2771,7 @@ void sdl_render_circle(int32_t centreX, int32_t centreY, int32_t radius,uint32_t
     int32_t ty = 1;
     int32_t error = (tx - diameter);
 
-    while (x >= y) {        
+    while (x >= y) {
         pts[dC].x = centreX + x; pts[dC].y = centreY - y; dC++;
         pts[dC].x = centreX + x; pts[dC].y = centreY + y; dC++;
         pts[dC].x = centreX - x; pts[dC].y = centreY - y; dC++;
@@ -2780,7 +2780,7 @@ void sdl_render_circle(int32_t centreX, int32_t centreY, int32_t radius,uint32_t
         pts[dC].x = centreX + y; pts[dC].y = centreY + x; dC++;
         pts[dC].x = centreX - y; pts[dC].y = centreY - x; dC++;
         pts[dC].x = centreX - y; pts[dC].y = centreY + x; dC++;
-         
+
         if (error <= 0) {
             ++y;
             error += ty;
