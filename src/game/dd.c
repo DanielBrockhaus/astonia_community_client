@@ -797,7 +797,7 @@ void dd_add_text(char *ptr) {
 
     while (*ptr) {
         while (*ptr==' ') ptr++;
-        while (*ptr=='�') {
+        while (*ptr==DDT) {
             ptr++;
             switch (*ptr) {
                 case 'c':	tmp=atoi(ptr+1);
@@ -814,7 +814,7 @@ void dd_add_text(char *ptr) {
         while (*ptr==' ') ptr++;
 
         n=0;
-        while (*ptr && *ptr!=' ' && *ptr!='�' && n<49) buf[n++]=*ptr++;
+        while (*ptr && *ptr!=' ' && *ptr!=DDT && n<49) buf[n++]=*ptr++;
         buf[n]=0;
 
         if (x+(tmp=dd_text_len(buf))>=TEXTDISPLAY_SX) {

@@ -5,7 +5,7 @@
  *
  * Displays mouse-over (hover) texts.
  *
- * Add "log_char(cn,LOG_SYSTEM,0,"�c5.");" to the very end of int look_item() in tool.c!
+ * Add "log_char(cn,LOG_SYSTEM,0,"\xB0c5.");" to the very end of int look_item() in tool.c!
  *
  */
 
@@ -81,7 +81,7 @@ static int textlength(char *text) {
     char *c,buf[4];
 
     for (x=0,c=text; *c; c++) {
-        if (c[0]=='�') {
+        if (c[0]==DDT) {
             if (c[1]=='c') {
                 if (isdigit(c[2])) {
                     if (isdigit(c[3])) {
@@ -104,7 +104,7 @@ int hover_capture_text(char *line) {
 
     while (isspace(*line)) line++;
 
-    if (strncmp(line,"���ITEMDESC",11)==0) {
+    if (strncmp(line,"\xB0\xB0\xB0ITEMDESC",11)==0) {
         last_invsel=atoi(line+11);
         if (last_invsel>=1000) last_invsel=last_invsel%1000+INVENTORYSIZE;
         if (last_invsel<0 || last_invsel>INVENTORYSIZE*2) {
@@ -117,18 +117,18 @@ int hover_capture_text(char *line) {
         return 1;
     }
 
-    if (line[0]=='�' && line[1]=='c' && line[2]=='5' && last_look) {
+    if (line[0]==DDT && line[1]=='c' && line[2]=='5' && last_look) {
         capture=1;
     }
 
-    if (line[0]=='�' && line[1]=='c' && line[2]=='5' && line[3]=='.') {
+    if (line[0]==DDT && line[1]=='c' && line[2]=='5' && line[3]=='.') {
         // If we captured the item description header but got no actual description,
         // provide a default message
         if (capture && last_line==0 && last_invsel>=0 && last_invsel<INVENTORYSIZE+CONTAINERSIZE) {
             hi[last_invsel].valid_till=tick+MAXVALID;
-            hi[last_invsel].desc[0]=xstrdup("�c1(no description)",MEM_TEMP11);
+            hi[last_invsel].desc[0]=xstrdup("\xB0c1(no description)",MEM_TEMP11);
             hi[last_invsel].cnt=1;
-            hi[last_invsel].width=textlength("�c1(no description)");
+            hi[last_invsel].width=textlength("\xB0c1(no description)");
         }
         capture=last_look=0;
         last_right_click_invsel=-1;
@@ -233,7 +233,7 @@ static int display_hover(void) {
 
             for (i=0; hi[slot].desc[n][i]; i++) {
 
-                if (hi[slot].desc[n][i]=='�') {
+                if (hi[slot].desc[n][i]==DDT) {
                     if (hi[slot].desc[n][i+1]=='c') {
                         if (isdigit(hi[slot].desc[n][i+2])) {
                             if (hi[slot].desc[n][i+2]=='5') col=IRGB(31,31,31);

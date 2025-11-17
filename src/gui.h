@@ -75,6 +75,7 @@ __declspec(dllexport) int _do_display_help(int nr);
 extern char action_row[2][MAXACTIONSLOT];
 extern int action_enabled;
 void actions_loaded(void);
+void action_flash_spell(int spell_cl_type);
 
 void minimap_clear(void);
 void minimap_compact(void);
