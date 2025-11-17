@@ -97,9 +97,10 @@ void sdl_dump(FILE *fp) {
 #define GO_DEFAULTS (GO_CONTEXT|GO_ACTION|GO_BIGBAR|GO_PREDICT|GO_SHORT|GO_MAPSAVE)
 //#define GO_DEFAULTS (GO_CONTEXT|GO_ACTION|GO_BIGBAR|GO_PREDICT|GO_SHORT|GO_MAPSAVE|GO_NOMAP)
 
-int sdl_init(int width,int height,char *title) {
+int sdl_init(int width,int height,char *title,int monitor) {
     int len,i;
     SDL_DisplayMode DM;
+    int num_displays,x_pos,y_pos;
 
     if (SDL_Init(SDL_INIT_VIDEO|((game_options&GO_SOUND)?SDL_INIT_AUDIO:0)) != 0){
         fail("SDL_Init Error: %s",SDL_GetError());
@@ -109,14 +110,33 @@ int sdl_init(int width,int height,char *title) {
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH,"1");
     SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4,"1");
 
-    SDL_GetCurrentDisplayMode(0, &DM);
+    // Check monitor number validity
+    num_displays=SDL_GetNumVideoDisplays();
+    if (monitor<0 || monitor>=num_displays) {
+        xlog(errorfp,"Invalid monitor %d, using default (0). Available monitors: %d",monitor,num_displays);
+        monitor=0;
+    } else if (monitor>0) {
+        xlog(errorfp,"Using monitor %d of %d available monitors",monitor,num_displays);
+    }
+
+    SDL_GetCurrentDisplayMode(monitor, &DM);
 
     if (!width || !height) {
         width=DM.w;
         height=DM.h;
     }
 
-    sdlwnd = SDL_CreateWindow(title, DM.w/2-width/2, DM.h/2-height/2, width, height, SDL_WINDOW_SHOWN);
+    // Get the position for the selected monitor
+    SDL_Rect display_bounds;
+    if (SDL_GetDisplayBounds(monitor,&display_bounds)==0) {
+        x_pos=display_bounds.x+DM.w/2-width/2;
+        y_pos=display_bounds.y+DM.h/2-height/2;
+    } else {
+        x_pos=DM.w/2-width/2;
+        y_pos=DM.h/2-height/2;
+    }
+
+    sdlwnd = SDL_CreateWindow(title, x_pos, y_pos, width, height, SDL_WINDOW_SHOWN);
     if (!sdlwnd) {
         fail("SDL_Init Error: %s",SDL_GetError());
         SDL_Quit();
