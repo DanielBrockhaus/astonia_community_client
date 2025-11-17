@@ -1833,6 +1833,9 @@ void gui_sdl_keyproc(int wparam) {
         case SDLK_F6:           cmd_speed(0); return;
         case SDLK_F7:           cmd_speed(2); return;
 
+        case SDLK_SPACE:        // Space bar acts as stop key (like ESC)
+                                cmd_stop(); context_stop(); cmd_reset(); return;
+
         case SDLK_F8:		    nocut^=1; return;
 
         case SDLK_F9:		    if (display_quest) display_quest=0;
@@ -2085,7 +2088,23 @@ void gui_sdl_mouseproc(int x,int y,int what,int clicks) {
 				break;
 			}
 
-            if (game_options&GO_WHEEL) {
+            if (game_options&GO_WHEELSPEED) {
+                // Mousewheel toggles movement speed mode
+                while (delta>0) {
+                    // Scroll up: cycle through normal->fast->stealth->normal
+                    if (pspeed==2) cmd_speed(0);        // stealth to normal
+                    else if (pspeed==0) cmd_speed(1);   // normal to fast
+                    else if (pspeed==1) cmd_speed(2);   // fast to stealth
+                    delta--;
+                }
+                while (delta<0) {
+                    // Scroll down: cycle through normal->stealth->fast->normal
+                    if (pspeed==0) cmd_speed(2);        // normal to stealth
+                    else if (pspeed==2) cmd_speed(1);   // stealth to fast
+                    else if (pspeed==1) cmd_speed(0);   // fast to normal
+                    delta++;
+                }
+            } else if (game_options&GO_WHEEL) {
                 while (delta>0) { vk_special_inc(); delta--; }
                 while (delta<0) { vk_special_dec(); delta++; }
                 vk_special_time=now;

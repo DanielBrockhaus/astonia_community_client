@@ -134,6 +134,7 @@ extern char localdata[MAX_PATH];
 #define GO_TINYTOP  (1ull<<16) // Slide out top only when mouse cursor is over window border
 #define GO_LOWLIGHT (1ull<<17) // Simplify Light calculations for slow CPUs
 #define GO_NOMAP    (1ull<<18) // Disable minimap completely
+#define GO_WHEELSPEED (1ull<<19) // Mouse wheel toggles movement speed (fast/normal/stealth)
 
 #define GO_NOTSET   (1ull<<63) // No -o given on command line
 
