@@ -37,14 +37,14 @@ it is easier...
 82-89   Die (328)               4X
 90      (reference frame)
 
-a00    45°
-b00     0°
-c00   -45°
-d00   -90°
-e00  -135°
-f00   180°
-g00   135°
-h00    90°
+a00    45 deg
+b00     0 deg
+c00   -45 deg
+d00   -90 deg
+e00  -135 deg
+f00   180 deg
+g00   135 deg
+h00    90 deg
 
 */
 

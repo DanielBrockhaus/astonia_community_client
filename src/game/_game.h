@@ -21,7 +21,7 @@
 #define DD__SHADEFONT	128
 #define DD__FRAMEFONT	256
 
-#define DDT             '°' // draw text terminator - (zero stays one, too)
+#define DDT             '\xB0' // draw text terminator - (zero stays one, too)
 
 #define DL_STEP 128
 
