@@ -920,28 +920,42 @@ void dd_sceweup(void) {
 }
 
 void dd_text_lineup(void) {
-    int tmp;
+    int oldest_line, newest_line_visible;
 
-    //printf("up: textlines=%d,displaylines=%d\n",textlines,textdisplayline); fflush(stdout);
-
+    // Can't scroll up if all lines fit on screen
     if (textlines<=TEXTDISPLAYLINES) return;
 
-    tmp=(textdisplayline+MAXTEXTLINES-1)%MAXTEXTLINES;
-    //printf("up: tmp=%d\n",tmp); fflush(stdout);
-    //if (textlines<MAXTEXTLINES-1 && tmp>textlines) return; // TODO: test if this line causes the "chat will not scroll" bug
-    if (tmp!=textnextline) textdisplayline=tmp;
+    // Calculate the oldest valid line in the circular buffer
+    if (textlines >= MAXTEXTLINES) {
+        // Buffer is full - oldest line is right after textnextline
+        oldest_line = textnextline;
+    } else {
+        // Buffer not full - oldest line is at index 0
+        oldest_line = 0;
+    }
+
+    // Don't scroll past the oldest line
+    if (textdisplayline == oldest_line) return;
+
+    // Move display one line up (toward older text)
+    textdisplayline = (textdisplayline + MAXTEXTLINES - 1) % MAXTEXTLINES;
 }
 
 void dd_text_linedown(void) {
-    int tmp;
+    int bottom_edge_line;
 
-    //printf("down: textlines=%d,displaylines=%d, textnextline=%d\n",textlines,textdisplayline,textnextline); fflush(stdout);
-
+    // Can't scroll down if all lines fit on screen
     if (textlines<=TEXTDISPLAYLINES) return;
 
-    tmp=(textdisplayline+1)%MAXTEXTLINES;
-    if (tmp!=(textnextline+MAXTEXTLINES-TEXTDISPLAYLINES+1)%MAXTEXTLINES) textdisplayline=tmp;
-    //printf("down: tmp=%d (%d)\n",tmp,(textnextline+MAXTEXTLINES-TEXTDISPLAYLINES+1)%MAXTEXTLINES); fflush(stdout);
+    // Calculate where the bottom edge of the display window would be
+    bottom_edge_line = (textdisplayline + TEXTDISPLAYLINES) % MAXTEXTLINES;
+
+    // Don't scroll past the newest line (textnextline)
+    // The bottom of our window should stop at textnextline
+    if (bottom_edge_line == textnextline) return;
+
+    // Move display one line down (toward newer text)
+    textdisplayline = (textdisplayline + 1) % MAXTEXTLINES;
 }
 
 void dd_text_pageup(void) {
