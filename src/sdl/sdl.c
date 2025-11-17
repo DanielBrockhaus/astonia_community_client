@@ -170,9 +170,12 @@ int sdl_init(int width,int height,char *title,int monitor) {
     } else if (game_options&GO_LARGE) {
         // Try to load a system font - Arial or fallback to other common fonts
         const char *font_paths[] = {
-            "C:/Windows/Fonts/arial.ttf",          // Windows
+            "C:\\Windows\\Fonts\\arial.ttf",          // Windows (backslash)
+            "C:/Windows/Fonts/arial.ttf",             // Windows (forward slash)
+            "/c/Windows/Fonts/arial.ttf",             // MSYS2 path
+            "res/arial.ttf",                          // Local bundled font
             "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",  // Linux
-            "/System/Library/Fonts/Helvetica.ttc", // macOS
+            "/System/Library/Fonts/Helvetica.ttc",    // macOS
             NULL
         };
 

@@ -540,10 +540,11 @@ void display_usage(void) {
 
     txt=buf=malloc(1024*8);
     buf+=sprintf(buf,"The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n");
-    buf+=sprintf(buf,"Usage: moac -u playername -p password -d url\n ... [-w width] [-h height]\n");
+    buf+=sprintf(buf,"Usage: moac -u playername -p password -d url\n ... [-w width] [-h height] [-r resolution]\n");
     buf+=sprintf(buf," ... [-m threads] [-o options] [-c cachesize]\n ... [-k framespersecond]\n\n");
     buf+=sprintf(buf,"url being, for example, \"server.astonia.com\" or \"192.168.77.132\" (without the quotes).\n\n");
     buf+=sprintf(buf,"width and height are the desired window size. If this matches the desktop size the client will start in windowed borderless pseudo-fullscreen mode.\n\n");
+    buf+=sprintf(buf,"resolution presets: -r 720p (1280x720), -r 1080p (1920x1080), -r 1440p (2560x1440), -r 4k (3840x2160)\n\n");
     buf+=sprintf(buf,"threads is the number of background threads the game should use. Use 0 to disable. Default is 4.\n\n");
     buf+=sprintf(buf,"options is a bitfield.\nBit 0 (value of 1) enables the Dark GUI by Tegra.");
     buf+=sprintf(buf,"Bit 1 enables the context menu.\nBit 2 the new keybindings.\nBit 3 the smaller bottom GUI.\n");
@@ -557,6 +558,7 @@ void display_usage(void) {
     buf+=sprintf(buf,"Bit 16 makes the sliding top bar less sensitive.\n");
     buf+=sprintf(buf,"Bit 17 reduces lighting effects (more performance, less pretty).\n");
     buf+=sprintf(buf,"Bit 18 disables the minimap.\n");
+    buf+=sprintf(buf,"Bit 19 enables mouse wheel speed toggle (fast/normal/stealth).\n");
     buf+=sprintf(buf,"Default depends on screen height.\n\n");
     buf+=sprintf(buf,"cachesize is the size of the texture cache. Default is 8000. Lower numbers might crash!\n\n");
     buf+=sprintf(buf,"framespersecond will set the display rate in frames per second.\n\n");
@@ -640,6 +642,18 @@ int parse_cmd(char *s) {
                 while (isspace(*s)) s++;
                 want_monitor=strtol(s,&end,10);
                 s=end;
+            } else if (tolower(*s)=='r') { // -r resolution preset (720p/1080p/1440p/4k)
+                s++;
+                while (isspace(*s)) s++;
+                if (strncmp(s,"720",3)==0 || strncmp(s,"720p",4)==0) {
+                    want_width=1280; want_height=720; s+=(*((s+3))=='p'?4:3);
+                } else if (strncmp(s,"1080",4)==0 || strncmp(s,"1080p",5)==0) {
+                    want_width=1920; want_height=1080; s+=(*((s+4))=='p'?5:4);
+                } else if (strncmp(s,"1440",4)==0 || strncmp(s,"1440p",5)==0) {
+                    want_width=2560; want_height=1440; s+=(*((s+4))=='p'?5:4);
+                } else if (strncmp(s,"4k",2)==0 || strncmp(s,"4K",2)==0) {
+                    want_width=3840; want_height=2160; s+=2;
+                } else { display_usage(); return -1; }
             } else { display_usage(); return -1; }
         } else { display_usage(); return -2; }
         while (isspace(*s)) s++;
