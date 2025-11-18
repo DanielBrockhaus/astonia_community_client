@@ -311,8 +311,20 @@ static int display_hover_skill(void) {
         v2=game_skill[v].base2;
         v3=game_skill[v].base3;
 
-        // Calculate equipment bonus (difference between current and base)
-        equip_bonus=value[0][v]-value[1][v];
+        // First calculate base attribute modifier
+        if (v1!=-1 && v2!=-1 && v3!=-3 && v!=V_DEMON) {
+            base=(value[0][v1]+value[0][v2]+value[0][v3])/5;
+            if (base>max(15,value[1][v]*2)) cap=max(15,value[1][v]*2);
+            height+=10;
+        }
+
+        // Calculate equipment bonus (current - base - attribute modifier)
+        // If base is capped, use the capped value
+        if (cap) {
+            equip_bonus=value[0][v]-value[1][v]-cap;
+        } else {
+            equip_bonus=value[0][v]-value[1][v]-base;
+        }
         if (equip_bonus!=0) height+=10;  // Add line for equipment bonus
 
         if (game_skill[v].cost && v!=V_DEMON) {
@@ -328,12 +340,6 @@ static int display_hover_skill(void) {
                     height+=10;  // Add line for percentage
                 }
             }
-        }
-
-        if (v1!=-1 && v2!=-1 && v3!=-3 && v!=V_DEMON) {
-            base=(value[0][v1]+value[0][v2]+value[0][v3])/5;
-            height+=10;
-            if (base>max(15,value[1][v]*2)) cap=max(15,value[1][v]*2);
         }
 
         if (v==V_DAGGER || v==V_SWORD || v==V_TWOHAND || v==V_STAFF || v==V_HAND) {
