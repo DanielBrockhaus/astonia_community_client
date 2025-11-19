@@ -1,0 +1,12 @@
+# Rustfmt configuration for Astonia Client
+# Standard Rust formatting with edition 2021
+
+edition = "2021"
+
+# Use default Rust style for consistency with ecosystem
+# All options below are defaults, listed for clarity
+
+max_width = 100
+tab_spaces = 4
+newline_style = "Unix"
+use_small_heuristics = "Default"

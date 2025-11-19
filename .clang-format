@@ -1,0 +1,46 @@
+---
+# Clang-Format configuration for Astonia Client
+# Gentle rules matching existing codebase style
+
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+UseTab: ForIndentation
+TabWidth: 4
+ContinuationIndentWidth: 4
+
+# Braces
+BreakBeforeBraces: Linux
+
+# Line length - be gentle, allow longer lines
+ColumnLimit: 120
+
+# Spacing
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+
+# Alignment - minimal, don't force too much
+AlignAfterOpenBracket: DontAlign
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments: false
+
+# Pointers and references
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+# Function formatting
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Include sorting - don't sort to avoid breaking things
+SortIncludes: false
+
+# Other
+KeepEmptyLinesAtTheStartOfBlocks: false
+MaxEmptyLinesToKeep: 2

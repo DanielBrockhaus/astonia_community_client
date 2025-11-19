@@ -1,0 +1,177 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  clang-format:
+    name: C Code Formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run clang-format check
+      uses: jidicula/clang-format-action@v4.16.0
+      with:
+        clang-format-version: 21
+        check-path: 'src'
+        fallback-style: 'llvm'
+
+  clang-tidy:
+    name: C Static Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang-tidy \
+          clang \
+          bear \
+          libsdl2-dev \
+          libsdl2-mixer-dev \
+          libpng-dev \
+          libzip-dev \
+          zlib1g-dev
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+        cache-workspaces: astonia_net
+
+    - name: Generate compile_commands.json
+      run: |
+        make clean
+        bear -- make
+
+    - name: Run clang-tidy
+      run: |
+        find src -type f -name "*.c" -print0 | \
+        xargs -0 clang-tidy > clang-tidy-report.txt 2>&1 || true
+        echo "clang-tidy analysis complete. Report generated."
+
+    - name: Upload clang-tidy report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: clang-tidy-report
+        path: clang-tidy-report.txt
+        retention-days: 90
+
+  cppcheck:
+    name: C Additional Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install cppcheck
+      run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+    - name: Run cppcheck
+      run: |
+        cppcheck --enable=warning,performance,portability \
+          --error-exitcode=1 \
+          --inline-suppr \
+          --suppress=missingIncludeSystem \
+          -Iinclude \
+          src/
+
+  rustfmt:
+    name: Rust Code Formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt
+        cache: false
+
+    - name: Check Rust formatting
+      run: cargo fmt --check
+      working-directory: astonia_net
+
+  clippy:
+    name: Rust Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        components: clippy
+        cache: true
+        cache-workspaces: astonia_net
+
+    - name: Run clippy
+      run: cargo clippy -- -D warnings
+      working-directory: astonia_net
+
+  file-consistency:
+    name: File Consistency Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check line endings (LF only)
+      run: |
+        echo "Checking for CRLF line endings..."
+        if git ls-files -z '*.c' '*.h' '*.rs' '*.toml' '*.md' '*.sh' 'Makefile*' | \
+           xargs -0 file | grep -i "CRLF"; then
+          echo "ERROR: Found files with CRLF line endings"
+          exit 1
+        fi
+        echo "✓ All text files use LF line endings"
+
+    - name: Check file encoding (UTF-8)
+      run: |
+        echo "Checking file encoding..."
+        if git ls-files -z '*.c' '*.h' '*.rs' '*.toml' '*.md' | \
+           xargs -0 file -i | grep -v "charset=utf-8\|charset=us-ascii"; then
+          echo "ERROR: Found files with non-UTF-8 encoding"
+          exit 1
+        fi
+        echo "✓ All text files use UTF-8 encoding"
+
+    - name: Check for tabs vs spaces consistency
+      run: |
+        echo "Checking tabs/spaces consistency..."
+        # C files should use tabs (check existing style)
+        TABS_IN_C=$(git ls-files 'src/**/*.c' | head -5 | xargs grep -l $'^\t' | wc -l)
+        if [ "$TABS_IN_C" -gt 0 ]; then
+          echo "C code appears to use tabs - checking consistency..."
+          if git ls-files 'src/**/*.c' | xargs grep -l '^    ' | head -1; then
+            echo "WARNING: Found C files with leading spaces (expecting tabs)"
+            # Don't fail for now, just warn
+          fi
+        fi
+        echo "✓ File consistency checks passed"

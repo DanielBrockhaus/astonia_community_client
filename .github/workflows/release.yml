@@ -1,0 +1,203 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build-linux-release:
+    name: Build Linux Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        lfs: true
+
+    - name: Checkout LFS objects
+      run: git lfs pull
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          clang \
+          libsdl2-dev \
+          libsdl2-mixer-dev \
+          libpng-dev \
+          libzip-dev \
+          zlib1g-dev
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+        cache-workspaces: astonia_net
+
+    - name: Build release
+      run: make linux
+
+    - name: Strip debug symbols
+      run: |
+        strip bin/moac
+        strip bin/libastonia_net.so
+
+    - name: Create distribution package
+      run: make distrib
+
+    - name: Upload distribution
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-release
+        path: linux_client.tar.gz
+        retention-days: 90
+
+  build-windows-release:
+    name: Build Windows Release
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+
+      - name: Checkout LFS objects
+        shell: bash
+        run: git lfs pull
+
+      - name: Install Rust toolchain (GNU variant)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
+          cache: true
+          cache-workspaces: astonia_net
+
+      - name: Setup MSYS2 (clang64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: clang64
+          path-type: inherit
+          update: true
+          install: >
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-SDL2
+            mingw-w64-clang-x86_64-libpng
+            mingw-w64-clang-x86_64-SDL2_mixer
+            mingw-w64-clang-x86_64-libzip
+            mingw-w64-clang-x86_64-dwarfstack
+            make
+            zip
+
+      - name: Build release
+        run: make windows
+
+      - name: Copy DLL to bin
+        run: cp astonia_net/target/x86_64-pc-windows-gnu/release/astonia_net.dll bin/
+
+      - name: Strip debug symbols
+        run: |
+          strip bin/moac.exe
+          strip bin/astonia_net.dll
+
+      - name: Create distribution package
+        run: make distrib
+
+      - name: Upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: windows_client.zip
+          retention-days: 90
+
+  build-macos-release:
+    name: Build macOS Release
+    runs-on: macos-latest
+    timeout-minutes: 20
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+      with:
+        lfs: true
+
+    - name: Checkout LFS objects
+      run: git lfs pull
+
+    - name: Install dependencies
+      run: |
+        brew install sdl2 sdl2_mixer libzip zlib
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        target: aarch64-apple-darwin
+        cache: true
+        cache-workspaces: astonia_net
+
+    - name: Build release
+      run: make macos
+
+    - name: Strip debug symbols
+      run: |
+        strip bin/moac
+        strip -x bin/libastonia_net.dylib
+
+    - name: Create distribution package
+      run: make distrib
+
+    - name: Upload distribution
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-release
+        path: macos_client.tar.gz
+        retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    needs: [build-linux-release, build-windows-release, build-macos-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v6
+
+    - name: Download Linux release
+      uses: actions/download-artifact@v4
+      with:
+        name: linux-release
+
+    - name: Download Windows release
+      uses: actions/download-artifact@v4
+      with:
+        name: windows-release
+
+    - name: Download macOS release
+      uses: actions/download-artifact@v4
+      with:
+        name: macos-release
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          linux_client.tar.gz
+          windows_client.zip
+          macos_client.tar.gz
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
