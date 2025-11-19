@@ -416,9 +416,9 @@ void set_map_lights(struct map *cmap) {
                 if (cmap[quick[i].mn[6]].flags&CMF_VISIBLE) cmap[mn].rlight=min((unsigned)cmap[mn].rlight,cmap[quick[i].mn[6]].flags&CMF_LIGHT);
                 if (cmap[quick[i].mn[8]].flags&CMF_VISIBLE) cmap[mn].rlight=min((unsigned)cmap[mn].rlight,cmap[quick[i].mn[8]].flags&CMF_LIGHT);
 
+                // If still no lighting from neighbors, treat as fully dark (14) not invisible
                 if (cmap[mn].rlight==15) {
-                    cmap[mn].rlight=0;
-                    continue;
+                    cmap[mn].rlight=14;
                 }
             }
 
@@ -1352,20 +1352,23 @@ void display_game_map(struct map *cmap) {
             dl=dl_next_set(get_lay_sprite(cmap[mn].isprite,GME_LAY),cmap[mn].ri.sprite,scrx,scry-8,itmsel==mn?DDFX_BRIGHT:light);
             if (!dl) { note("error in game #8 (%d,%d)",cmap[mn].ri.sprite,cmap[mn].isprite); continue; }
 
+            // Apply shaded lighting from adjacent tiles for smooth lighting transitions
+            // Use center tile lighting as fallback if neighbor is invalid or not visible
+            // Left lighting (mn[3])
+            mna=quick[i].mn[3];
+            dl->ddfx.ll=(mna>0 && mna<MAPDX*MAPDY && (cmap[mna].flags&CMF_VISIBLE) && cmap[mna].rlight)?cmap[mna].rlight:light;
 
-#if 0
-            // Disabled shaded lighting for items. It is often wrong and needs re-doing
-            if ((mna=quick[i].mn[3])!=0 && (cmap[mna].rlight)) dl->ddfx.ll=cmap[mna].rlight;
-            else dl->ddfx.ll=light;
-            if ((mna=quick[i].mn[5])!=0 && (cmap[mna].rlight)) dl->ddfx.rl=cmap[mna].rlight;
-            else dl->ddfx.rl=light;
-            if ((mna=quick[i].mn[1])!=0 && (cmap[mna].rlight)) dl->ddfx.ul=cmap[mna].rlight;
-            else dl->ddfx.ul=light;
-            if ((mna=quick[i].mn[7])!=0 && (cmap[mna].rlight)) dl->ddfx.dl=cmap[mna].rlight;
-            else dl->ddfx.dl=light;
-#else
-            dl->ddfx.ll=dl->ddfx.rl=dl->ddfx.ul=dl->ddfx.dl=dl->ddfx.ml;
-#endif
+            // Right lighting (mn[5])
+            mna=quick[i].mn[5];
+            dl->ddfx.rl=(mna>0 && mna<MAPDX*MAPDY && (cmap[mna].flags&CMF_VISIBLE) && cmap[mna].rlight)?cmap[mna].rlight:light;
+
+            // Upper lighting (mn[1])
+            mna=quick[i].mn[1];
+            dl->ddfx.ul=(mna>0 && mna<MAPDX*MAPDY && (cmap[mna].flags&CMF_VISIBLE) && cmap[mna].rlight)?cmap[mna].rlight:light;
+
+            // Down lighting (mn[7])
+            mna=quick[i].mn[7];
+            dl->ddfx.dl=(mna>0 && mna<MAPDX*MAPDY && (cmap[mna].flags&CMF_VISIBLE) && cmap[mna].rlight)?cmap[mna].rlight:light;
 
             dl->h+=heightadd-8;
             dl->ddfx.scale=cmap[mn].ri.scale;
@@ -1510,7 +1513,8 @@ void display_pents(void) {
 
             default:	continue;
         }
-        if (context_action_enabled()) yoff=30;
+        // Offset pent text if action bar UI exists (regardless of whether icons are visible)
+        if (game_options&GO_ACTION) yoff=30;
         else yoff=0;
         dd_drawtext(dotx(DOT_BOT)+550,doty(DOT_BOT)-80+n*10-yoff,col,DD_SMALL|DD_FRAME,pent_str[n]+1);
     }

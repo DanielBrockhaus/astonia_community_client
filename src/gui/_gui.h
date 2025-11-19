@@ -379,4 +379,5 @@ void dots_update(void);
 void display_action_lock(void);
 void display_action_open(void);
 void display_wear_lock(void);
+void action_flash_spell(int spell_cl_type);
 

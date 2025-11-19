@@ -95,7 +95,7 @@ void init_dots(void) {
 
     // scroll bars
     set_dot(DOT_SCL,160+5,0,0);
-    set_dot(DOT_SCR,640-5,0,0);
+    set_dot(DOT_SCR,XRES-160-5,0,0);
     set_dot(DOT_SCU,0,doty(DOT_BOT)+15,0);
     if (!sbot) set_dot(DOT_SCD,0,doty(DOT_BOT)+160,0);
     else set_dot(DOT_SCD,0,doty(DOT_BOT)+120,0);
@@ -131,7 +131,7 @@ void init_dots(void) {
 
     // map top left, bottom right, center
     set_dot(DOT_MTL,  0, 40,!stop ? 0 : DOTF_TOPOFF);
-    set_dot(DOT_MBR,800,min(doty(DOT_MTL)+450-(!stop?0:40),doty(DOT_BOT)+4),0);
+    set_dot(DOT_MBR,XRES,min(doty(DOT_MTL)+450-(!stop?0:40),doty(DOT_BOT)+4),0);
     x=dotx(DOT_MBR)-dotx(DOT_MTL);
     y=doty(DOT_MBR)-doty(DOT_MTL)+(!stop?0:40);
     xc=x/2;

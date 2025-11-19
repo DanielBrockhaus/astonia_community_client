@@ -530,7 +530,7 @@ void display_wheel(void) {
     int i;
 
     dd_push_clip();
-    dd_more_clip(0,0,800,600);
+    dd_more_clip(0,0,XRES,YRES0);
 
     if (now-vk_special_time<2000) {
         int n,panic=99;
@@ -588,15 +588,15 @@ static void display(void) {
     set_cmd_states();
 
     if (sockstate<4 && ((t=time(NULL)-socktimeout)>10 || !originx)) {
-        dd_rect(0,0,800,540,blackcolor);
+        dd_rect(0,0,XRES,YRES-60,blackcolor);
         display_screen();
         display_text();
-        if ((now/1000)&1) dd_drawtext(800/2,540/2-60,redcolor,DD_CENTER|DD_LARGE,"not connected");
-        dd_copysprite(60,800/2,(540-240)/2,DDFX_NLIGHT,DD_CENTER);
+        if ((now/1000)&1) dd_drawtext(XRES/2,(YRES-60)/2-60,redcolor,DD_CENTER|DD_LARGE,"not connected");
+        dd_copysprite(60,XRES/2,((YRES-60)-240)/2,DDFX_NLIGHT,DD_CENTER);
         if (!kicked_out) {
-            dd_drawtext_fmt(800/2,540/2-40,textcolor,DD_SMALL|DD_CENTER|DD_FRAME,"Trying to establish connection. %d seconds...",t);
+            dd_drawtext_fmt(XRES/2,(YRES-60)/2-40,textcolor,DD_SMALL|DD_CENTER|DD_FRAME,"Trying to establish connection. %d seconds...",t);
             if (t>15) {
-                dd_drawtext_fmt(800/2,540/2-0,textcolor,DD_LARGE|DD_CENTER|DD_FRAME,"Please check %s for troubleshooting advice.",game_url);
+                dd_drawtext_fmt(XRES/2,(YRES-60)/2-0,textcolor,DD_LARGE|DD_CENTER|DD_FRAME,"Please check %s for troubleshooting advice.",game_url);
             }
         }
         goto display_graphs;    // I know, I know. goto considered harmful and all that.
@@ -652,7 +652,7 @@ display_graphs:
         static unsigned char pre1_graph[100],pre2_graph[100],pre3_graph[100];
         //static int frame_min=99,frame_max=0,frame_step=0;
         //static int tick_min=99,tick_max=0,tick_step=0;
-        int px=800-110,py=35+(!(game_options&GO_SMALLTOP) ? 0 : gui_topoff);
+        int px=XRES-110,py=35+(!(game_options&GO_SMALLTOP) ? 0 : gui_topoff);
         PROCESS_MEMORY_COUNTERS mi;
 
         GetProcessMemoryInfo(GetCurrentProcess(),&mi,sizeof(mi));
@@ -1516,10 +1516,12 @@ static void set_cmd_states(void) {
 
         if (itmsel!=-1 &&  vk_item && !vk_char && !csprite && map[itmsel].flags&CMF_USE) lcmd=CMD_ITM_USE;
         if (itmsel!=-1 &&  vk_item && !vk_char && !csprite && map[itmsel].flags&CMF_TAKE) lcmd=CMD_ITM_TAKE;
+        // "Use With" should trump "Give" - check this before character give
         if (itmsel!=-1 &&  vk_item && !vk_char &&  csprite && map[itmsel].flags&CMF_USE) lcmd=CMD_ITM_USE_WITH;
 
+        // Only set Give if we haven't already set Use With (don't override it)
         if (chrsel!=-1 && !vk_item &&  vk_char && !csprite) lcmd=CMD_CHR_ATTACK;
-        if (chrsel!=-1 && !vk_item &&  vk_char &&  csprite) lcmd=CMD_CHR_GIVE;
+        if (chrsel!=-1 && !vk_item &&  vk_char &&  csprite && lcmd!=CMD_ITM_USE_WITH) lcmd=CMD_CHR_GIVE;
     }
 
     set_cmd_invsel();

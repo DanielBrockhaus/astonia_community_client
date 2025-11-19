@@ -574,4 +574,5 @@ void cl_client_info(struct client_info *ci);
 void cl_ticker(void);
 int close_client(void);
 int is_char_ceffect(int type);
+void action_flash_spell(int spell);
 

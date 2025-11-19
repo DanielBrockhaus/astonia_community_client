@@ -457,7 +457,7 @@ void display_keys(void) {
         if (keytab[i].usetime>now-300) col=bluecolor;
         else col=textcolor;
 
-        x=10+u++*((800-20)/10);
+        x=10+u++*((XRES-20)/10);
 
         if (keytab[i].skill==-1) continue;
         if (!value[0][keytab[i].skill]) continue;
@@ -607,7 +607,7 @@ void display_selfspells(void) {
             case 9:
                 step=50-50*(ceffect[nr].bless.stop-tick)/(ceffect[nr].bless.stop-ceffect[nr].bless.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 if (ceffect[nr].bless.stop-tick<24*30 && (tick&4)) dd_copysprite(997,dotx(DOT_SSP)+2*10,doty(DOT_SSP)+step,DDFX_BRIGHT,DD_NORMAL);
                 else dd_copysprite(997,dotx(DOT_SSP)+2*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
@@ -616,7 +616,7 @@ void display_selfspells(void) {
             case 11:
                 step=50-50*(ceffect[nr].freeze.stop-tick)/(ceffect[nr].freeze.stop-ceffect[nr].freeze.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 dd_copysprite(997,dotx(DOT_SSP)+1*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
                 sprintf(hover_freeze_text,"Freeze: %ds to go",(ceffect[nr].freeze.stop-tick)/24);
@@ -625,7 +625,7 @@ void display_selfspells(void) {
             case 14:
                 step=50-50*(ceffect[nr].potion.stop-tick)/(ceffect[nr].potion.stop-ceffect[nr].potion.start);
                 dd_push_clip();
-                dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+                dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
                 if (step>=40 && (tick&4)) dd_copysprite(997,dotx(DOT_SSP)+0*10,doty(DOT_SSP)+step,DDFX_BRIGHT,DD_NORMAL);
                 else dd_copysprite(997,dotx(DOT_SSP)+0*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
                 dd_pop_clip();
@@ -744,7 +744,7 @@ void display_rage(void) {
 
     step=50-50*rage/value[0][V_RAGE];
     dd_push_clip();
-    dd_more_clip(0,0,800,doty(DOT_SSP)+119-68);
+    dd_more_clip(0,0,XRES,doty(DOT_SSP)+119-68);
     dd_copysprite(997,dotx(DOT_SSP)+3*10,doty(DOT_SSP)+step,DDFX_NLIGHT,DD_NORMAL);
     dd_pop_clip();
 
@@ -858,6 +858,39 @@ static int action_skill[MAXACTIONSLOT]={
     -1
 };
 
+// Flash tracking for action icons
+static int action_flash_slot=-1;  // Which slot is flashing (-1 = none)
+static int action_flash_until=0;  // Tick until which to flash
+
+// Trigger a flash for the action icon corresponding to a spell
+void action_flash_spell(int spell_cl_type) {
+    int i;
+    int spell_v_type=-1;
+
+    // Map CL_ spell type to V_ skill type
+    switch (spell_cl_type) {
+        case CL_BLESS:      spell_v_type=V_BLESS; break;
+        case CL_FIREBALL:   spell_v_type=V_FIREBALL; break;
+        case CL_HEAL:       spell_v_type=V_HEAL; break;
+        case CL_MAGICSHIELD:spell_v_type=V_MAGICSHIELD; break;
+        case CL_FREEZE:     spell_v_type=V_FREEZE; break;
+        case CL_FLASH:      spell_v_type=V_FLASH; break;
+        case CL_BALL:       spell_v_type=V_FLASH; break;  // Ball uses FLASH
+        case CL_WARCRY:     spell_v_type=V_WARCRY; break;
+        case CL_PULSE:      spell_v_type=V_PULSE; break;
+        default:            return;  // Unknown spell, don't flash
+    }
+
+    // Find the first action slot with this spell
+    for (i=0; i<MAXACTIONSLOT; i++) {
+        if (action_skill[i]==spell_v_type) {
+            action_flash_slot=i;
+            action_flash_until=tick+TICKS/2;  // Flash for 0.5 seconds
+            return;
+        }
+    }
+}
+
 void actions_loaded(void) {
     int i;
 
@@ -952,6 +985,12 @@ void display_action(void) {
         hoover_start=tick+HOVER_DELAY;
     }
 
+    // Check if flash has expired
+    if (action_flash_until>0 && tick>=action_flash_until) {
+        action_flash_slot=-1;
+        action_flash_until=0;
+    }
+
     bzero(&fx,sizeof(fx));
     fx.scale=80;
     fx.sat=14;
@@ -959,7 +998,8 @@ void display_action(void) {
         for (i=0; i<MAXACTIONSLOT; i++) {
             if (!has_action_skill(i)) continue;
             fx.sprite=800+i;
-            fx.ml=fx.ll=fx.rl=fx.ul=fx.dl=(i==actsel || i==action_ovr)?DDFX_BRIGHT:DDFX_NLIGHT;
+            // Flash if this is the flash slot, or brighten if selected/active
+            fx.ml=fx.ll=fx.rl=fx.ul=fx.dl=(i==actsel || i==action_ovr || i==action_flash_slot)?DDFX_BRIGHT:DDFX_NLIGHT;
             dd_copysprite_fx(&fx,butx(BUT_ACT_BEG+i),buty(BUT_ACT_BEG+i));
             if (i==actsel) {
                 if (act_lck) { // non-keybinding mode
