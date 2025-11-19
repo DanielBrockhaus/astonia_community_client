@@ -42,15 +42,14 @@ Also install git lfs (large file system) as described here: https://docs.github.
 
 Clone or download the sources from Github to the current directory.
 
-#### Build with Make (Traditional)
+#### Build with Make
 ```
-make
+make           # Auto-detects platform and builds
+make windows   # or make linux, make macos
+make zig-build # Build with zig
 ```
 
-#### Build with Zig
-```
-zig build --release=fast install --prefix .
-```
+Build files: `build/build.zig`, `build/make/` (Makefiles).
 
 ### Errors
 If pacman, make, clang, or zig are not found something with your MSYS2 installation
@@ -66,13 +65,11 @@ Will copy all neccessary DLLs to the build directory and create a zip archive
 with the executables and graphics.
 
 ### Linux Build
-For Linux, you can use the provided Dockerfile to build in a containerized environment:
 ```
-docker build -f Dockerfile.linux -t astonia-linux-build .
-docker run --rm -i -e HOST_UID=$(id -u) -e HOST_GID=$(id -g) -v "$PWD:/app" -w /app astonia-linux-build
+make               # Native Linux build
+make zig-build     # Native Linux build using zig
+make docker-linux  # Build in Docker container
 ```
-
-The built binaries will be in `bin/`.
 
 ### macOS Build
 
@@ -116,10 +113,9 @@ rustup target add aarch64-apple-darwin
 
 #### Build
 ```
-zig build --release=fast install --prefix .
+make           # Auto-detects macOS
+make zig-build # Build with zig
 ```
-
-The built binaries will be in `bin/`.
 
 ### Make A Mod
 ```

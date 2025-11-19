@@ -1,0 +1,127 @@
+all: bin/moac
+
+SDL_CONFIG=sdl2-config
+CC=clang
+OPT=-O3
+DEBUG=-gdwarf-4
+PKG_CONFIG?=pkg-config
+BREW_PREFIX:=$(shell brew --prefix 2>/dev/null)
+
+ZIP_CFLAGS:=$(shell $(PKG_CONFIG) --cflags libzip 2>/dev/null)
+ZIP_LIBS:=$(shell $(PKG_CONFIG) --libs libzip 2>/dev/null)
+ifeq ($(ZIP_CFLAGS),)
+    ifneq ($(BREW_PREFIX),)
+        ZIP_CFLAGS:=-I$(BREW_PREFIX)/include
+    endif
+endif
+ifeq ($(ZIP_LIBS),)
+    ifneq ($(BREW_PREFIX),)
+        ZIP_LIBS:=-L$(BREW_PREFIX)/lib -lzip
+    else
+        ZIP_LIBS:=-lzip
+    endif
+endif
+
+SDL_MIXER_CFLAGS:=$(shell $(PKG_CONFIG) --cflags SDL2_mixer 2>/dev/null)
+SDL_MIXER_LIBS:=$(shell $(PKG_CONFIG) --libs SDL2_mixer 2>/dev/null)
+ifeq ($(SDL_MIXER_CFLAGS),)
+    ifneq ($(BREW_PREFIX),)
+        SDL_MIXER_CFLAGS:=-I$(BREW_PREFIX)/include
+    endif
+endif
+ifeq ($(SDL_MIXER_LIBS),)
+    ifneq ($(BREW_PREFIX),)
+        SDL_MIXER_LIBS:=-L$(BREW_PREFIX)/lib -lSDL2_mixer
+    else
+        SDL_MIXER_LIBS:=-lSDL2_mixer
+    endif
+endif
+
+SDL_CFLAGS=$(shell $(SDL_CONFIG) --cflags)
+CFLAGS=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fno-omit-frame-pointer -fvisibility=hidden $(SDL_CFLAGS) $(SDL_MIXER_CFLAGS) -Iinclude -Isrc $(ZIP_CFLAGS)
+CFLAGS_PIC=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fPIC -fno-omit-frame-pointer -fvisibility=hidden $(SDL_CFLAGS) $(SDL_MIXER_CFLAGS) -Iinclude -Isrc $(ZIP_CFLAGS)
+LDFLAGS=$(OPT) $(DEBUG) -rdynamic -Wl,-rpath,@loader_path
+
+SDL_LIBS=$(shell $(SDL_CONFIG) --libs)
+LIBS = -lz -lpng $(ZIP_LIBS) $(SDL_MIXER_LIBS) -lm
+
+ASTONIA_NET_DIR=astonia_net
+# Detect macOS architecture
+UNAME_M := $(shell uname -m)
+ifeq ($(UNAME_M),arm64)
+    ASTONIA_NET_TGT=aarch64-apple-darwin
+else
+    ASTONIA_NET_TGT=x86_64-apple-darwin
+endif
+ASTONIA_NET_LIB=$(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/libastonia_net.dylib
+
+OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/game/font.o\
+			src/game/main.o src/game/sprite.o src/game/game.o src/modder/modder.o\
+			src/sdl/sound.o src/sdl/sdl.o src/helper/helper.o\
+			src/gui/dots.o src/gui/display.o src/gui/teleport.o src/gui/color.o src/gui/cmd.o\
+			src/gui/questlog.o src/gui/context.o src/gui/hover.o src/gui/minimap.o\
+			src/game/memory_macos.o
+
+bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
+		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) $(ASTONIA_NET_LIB)
+		cp $(ASTONIA_NET_LIB) bin/
+
+$(ASTONIA_NET_LIB):
+		rustup target add $(ASTONIA_NET_TGT)
+		cargo build --release --manifest-path $(ASTONIA_NET_DIR)/Cargo.toml --target $(ASTONIA_NET_TGT)
+
+bin/amod.dylib:	src/amod/amod.o bin/moac
+		$(CC) $(LDFLAGS) -dynamiclib -undefined dynamic_lookup -o bin/amod.dylib src/amod/amod.o
+
+src/amod/amod.o:	src/amod/amod.c src/amod/amod.h src/amod/amod_structs.h
+
+bin/anicopy:	src/helper/anicopy.c
+		$(CC) $(OPT) $(DEBUG) -Wall -o bin/anicopy src/helper/anicopy.c
+
+bin/convert:	src/helper/convert.c
+		$(CC) $(OPT) $(DEBUG) -Wall -DSTANDALONE $(ZIP_CFLAGS) -o bin/convert src/helper/convert.c -lpng $(ZIP_LIBS)
+
+
+src/client/client.o:	src/client/client.c src/astonia.h src/client.h src/client/_client.h src/sdl.h
+
+src/game/dd.o:		src/game/dd.c src/astonia.h src/game.h src/game/_game.h src/client.h src/sdl.h
+src/game/font.o:	src/game/font.c src/game.h src/game/_game.h
+src/game/game.o:    	src/game/game.c src/astonia.h src/game.h src/game/_game.h src/client.h src/gui.h
+src/game/main.o:	src/game/main.c src/astonia.h src/game.h src/game/_game.h src/client.h src/gui.h src/sdl.h src/modder.h
+src/game/skill.o:      	src/game/skill.c src/astonia.h src/game.h src/game/_game.h src/client.h
+src/game/sprite.o:	src/game/sprite.c src/astonia.h src/game.h src/game/_game.h src/client.h src/gui.h
+
+src/gui/color.o:	src/gui/color.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h
+src/gui/context.o:	src/gui/context.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h
+src/gui/cmd.o:		src/gui/cmd.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h src/sdl.h src/modder.h
+src/gui/dots.o:		src/gui/dots.c src/astonia.h src/gui.h src/gui/_gui.h
+src/gui/display.o:	src/gui/display.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h
+src/gui/gui.o:		src/gui/gui.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h  src/sdl.h src/modder.h
+src/gui/hover.o:	src/gui/hover.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/gui.h src/game.h src/sdl.h src/modder.h
+src/gui/minimap.o:	src/gui/minimap.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/sdl.h src/game.h
+src/gui/teleport.o:	src/gui/teleport.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h
+src/gui/questlog.o:	src/gui/questlog.c src/astonia.h src/gui.h src/gui/_gui.h src/client.h src/game.h
+
+src/helper/helper.o:	src/helper/helper.c src/astonia.h
+src/helper/convert.o:	src/helper/convert.c src/astonia.h src/sdl.h src/sdl/_sdl.h
+
+src/modder/modder.o:	src/modder/modder.c src/astonia.h src/modder.h src/modder/_modder.h src/client.h
+
+src/sdl/sdl.o:		src/sdl/sdl.c src/astonia.h src/sdl.h src/sdl/_sdl.h
+src/sdl/sound.o:      	src/sdl/sound.c src/astonia.h src/sdl.h src/sdl/_sdl.h
+
+src/game/memory_macos.o: src/game/memory_macos.c
+		$(CC) $(CFLAGS_PIC) -c -o $@ $<
+
+clean:
+		-rm -f src/*/*.o bin/moac bin/*.dylib bin/convert bin/anicopy
+		-rm -rf bin/*.dSYM
+		-rm -rf astonia_net/target
+
+distrib:
+	tar czf macos_client.tar.gz --exclude='bin/*.dSYM' bin res
+
+amod:		bin/amod.dylib bin/moac
+convert:	bin/convert
+anicopy:	bin/anicopy
+

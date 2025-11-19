@@ -35,6 +35,7 @@ bin/amod.so:	src/amod/amod.o bin/moac
 		$(CC) $(LDFLAGS) -shared -o bin/amod.so src/amod/amod.o
 
 src/amod/amod.o:	src/amod/amod.c src/amod/amod.h src/amod/amod_structs.h
+		$(CC) $(CFLAGS_PIC) -c -o $@ $<
 
 bin/anicopy:	src/helper/anicopy.c
 		$(CC) $(OPT) $(DEBUG) -Wall -o bin/anicopy src/helper/anicopy.c
@@ -76,6 +77,7 @@ src/game/memory_linux.o: src/game/memory_linux.c
 
 clean:
 		-rm -f src/*/*.o bin/moac bin/*.so bin/convert bin/anicopy
+		-rm -rf astonia_net/target
 
 distrib:
 	tar czf linux_client.tar.gz bin res

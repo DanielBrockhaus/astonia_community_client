@@ -40,7 +40,7 @@ ENV ZIG_GLOBAL_CACHE_DIR="/root/.cache/zig"
 ENV ZIG_LOCAL_CACHE_DIR="/tmp/zig-local-cache"
 
 # Create wrapper script that builds and fixes ownership
-RUN printf '#!/bin/bash\nset -e\nzig build "$@" --prefix .\nif [ -n "$HOST_UID" ] && [ -n "$HOST_GID" ]; then\n    chown -R "$HOST_UID:$HOST_GID" /app/bin /app/.cache 2>/dev/null || true\nfi\n' > /usr/local/bin/build.sh && \
+RUN printf '#!/bin/bash\nset -e\ncp build/build.zig .\nzig build "$@" --prefix .\nrm -f build.zig\nif [ -n "$HOST_UID" ] && [ -n "$HOST_GID" ]; then\n    chown -R "$HOST_UID:$HOST_GID" /app/bin /app/.cache 2>/dev/null || true\nfi\n' > /usr/local/bin/build.sh && \
     chmod +x /usr/local/bin/build.sh
 
 # Set working directory
