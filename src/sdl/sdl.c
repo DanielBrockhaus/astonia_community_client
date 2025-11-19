@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
 #include <png.h>
 #include <zip.h>
 
@@ -21,6 +22,11 @@
 
 static SDL_Window *sdlwnd;
 static SDL_Renderer *sdlren;
+
+// TTF fonts for scalable text rendering when GO_LARGE is enabled
+static TTF_Font *ttf_font_small=NULL;   // 10pt
+static TTF_Font *ttf_font_medium=NULL;  // 14pt
+static TTF_Font *ttf_font_large=NULL;   // 18pt
 
 static struct sdl_texture *sdlt=NULL;
 static int sdlt_best,sdlt_last;
@@ -135,6 +141,37 @@ int sdl_init(int width,int height,char *title) {
         fail("SDL_Init Error: %s",SDL_GetError());
         SDL_Quit();
         return 0;
+    }
+
+    // Initialize SDL_ttf for TrueType font rendering
+    if (TTF_Init()==-1) {
+        warn("TTF_Init Error: %s (TTF fonts will not be available)",TTF_GetError());
+    } else if (game_options&GO_LARGE) {
+        // Try to load a system font - Arial or fallback to other common fonts
+        const char *font_paths[] = {
+            "C:\\Windows\\Fonts\\arial.ttf",          // Windows (backslash)
+            "C:/Windows/Fonts/arial.ttf",             // Windows (forward slash)
+            "/c/Windows/Fonts/arial.ttf",             // MSYS2 path
+            "res/arial.ttf",                          // Local bundled font
+            "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",  // Linux
+            "/System/Library/Fonts/Helvetica.ttc",    // macOS
+            NULL
+        };
+
+        int font_found=0;
+        for (i=0; font_paths[i]!=NULL && !font_found; i++) {
+            ttf_font_small=TTF_OpenFont(font_paths[i],10);
+            if (ttf_font_small) {
+                ttf_font_medium=TTF_OpenFont(font_paths[i],14);
+                ttf_font_large=TTF_OpenFont(font_paths[i],18);
+                font_found=1;
+                note("Using TTF font: %s",font_paths[i]);
+            }
+        }
+
+        if (!font_found) {
+            warn("Could not load TrueType font (falling back to bitmap fonts)");
+        }
     }
 
     len=sizeof(struct sdl_image)*MAXSPRITE;
@@ -1952,9 +1989,69 @@ void sdl_exit(void) {
     if (sdl_zip2p) zip_close(sdl_zip2p);
 
     if (game_options&GO_SOUND) Mix_Quit();
+
+    // Clean up TTF fonts
+    if (ttf_font_small) TTF_CloseFont(ttf_font_small);
+    if (ttf_font_medium) TTF_CloseFont(ttf_font_medium);
+    if (ttf_font_large) TTF_CloseFont(ttf_font_large);
+    if (TTF_WasInit()) TTF_Quit();
+
 #ifdef DEVELOPER
     sdl_dump_spritecache();
 #endif
+}
+
+// Render text using SDL_ttf TrueType fonts (when GO_LARGE is enabled and fonts are loaded)
+int sdl_drawtext_ttf(int sx,int sy,unsigned short int color,int flags,const char *text,int clipsx,int clipsy,int clipex,int clipey,int x_offset,int y_offset) {
+    SDL_Surface *text_surface;
+    SDL_Texture *text_texture;
+    SDL_Color text_color;
+    SDL_Rect dest_rect;
+    TTF_Font *font;
+    int text_width,text_height;
+
+    if (!*text) return sx;
+
+    // Select font size based on flags
+    if (flags&DD_SMALL) font=ttf_font_small;
+    else if (flags&DD_BIG) font=ttf_font_large;
+    else font=ttf_font_medium;
+
+    if (!font) return sx;  // Font not loaded, fall back
+
+    // Convert 16-bit color to SDL_Color
+    text_color.r=R16TO32(color);
+    text_color.g=G16TO32(color);
+    text_color.b=B16TO32(color);
+    text_color.a=255;
+
+    // Render text to surface
+    text_surface=TTF_RenderText_Blended(font,text,text_color);
+    if (!text_surface) return sx;
+
+    text_width=text_surface->w;
+    text_height=text_surface->h;
+
+    // Create texture from surface
+    text_texture=SDL_CreateTextureFromSurface(sdlren,text_surface);
+    SDL_FreeSurface(text_surface);
+
+    if (!text_texture) return sx;
+
+    // Apply alignment
+    dest_rect.x=(sx+x_offset)*sdl_scale;
+    dest_rect.y=(sy+y_offset)*sdl_scale;
+    dest_rect.w=text_width*sdl_scale;
+    dest_rect.h=text_height*sdl_scale;
+
+    if (flags&DD_CENTER) dest_rect.x-=(text_width*sdl_scale)/2;
+    else if (flags&DD_RIGHT) dest_rect.x-=text_width*sdl_scale;
+
+    // Render texture
+    SDL_RenderCopy(sdlren,text_texture,NULL,&dest_rect);
+    SDL_DestroyTexture(text_texture);
+
+    return sx+text_width;
 }
 
 int sdl_drawtext(int sx,int sy,unsigned short int color,int flags,const char *text,struct ddfont *font,int clipsx,int clipsy,int clipex,int clipey,int x_offset,int y_offset) {
@@ -1964,6 +2061,11 @@ int sdl_drawtext(int sx,int sy,unsigned short int color,int flags,const char *te
     const char *c;
 
     if (!*text) return sx;
+
+    // Use TTF rendering if GO_LARGE is enabled and fonts are loaded
+    if ((game_options&GO_LARGE) && ttf_font_medium!=NULL) {
+        return sdl_drawtext_ttf(sx,sy,color,flags,text,clipsx,clipsy,clipex,clipey,x_offset,y_offset);
+    }
 
     r=R16TO32(color);
     g=G16TO32(color);
