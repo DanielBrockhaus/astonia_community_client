@@ -38,6 +38,7 @@ jobs:
       with:
         toolchain: stable
         cache: true
+        cache-workspaces: astonia_net
 
     - name: Build
       run: make linux
@@ -90,6 +91,10 @@ jobs:
         toolchain: stable
         target: x86_64-pc-windows-gnu
         cache: true
+        cache-workspaces: astonia_net
+
+    - name: Add Rust to PATH
+      run: echo "$USERPROFILE/.cargo/bin" >> $GITHUB_PATH
 
     - name: Build
       run: make windows
@@ -130,6 +135,7 @@ jobs:
         toolchain: stable
         target: x86_64-apple-darwin
         cache: true
+        cache-workspaces: astonia_net
 
     - name: Build
       run: make macos
@@ -170,6 +176,7 @@ jobs:
         toolchain: stable
         target: aarch64-apple-darwin
         cache: true
+        cache-workspaces: astonia_net
 
     - name: Build
       run: make macos
