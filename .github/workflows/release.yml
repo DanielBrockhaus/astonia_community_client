@@ -63,65 +63,61 @@ jobs:
     name: Build Windows Release
     runs-on: windows-latest
     timeout-minutes: 20
-
     defaults:
       run:
         shell: msys2 {0}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        lfs: true
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
 
-    - name: Checkout LFS objects
-      run: git lfs pull
+      - name: Checkout LFS objects
+        run: git lfs pull
 
-    - name: Setup MSYS2
-      uses: msys2/setup-msys2@v2
-      with:
-        msystem: CLANG64
-        update: true
-        install: >-
-          mingw-w64-clang-x86_64-clang
-          mingw-w64-clang-x86_64-SDL2
-          mingw-w64-clang-x86_64-SDL2_mixer
-          mingw-w64-clang-x86_64-libpng
-          mingw-w64-clang-x86_64-libzip
-          mingw-w64-clang-x86_64-dwarfstack
-          make
-          zip
+      - name: Install Rust toolchain (GNU variant)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
+          cache: true
+          cache-workspaces: astonia_net
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        target: x86_64-pc-windows-gnu
-        cache: true
-        cache-workspaces: astonia_net
+      - name: Setup MSYS2 (clang64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: clang64
+          path-type: inherit
+          update: true
+          install: >
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-SDL2
+            mingw-w64-clang-x86_64-libpng
+            mingw-w64-clang-x86_64-SDL2_mixer
+            mingw-w64-clang-x86_64-libzip
+            mingw-w64-clang-x86_64-dwarfstack
+            make
+            zip
 
-    - name: Add Rust to PATH
-      run: echo "$USERPROFILE/.cargo/bin" >> $GITHUB_PATH
+      - name: Build release
+        run: make windows
 
-    - name: Build release
-      run: make windows
+      - name: Strip debug symbols
+        run: |
+          strip bin/moac.exe
+          strip bin/astonia_net.dll
+          strip bin/convert.exe
+          strip bin/anicopy.exe
 
-    - name: Strip debug symbols
-      run: |
-        strip bin/moac.exe
-        strip bin/astonia_net.dll
-        strip bin/convert.exe
-        strip bin/anicopy.exe
+      - name: Create distribution package
+        run: make distrib
 
-    - name: Create distribution package
-      run: make distrib
-
-    - name: Upload distribution
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-release
-        path: windows_client.zip
-        retention-days: 90
+      - name: Upload distribution
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: windows_client.zip
+          retention-days: 90
 
   build-macos-release:
     name: Build macOS Release
