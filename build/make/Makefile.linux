@@ -80,16 +80,35 @@ clean:
 		-rm -rf astonia_net/target
 
 distrib:
-	@echo "Copying required shared libraries..."
-	@ldd bin/moac | grep "=> /" | awk '{print $$3}' | while read lib; do \
-		if echo $$lib | grep -E "(libSDL2|libpng|libzip|libz\.so)" > /dev/null; then \
-			cp -v $$lib bin/ || true; \
-		fi; \
+	@echo "Bundling all required libraries for distribution..."
+	@# Find all non-system libraries recursively
+	@for binary in bin/moac bin/libastonia_net.so; do \
+		ldd $$binary | grep "=> /" | awk '{print $$3}' | while read lib; do \
+			# Skip system libraries (libc, libm, libpthread, ld-linux, etc.) \
+			if echo $$lib | grep -qE "^/(lib|usr/lib)/(x86_64-linux-gnu/)?(libc\.|libm\.|libpthread\.|libdl\.|librt\.|ld-linux)"; then \
+				continue; \
+			fi; \
+			# Copy library if not already in bin/ \
+			libname=$$(basename $$lib); \
+			if [ ! -f "bin/$$libname" ]; then \
+				echo "Bundling: $$lib"; \
+				cp "$$lib" bin/ || true; \
+			fi; \
+		done; \
 	done
-	@ldd bin/libastonia_net.so | grep "=> /" | awk '{print $$3}' | while read lib; do \
-		if echo $$lib | grep -E "(libSDL2|libpng|libzip|libz\.so)" > /dev/null; then \
-			cp -v $$lib bin/ || true; \
-		fi; \
+	@# Check dependencies of newly copied libraries (recursive) \
+	@for lib in bin/*.so*; do \
+		[ -f "$$lib" ] || continue; \
+		ldd "$$lib" 2>/dev/null | grep "=> /" | awk '{print $$3}' | while read deplib; do \
+			if echo $$deplib | grep -qE "^/(lib|usr/lib)/(x86_64-linux-gnu/)?(libc\.|libm\.|libpthread\.|libdl\.|librt\.|ld-linux)"; then \
+				continue; \
+			fi; \
+			libname=$$(basename $$deplib); \
+			if [ ! -f "bin/$$libname" ]; then \
+				echo "Bundling dependency: $$deplib"; \
+				cp "$$deplib" bin/ || true; \
+			fi; \
+		done; \
 	done
 	tar czf linux_client.tar.gz bin res
 

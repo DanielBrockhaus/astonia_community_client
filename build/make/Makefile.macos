@@ -119,16 +119,51 @@ clean:
 		-rm -rf astonia_net/target
 
 distrib:
-	@echo "Copying required dynamic libraries..."
-	@otool -L bin/moac | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read lib; do \
-		if [ -f "$$lib" ]; then \
-			cp -v "$$lib" bin/ || true; \
-		fi; \
+	@echo "Bundling all required libraries for distribution..."
+	@# Find all non-system libraries recursively
+	@for binary in bin/moac bin/libastonia_net.dylib; do \
+		otool -L "$$binary" | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read lib; do \
+			[ -f "$$lib" ] || continue; \
+			libname=$$(basename "$$lib"); \
+			if [ ! -f "bin/$$libname" ]; then \
+				echo "Bundling: $$lib"; \
+				cp "$$lib" bin/ || true; \
+			fi; \
+		done; \
 	done
-	@otool -L bin/libastonia_net.dylib | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read lib; do \
-		if [ -f "$$lib" ]; then \
-			cp -v "$$lib" bin/ || true; \
-		fi; \
+	@# Check dependencies of newly copied libraries (recursive) \
+	@for lib in bin/*.dylib; do \
+		[ -f "$$lib" ] || continue; \
+		otool -L "$$lib" 2>/dev/null | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read deplib; do \
+			[ -f "$$deplib" ] || continue; \
+			libname=$$(basename "$$deplib"); \
+			if [ ! -f "bin/$$libname" ]; then \
+				echo "Bundling dependency: $$deplib"; \
+				cp "$$deplib" bin/ || true; \
+			fi; \
+		done; \
+	done
+	@echo "Fixing library paths with install_name_tool..."
+	@# Fix library paths to use @loader_path (equivalent to $ORIGIN on Linux) \
+	@for lib in bin/*.dylib; do \
+		[ -f "$$lib" ] || continue; \
+		libname=$$(basename "$$lib"); \
+		install_name_tool -id "@loader_path/$$libname" "$$lib" 2>/dev/null || true; \
+		otool -L "$$lib" | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read oldpath; do \
+			depname=$$(basename "$$oldpath"); \
+			if [ -f "bin/$$depname" ]; then \
+				install_name_tool -change "$$oldpath" "@loader_path/$$depname" "$$lib" 2>/dev/null || true; \
+			fi; \
+		done; \
+	done
+	@# Fix paths in main executable \
+	@for binary in bin/moac; do \
+		otool -L "$$binary" | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read oldpath; do \
+			depname=$$(basename "$$oldpath"); \
+			if [ -f "bin/$$depname" ]; then \
+				install_name_tool -change "$$oldpath" "@loader_path/$$depname" "$$binary" 2>/dev/null || true; \
+			fi; \
+		done; \
 	done
 	tar czf macos_client.tar.gz --exclude='bin/*.dSYM' bin res
 
