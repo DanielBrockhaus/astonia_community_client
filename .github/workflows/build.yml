@@ -45,8 +45,6 @@ jobs:
         path: |
           bin/moac
           bin/libastonia_net.so
-          bin/convert
-          bin/anicopy
         retention-days: 30
         if-no-files-found: error
 
@@ -98,8 +96,6 @@ jobs:
           path: |
             bin/moac.exe
             bin/astonia_net.dll
-            bin/convert.exe
-            bin/anicopy.exe
           retention-days: 30
           if-no-files-found: error
 
@@ -134,7 +130,5 @@ jobs:
         path: |
           bin/moac
           bin/libastonia_net.dylib
-          bin/convert
-          bin/anicopy
         retention-days: 30
         if-no-files-found: error
