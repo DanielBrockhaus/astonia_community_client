@@ -101,6 +101,9 @@ jobs:
       - name: Build release
         run: make windows
 
+      - name: Copy DLL to bin
+        run: cp astonia_net/target/x86_64-pc-windows-gnu/release/astonia_net.dll bin/
+
       - name: Strip debug symbols
         run: |
           strip bin/moac.exe
