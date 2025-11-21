@@ -24,8 +24,8 @@ OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/g
 			src/game/memory_linux.o
 
 bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
-		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) $(ASTONIA_NET_LIB)
 		cp $(ASTONIA_NET_LIB) bin/
+		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) -Lbin -lastonia_net
 
 $(ASTONIA_NET_LIB):
 		rustup target add $(ASTONIA_NET_TGT)
