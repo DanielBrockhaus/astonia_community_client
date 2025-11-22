@@ -12,7 +12,6 @@ it is easier...
 #include <stdlib.h>
 #include <stdio.h>
 
-
 /* DAZ3D Animation Track:
 
 00      Standing Still (0)      8X
@@ -37,14 +36,14 @@ it is easier...
 82-89   Die (328)               4X
 90      (reference frame)
 
-a00    45°
-b00     0°
-c00   -45°
-d00   -90°
-e00  -135°
-f00   180°
-g00   135°
-h00    90°
+a00    45Â°
+b00     0Â°
+c00   -45Â°
+d00   -90Â°
+e00  -135Â°
+f00   180Â°
+g00   135Â°
+h00    90Â°
 
 */
 

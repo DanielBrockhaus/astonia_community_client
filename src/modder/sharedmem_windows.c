@@ -84,14 +84,14 @@ int sharedmem_init(void)
 	sm->pid = pid;
 	random_dungeon_tracker();
 #if 0
-    printf("base: %p\n",sm->base);
-    printf("key: %d\n",sm->key);
-    printf("isprite: %d\n",sm->isprite);
-    printf("offX: %d\n",sm->offX);
-    printf("offY: %d\n",sm->offY);
-    printf("flags: %d\n",sm->flags);
-    printf("fsprite: %d\n",sm->fsprite);
-    printf("swapped: %d\n",sm->swapped);
+	printf("base: %p\n",sm->base);
+	printf("key: %d\n",sm->key);
+	printf("isprite: %d\n",sm->isprite);
+	printf("offX: %d\n",sm->offX);
+	printf("offY: %d\n",sm->offY);
+	printf("flags: %d\n",sm->flags);
+	printf("fsprite: %d\n",sm->fsprite);
+	printf("swapped: %d\n",sm->swapped);
 #endif
 	return 0;
 }
@@ -106,16 +106,18 @@ void sharedmem_update(void)
 {
 	int endup;
 
-	if (value[0][V_ENDURANCE])
+	if (value[0][V_ENDURANCE]) {
 		endup = 100 * endurance / value[0][V_ENDURANCE];
-	else
+	} else {
 		endup = 100;
+	}
 
 	sm->hp = map[plrmn].health;
 	sm->shield = map[plrmn].shield;
-	if (value[0][V_MANA])
+	if (value[0][V_MANA]) {
 		sm->mana = map[plrmn].mana;
-	else
+	} else {
 		sm->mana = -1;
+	}
 	sm->end = endup;
 }

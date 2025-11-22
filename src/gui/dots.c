@@ -38,8 +38,9 @@ DLL_EXPORT int dotx(int didx)
 
 DLL_EXPORT int doty(int didx)
 {
-	if (dot[didx].flags & DOTF_TOPOFF)
+	if (dot[didx].flags & DOTF_TOPOFF) {
 		return dot[didx].y + gui_topoff;
+	}
 	return dot[didx].y;
 }
 
@@ -62,8 +63,9 @@ DLL_EXPORT int butx(int bidx)
 
 DLL_EXPORT int buty(int bidx)
 {
-	if (but[bidx].flags & BUTF_TOPOFF)
+	if (but[bidx].flags & BUTF_TOPOFF) {
 		return but[bidx].y + gui_topoff;
+	}
 	return but[bidx].y;
 }
 
@@ -88,10 +90,11 @@ void init_dots(void)
 
 	// top and bottom window
 	set_dot(DOT_TOP, 0, 0, !stop ? 0 : DOTF_TOPOFF);
-	if (!sbot)
+	if (!sbot) {
 		set_dot(DOT_BOT, 0, YRES - 170, 0);
-	else
+	} else {
 		set_dot(DOT_BOT, 0, YRES - 130, 0);
+	}
 	set_dot(DOT_BO2, XRES, YRES, 0);
 
 	// equipment, inventory, container. center of first displayed item.
@@ -102,25 +105,28 @@ void init_dots(void)
 	// inventory top left and bottom right
 	set_dot(DOT_IN1, 645, doty(DOT_BOT) + 2, 0);
 	set_dot(DOT_IN2, 795, doty(DOT_BO2) - 2, 0);
-	if (!sbot)
+	if (!sbot) {
 		__invdy = 4;
-	else
+	} else {
 		__invdy = 3;
+	}
 
 	// scroll bars
 	set_dot(DOT_SCL, 160 + 5, 0, 0);
 	set_dot(DOT_SCR, 640 - 5, 0, 0);
 	set_dot(DOT_SCU, 0, doty(DOT_BOT) + 15, 0);
-	if (!sbot)
+	if (!sbot) {
 		set_dot(DOT_SCD, 0, doty(DOT_BOT) + 160, 0);
-	else
+	} else {
 		set_dot(DOT_SCD, 0, doty(DOT_BOT) + 120, 0);
+	}
 
 	// self spell bars (bless, potion, rage, ...)
-	if (!sbot)
+	if (!sbot) {
 		set_dot(DOT_SSP, dotx(DOT_BOT) + 179, doty(DOT_BOT) + 68, 0);
-	else
+	} else {
 		set_dot(DOT_SSP, dotx(DOT_BOT) + 179, doty(DOT_BOT) + 52, 0);
+	}
 
 	// chat text
 	set_dot(DOT_TXT, 230, doty(DOT_BOT) + 8, 0);
@@ -135,10 +141,11 @@ void init_dots(void)
 	// skill list
 	set_dot(DOT_SKL, 8, doty(DOT_BOT) + 12, 0);
 	set_dot(DOT_SK2, 156, doty(DOT_BO2) - 2, 0);
-	if (!sbot)
+	if (!sbot) {
 		__skldy = 16;
-	else
+	} else {
 		__skldy = 12;
+	}
 
 	// gold
 	set_dot(DOT_GLD, 195, doty(DOT_BO2) - 22, 0);
@@ -155,18 +162,19 @@ void init_dots(void)
 	x = dotx(DOT_MBR) - dotx(DOT_MTL);
 	y = doty(DOT_MBR) - doty(DOT_MTL) + (!stop ? 0 : 40);
 	xc = x / 2;
-	if (y < 430)
+	if (y < 430) {
 		yc = y / 2 + 20;
-	else if (y < 450)
+	} else if (y < 450) {
 		yc = y / 2 + 20 - y + 430;
-	else
+	} else {
 		yc = y / 2;
+	}
 	set_dot(DOT_MCT, dotx(DOT_MTL) + xc, doty(DOT_MTL) - (!stop ? 0 : 40) + yc, 0);
 	// note("map: %dx%d, center: %d,%d, origin: %d,%d,
 	// (%d,%d)",x,y,dotx(DOT_MCT),doty(DOT_MCT),dotx(DOT_MTL),doty(DOT_MTL),dotx(DOT_MBR),doty(DOT_MBR));
 
 	// help and quest window
-	set_dot(DOT_HLP, 0, (!stop ? 40 : 0), 0);
+	set_dot(DOT_HLP, 0, !stop ? 40 : 0, 0);
 	set_dot(DOT_HL2, 222, (!stop ? 40 : 0) + 394, 0);
 
 	// teleporter window
@@ -191,18 +199,25 @@ void init_dots(void)
 
 	// note to self: do not use dotx(),doty() here because the moving top bar logic is built into the
 	// button flags as well
-	for (i = 0; i < 12; i++)
+	for (i = 0; i < 12; i++) {
 		set_but(BUT_WEA_BEG + i, dot[DOT_WEA].x + i * FDX, dot[DOT_WEA].y + 0, 40, !stop ? 0 : BUTF_TOPOFF);
-	for (x = 0; x < 4; x++)
-		for (y = 0; y < 4; y++)
+	}
+	for (x = 0; x < 4; x++) {
+		for (y = 0; y < 4; y++) {
 			set_but(BUT_INV_BEG + x + y * 4, dot[DOT_INV].x + x * FDX, dot[DOT_INV].y + y * FDX, 40, 0);
-	for (x = 0; x < 4; x++)
-		for (y = 0; y < 4; y++)
+		}
+	}
+	for (x = 0; x < 4; x++) {
+		for (y = 0; y < 4; y++) {
 			set_but(BUT_CON_BEG + x + y * 4, dot[DOT_CON].x + x * FDX, dot[DOT_CON].y + y * FDX, 40, 0);
-	for (i = 0; i < 16; i++)
+		}
+	}
+	for (i = 0; i < 16; i++) {
 		set_but(BUT_SKL_BEG + i, dot[DOT_SKL].x, dot[DOT_SKL].y + i * LINEHEIGHT, 10, 0);
-	for (i = 0; i < MAXACTIONSLOT; i++)
+	}
+	for (i = 0; i < MAXACTIONSLOT; i++) {
 		set_but(BUT_ACT_BEG + i, dot[DOT_ACT].x + i * 40, dot[DOT_ACT].y, 18, 0);
+	}
 
 	set_but(BUT_WEA_LCK, dot[DOT_WEA].x + 12 * FDX - 12, dot[DOT_WEA].y + 4, 18, !stop ? 0 : BUTF_TOPOFF);
 	set_but(BUT_ACT_LCK, dot[DOT_ACT].x - 40, dot[DOT_ACT].y, 18, 0);
@@ -216,10 +231,11 @@ void init_dots(void)
 	set_but(BUT_SCR_TR, dot[DOT_SCR].x + 0, dot[DOT_SCU].y + 10, 40, BUTF_CAPTURE | BUTF_MOVEEXEC);
 	set_but(BUT_SCR_DW, dot[DOT_SCR].x + 0, dot[DOT_SCD].y + 0, 30, 0);
 
-	if (!stop)
+	if (!stop) {
 		set_but(BUT_GLD, dot[DOT_GLD].x + 0, dot[DOT_GLD].y + 10, 30, BUTF_CAPTURE);
-	else
+	} else {
 		set_but(BUT_GLD, dot[DOT_GLD].x + 0, dot[DOT_GLD].y + 10, 15, BUTF_CAPTURE);
+	}
 
 	set_but(BUT_JNK, dot[DOT_JNK].x + 0, dot[DOT_JNK].y + 0, 30, 0);
 

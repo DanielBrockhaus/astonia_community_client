@@ -86,8 +86,9 @@ int clan_offset = 0;
 
 DLL_EXPORT void set_teleport(int idx, int x, int y)
 {
-	if (idx < 0 || idx >= 64)
+	if (idx < 0 || idx >= 64) {
 		return;
+	}
 
 	tele[idx * 2] = x;
 	tele[idx * 2 + 1] = y;
@@ -97,46 +98,57 @@ int get_teleport(int x, int y)
 {
 	int n;
 
-	if (!teleporter)
+	if (!teleporter) {
 		return -1;
+	}
 
 	// map teleports
 	for (n = 0; n < 64; n++) {
-		if (!tele[n * 2])
+		if (!tele[n * 2]) {
 			break;
-		if (tele[n * 2] == -1)
+		}
+		if (tele[n * 2] == -1) {
 			continue;
-		if (!may_teleport[n])
+		}
+		if (!may_teleport[n]) {
 			continue;
+		}
 
-		if (abs(tele[n * 2] + dotx(DOT_TEL) - x) < 8 && abs(tele[n * 2 + 1] + doty(DOT_TEL) - y) < 8)
+		if (abs(tele[n * 2] + dotx(DOT_TEL) - x) < 8 && abs(tele[n * 2 + 1] + doty(DOT_TEL) - y) < 8) {
 			return n;
+		}
 	}
 
 	// clan teleports
 	for (n = 0; n < 8; n++) {
-		if (!may_teleport[n + 64 + clan_offset])
+		if (!may_teleport[n + 64 + clan_offset]) {
 			continue;
+		}
 
-		if (abs(dotx(DOT_TEL) + 337 - x) < 8 && abs(doty(DOT_TEL) + 24 + n * 12 - y) < 8)
+		if (abs(dotx(DOT_TEL) + 337 - x) < 8 && abs(doty(DOT_TEL) + 24 + n * 12 - y) < 8) {
 			return n + 64;
+		}
 	}
 	for (n = 0; n < 8; n++) {
-		if (!may_teleport[n + 64 + 8 + clan_offset])
+		if (!may_teleport[n + 64 + 8 + clan_offset]) {
 			continue;
+		}
 
-		if (abs(dotx(DOT_TEL) + 389 - x) < 8 && abs(doty(DOT_TEL) + 24 + n * 12 - y) < 8)
+		if (abs(dotx(DOT_TEL) + 389 - x) < 8 && abs(doty(DOT_TEL) + 24 + n * 12 - y) < 8) {
 			return n + 64 + 8;
+		}
 	}
 
 	// mirror selector
 	for (n = 0; n < 26; n++) {
-		if (abs(mirror_pos[n * 2] + dotx(DOT_TEL) - x) < 8 && abs(mirror_pos[n * 2 + 1] + doty(DOT_TEL) - y) < 8)
+		if (abs(mirror_pos[n * 2] + dotx(DOT_TEL) - x) < 8 && abs(mirror_pos[n * 2 + 1] + doty(DOT_TEL) - y) < 8) {
 			return n + 101;
+		}
 	}
 
-	if (abs(389 + dotx(DOT_TEL) - x) < 8 && abs(24 + 8 * 12 + doty(DOT_TEL) - y) < 8)
+	if (abs(389 + dotx(DOT_TEL) - x) < 8 && abs(24 + 8 * 12 + doty(DOT_TEL) - y) < 8) {
 		return 1042;
+	}
 
 	return -1;
 }
@@ -145,58 +157,68 @@ void display_teleport(void)
 {
 	int n;
 
-	if (!teleporter)
+	if (!teleporter) {
 		return;
+	}
 
-	if (!clan_offset)
+	if (!clan_offset) {
 		dd_copysprite(53519, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
-	else
+	} else {
 		dd_copysprite(53520, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
+	}
 
 	for (n = 0; n < 64; n++) {
-		if (!tele[n * 2])
+		if (!tele[n * 2]) {
 			break;
-		if (tele[n * 2] == -1)
+		}
+		if (tele[n * 2] == -1) {
 			continue;
+		}
 
-		if (!may_teleport[n])
+		if (!may_teleport[n]) {
 			dx_copysprite_emerald(tele[n * 2] + dotx(DOT_TEL), tele[n * 2 + 1] + doty(DOT_TEL), 2, 0);
-		else if (telsel == n)
+		} else if (telsel == n) {
 			dx_copysprite_emerald(tele[n * 2] + dotx(DOT_TEL), tele[n * 2 + 1] + doty(DOT_TEL), 2, 2);
-		else
+		} else {
 			dx_copysprite_emerald(tele[n * 2] + dotx(DOT_TEL), tele[n * 2 + 1] + doty(DOT_TEL), 2, 1);
+		}
 	}
 
 	for (n = 0; n < 8; n++) {
-		if (!may_teleport[n + 64 + clan_offset])
+		if (!may_teleport[n + 64 + clan_offset]) {
 			dx_copysprite_emerald(337 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 0);
-		else if (telsel == n + 64 + clan_offset)
+		} else if (telsel == n + 64 + clan_offset) {
 			dx_copysprite_emerald(337 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 2);
-		else
+		} else {
 			dx_copysprite_emerald(337 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 1);
+		}
 	}
 	for (n = 0; n < 8; n++) {
-		if (8 + clan_offset + n == 31)
+		if (8 + clan_offset + n == 31) {
 			continue;
-		if (!may_teleport[n + 64 + 8 + clan_offset])
+		}
+		if (!may_teleport[n + 64 + 8 + clan_offset]) {
 			dx_copysprite_emerald(389 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 0);
-		else if (telsel == n + 64 + 8 + clan_offset)
+		} else if (telsel == n + 64 + 8 + clan_offset) {
 			dx_copysprite_emerald(389 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 2);
-		else
+		} else {
 			dx_copysprite_emerald(389 + dotx(DOT_TEL), 24 + n * 12 + doty(DOT_TEL), 3, 1);
+		}
 	}
 
 	for (n = 0; n < 26; n++) {
-		if (telsel == n + 101)
+		if (telsel == n + 101) {
 			dx_copysprite_emerald(mirror_pos[n * 2] + dotx(DOT_TEL), mirror_pos[n * 2 + 1] + doty(DOT_TEL), 1, 2);
-		else if (newmirror == n + 1)
+		} else if (newmirror == n + 1) {
 			dx_copysprite_emerald(mirror_pos[n * 2] + dotx(DOT_TEL), mirror_pos[n * 2 + 1] + doty(DOT_TEL), 1, 1);
-		else
+		} else {
 			dx_copysprite_emerald(mirror_pos[n * 2] + dotx(DOT_TEL), mirror_pos[n * 2 + 1] + doty(DOT_TEL), 1, 0);
+		}
 	}
 
-	if (telsel == 1042)
+	if (telsel == 1042) {
 		dx_copysprite_emerald(389 + dotx(DOT_TEL), 24 + 8 * 12 + doty(DOT_TEL), 2, 2);
-	else
+	} else {
 		dx_copysprite_emerald(389 + dotx(DOT_TEL), 24 + 8 * 12 + doty(DOT_TEL), 2, 1);
+	}
 }

@@ -26,23 +26,27 @@ void display_color(void)
 	static int col_anim = 4, col_step = 0, col_dir = 0;
 	DDFX fx;
 
-	if (!show_color)
+	if (!show_color) {
 		return;
+	}
 
 	dd_copysprite(51082, dotx(DOT_COL), doty(DOT_COL), 14, 0);
 
-	if (show_cur == 0)
+	if (show_cur == 0) {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38, doty(DOT_COL) + 40, 2, 2);
-	else
+	} else {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38, doty(DOT_COL) + 40, 2, 1);
-	if (show_cur == 1)
+	}
+	if (show_cur == 1) {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38 + 12, doty(DOT_COL) + 40, 2, 2);
-	else
+	} else {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38 + 12, doty(DOT_COL) + 40, 2, 1);
-	if (show_cur == 2)
+	}
+	if (show_cur == 2) {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38 + 24, doty(DOT_COL) + 40, 2, 2);
-	else
+	} else {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38 + 24, doty(DOT_COL) + 40, 2, 1);
+	}
 
 	dd_copysprite(51083, dotx(DOT_COL) - 55, doty(DOT_COL) - 50 + 64 - IGET_R(show_color_c[show_cur]) * 2, 14, 0);
 	dd_copysprite(51083, dotx(DOT_COL) - 55 + 20, doty(DOT_COL) - 50 + 64 - IGET_G(show_color_c[show_cur]) * 2, 14, 0);
@@ -62,8 +66,9 @@ void display_color(void)
 		if (col_anim > 6) {
 			col_anim = 4;
 			col_dir += 2;
-			if (col_dir > 7)
+			if (col_dir > 7) {
 				col_dir = 0;
+			}
 		}
 	}
 	fx.scale = scale;
@@ -86,15 +91,19 @@ void display_color(void)
 
 int get_color(int x, int y)
 {
-	if (!show_color)
+	if (!show_color) {
 		return -1;
+	}
 
-	if (abs(x - dotx(DOT_COL) + 38) < 4 && abs(y - doty(DOT_COL) - 39) < 4)
+	if (abs(x - dotx(DOT_COL) + 38) < 4 && abs(y - doty(DOT_COL) - 39) < 4) {
 		return 1;
-	if (abs(x - dotx(DOT_COL) + 26) < 4 && abs(y - doty(DOT_COL) - 39) < 4)
+	}
+	if (abs(x - dotx(DOT_COL) + 26) < 4 && abs(y - doty(DOT_COL) - 39) < 4) {
 		return 2;
-	if (abs(x - dotx(DOT_COL) + 14) < 4 && abs(y - doty(DOT_COL) - 39) < 4)
+	}
+	if (abs(x - dotx(DOT_COL) + 14) < 4 && abs(y - doty(DOT_COL) - 39) < 4) {
 		return 3;
+	}
 
 	if (abs(x - dotx(DOT_COL) + 50) < 11 && abs(y - doty(DOT_COL) + 18) < 34) {
 		show_cx = 64 - (y - doty(DOT_COL) + 50);
@@ -109,13 +118,16 @@ int get_color(int x, int y)
 		return 6;
 	}
 
-	if (abs(x - dotx(DOT_COL) - 43) < 10 && abs(y - doty(DOT_COL) - 39) < 5)
+	if (abs(x - dotx(DOT_COL) - 43) < 10 && abs(y - doty(DOT_COL) - 39) < 5) {
 		return 7;
-	if (abs(x - dotx(DOT_COL) - 19) < 10 && abs(y - doty(DOT_COL) - 39) < 5)
+	}
+	if (abs(x - dotx(DOT_COL) - 19) < 10 && abs(y - doty(DOT_COL) - 39) < 5) {
 		return 8;
+	}
 
-	if (x - dotx(DOT_COL) < -60 || x - dotx(DOT_COL) > 60 || y - doty(DOT_COL) < -60 || y - doty(DOT_COL) > 60)
+	if (x - dotx(DOT_COL) < -60 || x - dotx(DOT_COL) > 60 || y - doty(DOT_COL) < -60 || y - doty(DOT_COL) > 60) {
 		return -1;
+	}
 
 	return 0;
 }

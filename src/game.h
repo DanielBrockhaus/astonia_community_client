@@ -8,29 +8,29 @@
 #define DD_CENTER 1 // also used in dd_drawtext
 #define DD_NORMAL 2
 
-#define DD_LEFT 0
-#define DD_CENTER 1
-#define DD_RIGHT 2
-#define DD_SHADE 4
-#define DD_LARGE 0
-#define DD_SMALL 8
-#define DD_FRAME 16
-#define DD_BIG 32
+#define DD_LEFT    0
+#define DD_CENTER  1
+#define DD_RIGHT   2
+#define DD_SHADE   4
+#define DD_LARGE   0
+#define DD_SMALL   8
+#define DD_FRAME   16
+#define DD_BIG     32
 #define DD_NOCACHE 64
-#define DD_WFRAME (DD_FRAME | 512)
+#define DD_WFRAME  (DD_FRAME | 512)
 
 #define SPR_WALK 11
 
 #define SPR_FFIELD 10
-#define SPR_FIELD 12
+#define SPR_FIELD  12
 
 #define SPR_ITPAD 13
 #define SPR_ITSEL 14
 
-#define SPR_SCRUP 27 // 20 // 17
-#define SPR_SCRLT 28 // 21 // 19
-#define SPR_SCRDW 29 // 23 // 18
-#define SPR_SCRRT 30 // 22 // 19
+#define SPR_SCRUP  27 // 20 // 17
+#define SPR_SCRLT  28 // 21 // 19
+#define SPR_SCRDW  29 // 23 // 18
+#define SPR_SCRRT  30 // 22 // 19
 #define SPR_SCRBAR 26
 
 #define SPR_RAISE 19
@@ -44,8 +44,8 @@
 #define DDFX_BRIGHT 0
 
 #define MMF_SIGHTBLOCK (1 << 1) // indicates sight block (set_map_lights)
-#define MMF_DOOR (1 << 2) // a door - helpful when cutting sprites - (set_map_sprites)
-#define MMF_CUT (1 << 3) // indicates cut (set_map_cut)
+#define MMF_DOOR       (1 << 2) // a door - helpful when cutting sprites - (set_map_sprites)
+#define MMF_CUT        (1 << 3) // indicates cut (set_map_cut)
 
 #define MMF_STRAIGHT_T (1 << 5) // (set_map_straight)
 #define MMF_STRAIGHT_B (1 << 6) // (set_map_straight)
@@ -53,9 +53,9 @@
 #define MMF_STRAIGHT_R (1 << 8) // (set_map_straight)
 
 
-#define IGET_R(c) ((((unsigned short int)(c)) >> 10) & 0x1F)
-#define IGET_G(c) ((((unsigned short int)(c)) >> 5) & 0x1F)
-#define IGET_B(c) ((((unsigned short int)(c)) >> 0) & 0x1F)
+#define IGET_R(c)     ((((unsigned short int)(c)) >> 10) & 0x1F)
+#define IGET_G(c)     ((((unsigned short int)(c)) >> 5) & 0x1F)
+#define IGET_B(c)     ((((unsigned short int)(c)) >> 0) & 0x1F)
 #define IRGB(r, g, b) (((r) << 10) | ((g) << 5) | ((b) << 0))
 
 struct ddfx {

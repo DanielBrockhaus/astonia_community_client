@@ -113,17 +113,19 @@ DLL_EXPORT int raise_cost(int v, int n)
 	int nr, seyan;
 
 	// hack to determine if we are a seyan:
-	if (value[0][V_ATTACK] && value[0][V_BLESS])
+	if (value[0][V_ATTACK] && value[0][V_BLESS]) {
 		seyan = 1;
-	else
+	} else {
 		seyan = 0;
+	}
 
 	nr = n - game_skill[v].start + 1 + 5;
 
-	if (seyan)
+	if (seyan) {
 		return max(1, nr * nr * nr * game_skill[v].cost * 4 / 30);
-	else
+	} else {
 		return max(1, nr * nr * nr * game_skill[v].cost / 10);
+	}
 }
 
 char *_game_skilldesc[] = {

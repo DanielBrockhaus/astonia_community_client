@@ -10,7 +10,14 @@ UseTab: ForIndentation
 TabWidth: 4
 ContinuationIndentWidth: 4
 
+# Semicolon
+RemoveSemicolon: true
+
+# Parentheses
+RemoveParentheses: MultipleParentheses
+
 # Braces
+InsertBraces: true
 BreakBeforeBraces: Linux
 
 # Line length - be gentle, allow longer lines
@@ -28,6 +35,9 @@ AlignAfterOpenBracket: DontAlign
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
 AlignTrailingComments: false
+QualifierAlignment: Left  # Enforce "const int" style
+SeparateDefinitionBlocks: Always
+AlignConsecutiveMacros: true
 
 # Pointers and references
 PointerAlignment: Right
@@ -40,6 +50,7 @@ AllowShortLoopsOnASingleLine: false
 
 # Include sorting - don't sort to avoid breaking things
 SortIncludes: false
+IncludeBlocks: Regroup
 
 # Other
 KeepEmptyLinesAtTheStartOfBlocks: false

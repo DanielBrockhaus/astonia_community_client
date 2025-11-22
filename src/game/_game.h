@@ -4,16 +4,16 @@
 
 #include "../dll.h"
 
-#define GND_LAY 100
-#define GND2_LAY 101
-#define GNDSHD_LAY 102
-#define GNDSTR_LAY 103
-#define GNDTOP_LAY 104
-#define GNDSEL_LAY 105
-#define GME_LAY 110
-#define GME_LAY2 111
+#define GND_LAY       100
+#define GND2_LAY      101
+#define GNDSHD_LAY    102
+#define GNDSTR_LAY    103
+#define GNDTOP_LAY    104
+#define GNDSEL_LAY    105
+#define GME_LAY       110
+#define GME_LAY2      111
 #define GMEGRD_LAYADD 500
-#define TOP_LAY 1000
+#define TOP_LAY       1000
 
 #define DDFX_MAX_FREEZE 8
 
@@ -27,14 +27,14 @@
 
 #define DL_STEP 128
 
-#define DLC_STRIKE 1
-#define DLC_NUMBER 2
-#define DLC_DUMMY 3 // used to get space in the list to reduce compares ;-)
-#define DLC_PIXEL 4
-#define DLC_BLESS 5
-#define DLC_POTION 6
-#define DLC_RAIN 7
-#define DLC_PULSE 8
+#define DLC_STRIKE    1
+#define DLC_NUMBER    2
+#define DLC_DUMMY     3 // used to get space in the list to reduce compares ;-)
+#define DLC_PIXEL     4
+#define DLC_BLESS     5
+#define DLC_POTION    6
+#define DLC_RAIN      7
+#define DLC_PULSE     8
 #define DLC_PULSEBACK 9
 
 struct xxximage {
@@ -63,6 +63,7 @@ typedef struct dl DL;
 
 #ifndef HAVE_DDFONT
 #define HAVE_DDFONT
+
 struct ddfont {
 	int dim;
 	unsigned char *raw;

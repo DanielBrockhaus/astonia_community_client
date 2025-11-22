@@ -19,6 +19,7 @@
 
 // is_..._sprite
 int (*is_cut_sprite)(int sprite) = _is_cut_sprite;
+
 DLL_EXPORT int _is_cut_sprite(int sprite)
 {
 	switch (sprite) {
@@ -765,6 +766,7 @@ DLL_EXPORT int _is_cut_sprite(int sprite)
 }
 
 int (*is_mov_sprite)(int sprite, int itemhint) = _is_mov_sprite;
+
 DLL_EXPORT int _is_mov_sprite(int sprite, int itemhint)
 {
 	switch (sprite) {
@@ -780,7 +782,7 @@ DLL_EXPORT int _is_mov_sprite(int sprite, int itemhint)
 	case 20153:
 	case 20154:
 	case 20155: // poor wood door
-		// case 20423: case 20424: case 20425: case 20426:         // funstuff_cdoor
+	            // case 20423: case 20424: case 20425: case 20426:         // funstuff_cdoor
 	case 20429:
 	case 20430:
 	case 20431:
@@ -816,6 +818,7 @@ DLL_EXPORT int _is_mov_sprite(int sprite, int itemhint)
 }
 
 int (*is_door_sprite)(int sprite) = _is_door_sprite;
+
 DLL_EXPORT int _is_door_sprite(int sprite)
 {
 	switch (sprite) {
@@ -869,6 +872,7 @@ DLL_EXPORT int _is_door_sprite(int sprite)
 }
 
 int (*is_yadd_sprite)(int sprite) = _is_yadd_sprite;
+
 DLL_EXPORT int _is_yadd_sprite(int sprite)
 {
 	switch (sprite) {
@@ -960,6 +964,7 @@ DLL_EXPORT int _is_yadd_sprite(int sprite)
 }
 
 int (*get_chr_height)(int csprite) = _get_chr_height;
+
 DLL_EXPORT int _get_chr_height(int csprite)
 {
 	switch (csprite) {
@@ -997,6 +1002,7 @@ DLL_EXPORT int _get_chr_height(int csprite)
 // charno to scale / colors
 int (*trans_charno)(int csprite, int *pscale, int *pcr, int *pcg, int *pcb, int *plight, int *psat, int *pc1, int *pc2,
     int *pc3, int *pshine, int attick) = _trans_charno;
+
 DLL_EXPORT int _trans_charno(int csprite, int *pscale, int *pcr, int *pcg, int *pcb, int *plight, int *psat, int *pc1,
     int *pc2, int *pc3, int *pshine, int attick)
 {
@@ -1161,8 +1167,9 @@ DLL_EXPORT int _trans_charno(int csprite, int *pscale, int *pcr, int *pcg, int *
 	case 157:
 		csprite = 39; // fire demon
 		helper = attick & 31;
-		if (helper > 15)
+		if (helper > 15) {
 			helper = 32 - helper;
+		}
 		sat = 5;
 		light = -80;
 		cr = 60 + helper * 3;
@@ -2967,26 +2974,36 @@ DLL_EXPORT int _trans_charno(int csprite, int *pscale, int *pcr, int *pcg, int *
 		break;
 	}
 
-	if (pscale)
+	if (pscale) {
 		*pscale = scale;
-	if (pcr)
+	}
+	if (pcr) {
 		*pcr = cr;
-	if (pcg)
+	}
+	if (pcg) {
 		*pcg = cg;
-	if (pcb)
+	}
+	if (pcb) {
 		*pcb = cb;
-	if (plight)
+	}
+	if (plight) {
 		*plight = light;
-	if (psat)
+	}
+	if (psat) {
 		*psat = sat;
-	if (pc1)
+	}
+	if (pc1) {
 		*pc1 = c1;
-	if (pc2)
+	}
+	if (pc2) {
 		*pc2 = c2;
-	if (pc3)
+	}
+	if (pc3) {
 		*pc3 = c3;
-	if (pshine)
+	}
+	if (pshine) {
 		*pshine = shine;
+	}
 
 	return csprite;
 }
@@ -2995,6 +3012,7 @@ DLL_EXPORT int _trans_charno(int csprite, int *pscale, int *pcr, int *pcg, int *
 int (*trans_asprite)(int mn, int sprite, int attick, unsigned char *pscale, unsigned char *pcr, unsigned char *pcg,
     unsigned char *pcb, unsigned char *plight, unsigned char *psat, unsigned short *pc1, unsigned short *pc2,
     unsigned short *pc3, unsigned short *pshine) = _trans_asprite;
+
 DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *pscale, unsigned char *pcr,
     unsigned char *pcg, unsigned char *pcb, unsigned char *plight, unsigned char *psat, unsigned short *pc1,
     unsigned short *pc2, unsigned short *pc3, unsigned short *pshine)
@@ -3022,10 +3040,11 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 
 	case 11127: // lab5_regen
 		help = (attick / 4) % 16;
-		if (help < 8)
+		if (help < 8) {
 			sprite = sprite + help;
-		else
+		} else {
 			sprite = sprite + 15 - help;
+		}
 		break;
 
 	case 11139:
@@ -3049,12 +3068,13 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 	case 12163:
 	case 14353: // lava_ground_circle
 		help = (mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick / 31);
-		if (help % 17 < 14)
+		if (help % 17 < 14) {
 			sprite = 14353 + ((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 5) % 8;
-		else if (help % 17 < 16)
+		} else if (help % 17 < 16) {
 			sprite = 14353 + ((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 9) % 8;
-		else
+		} else {
 			sprite = 14353 + ((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 2) % 8;
+		}
 		// c3=IRGB(16,0,0);
 		break;
 	case 12164:
@@ -3455,12 +3475,13 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 	case 20406: // dungeon_walllight_nw_on
 	case 20415: // dungeon_walllight_ne_on
 		help = ((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + attick / 10 + rrand(2));
-		if ((help %= 50) > 15)
+		if ((help %= 50) > 15) {
 			sprite = sprite + 5;
-		else if (help < 8)
+		} else if (help < 8) {
 			sprite = sprite + help;
-		else
+		} else {
 			sprite = sprite + 15 - help;
+		}
 		break;
 
 		/*case 20797:
@@ -3548,14 +3569,16 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 		break;
 	case 50289:
 		help = ((int)((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 2) % 16);
-		if (help > 7)
+		if (help > 7) {
 			help = 15 - help;
+		}
 		sprite = sprite + help;
 		break;
 	case 50297:
 		help = ((int)((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 2) % 16);
-		if (help > 7)
+		if (help > 7) {
 			help = 15 - help;
+		}
 		sprite = sprite + help;
 		break;
 
@@ -3584,8 +3607,9 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 
 	case 51625:
 		help = ((int)((mn % MAPDX + originx) + (mn / MAPDX + originy) * 256 + (attick) / 2) % 10); // glowing steel door
-		if (help > 4)
+		if (help > 4) {
 			help = 9 - help;
+		}
 		sprite = sprite + help;
 		break;
 
@@ -3597,10 +3621,11 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 
 	case 56002:
 		help = (attick / 2) % 8;
-		if (help > 3)
+		if (help > 3) {
 			sprite = 56002 + 7 - help;
-		else
+		} else {
 			sprite = 56002 + help;
+		}
 		break; // pulsing ring
 
 		// !! -------------------- !! pseudo sprites start here !! --------------------- !!
@@ -3738,7 +3763,7 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 		sprite = sprite + 21302 - 59054;
 		cr = 10;
 		light = -20;
-		break; // krüge
+		break; // krÃ¼ge
 
 	case 59068:
 	case 59069:
@@ -3757,7 +3782,7 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 		sprite = sprite + 21302 - 59068;
 		cr = 15;
 		light = -30;
-		break; // krüge
+		break; // krÃ¼ge
 
 	case 59082:
 	case 59083:
@@ -5530,31 +5555,42 @@ DLL_EXPORT int _trans_asprite(int mn, int sprite, int attick, unsigned char *psc
 		sprite = nr * 1000 + sprite % 1000 + 100000;
 	}
 
-	if (pscale)
+	if (pscale) {
 		*pscale = scale;
-	if (pcr)
+	}
+	if (pcr) {
 		*pcr = cr;
-	if (pcg)
+	}
+	if (pcg) {
 		*pcg = cg;
-	if (pcb)
+	}
+	if (pcb) {
 		*pcb = cb;
-	if (plight)
+	}
+	if (plight) {
 		*plight = light;
-	if (psat)
+	}
+	if (psat) {
 		*psat = sat;
-	if (pc1)
+	}
+	if (pc1) {
 		*pc1 = c1;
-	if (pc2)
+	}
+	if (pc2) {
 		*pc2 = c2;
-	if (pc3)
+	}
+	if (pc3) {
 		*pc3 = c3;
-	if (pshine)
+	}
+	if (pshine) {
 		*pshine = shine;
+	}
 
 	return sprite;
 }
 
 int (*get_player_sprite)(int nr, int zdir, int action, int step, int duration, int attick) = _get_player_sprite;
+
 DLL_EXPORT int _get_player_sprite(int nr, int zdir, int action, int step, int duration, int attick)
 {
 	int base;
@@ -5611,8 +5647,9 @@ DLL_EXPORT int _get_player_sprite(int nr, int zdir, int action, int step, int du
 	}
 
 	if (nr == 21) { // spiders action override
-		if (action == 2 || action == 3 || (action >= 6 && action <= 49) || action > 60)
+		if (action == 2 || action == 3 || (action >= 6 && action <= 49) || action > 60) {
 			action = 4;
+		}
 	}
 
 	// Note: fireball2, lightning ball2, bless2 and heal 2 are really the second half of the same animation
@@ -5688,6 +5725,7 @@ DLL_EXPORT int _get_player_sprite(int nr, int zdir, int action, int step, int du
 }
 
 void (*trans_csprite)(int mn, struct map *cmap, int attick) = _trans_csprite;
+
 DLL_EXPORT void _trans_csprite(int mn, struct map *cmap, int attick)
 {
 	int dirxadd[8] = {+1, 0, -1, -2, -1, 0, +1, +2};
@@ -5696,10 +5734,11 @@ DLL_EXPORT void _trans_csprite(int mn, struct map *cmap, int attick)
 	int csprite;
 	int scale, cr, cg, cb, light, sat, c1, c2, c3, shine;
 
-	if (playersprite_override && mn == mapmn(MAPDX / 2, MAPDY / 2))
+	if (playersprite_override && mn == mapmn(MAPDX / 2, MAPDY / 2)) {
 		csprite = playersprite_override;
-	else
+	} else {
 		csprite = cmap[mn].csprite;
+	}
 
 	csprite = trans_charno(csprite, &scale, &cr, &cg, &cb, &light, &sat, &c1, &c2, &c3, &shine, attick);
 
@@ -5734,6 +5773,7 @@ DLL_EXPORT void _trans_csprite(int mn, struct map *cmap, int attick)
 }
 
 int (*get_lay_sprite)(int sprite, int lay) = _get_lay_sprite;
+
 DLL_EXPORT int _get_lay_sprite(int sprite, int lay)
 {
 	switch (sprite) {
@@ -5781,6 +5821,7 @@ DLL_EXPORT int _get_lay_sprite(int sprite, int lay)
 }
 
 int (*get_offset_sprite)(int sprite, int *px, int *py) = _get_offset_sprite;
+
 DLL_EXPORT int _get_offset_sprite(int sprite, int *px, int *py)
 {
 	int x = 0, y = 0;
@@ -5842,18 +5883,22 @@ DLL_EXPORT int _get_offset_sprite(int sprite, int *px, int *py)
 		break;
 	}
 
-	if (px)
+	if (px) {
 		*px = x;
-	if (py)
+	}
+	if (py) {
 		*py = y;
+	}
 
-	if ((x || y))
+	if (x || y) {
 		return 1;
-	else
+	} else {
 		return 0;
+	}
 }
 
 int (*additional_sprite)(int sprite, int attick) = _additional_sprite;
+
 DLL_EXPORT int _additional_sprite(int sprite, int attick)
 {
 	switch (sprite) {
@@ -5869,40 +5914,49 @@ DLL_EXPORT int _additional_sprite(int sprite, int attick)
 }
 
 int (*opt_sprite)(int sprite) = _opt_sprite;
+
 DLL_EXPORT int _opt_sprite(int sprite)
 {
 	switch (sprite) {
 	case 13:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 300;
+		}
 		break;
 	case 14:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 301;
+		}
 		break;
 	case 35:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 302;
+		}
 		break;
 	case 991:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 308;
+		}
 		break;
 	case 994:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 303;
+		}
 		break;
 	case 995:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 304;
+		}
 		break;
 	case 998:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 305;
+		}
 		break;
 	case 999:
-		if (game_options & GO_DARK)
+		if (game_options & GO_DARK) {
 			return 306;
+		}
 		break;
 	}
 	return sprite;
@@ -5912,6 +5966,7 @@ DLL_EXPORT int _opt_sprite(int sprite)
 // The client will use uniform light instead. Should return
 // true for anything that is not a basic wall or floor.
 int (*no_lighting_sprite)(int sprite) = _no_lighting_sprite;
+
 DLL_EXPORT int _no_lighting_sprite(int sprite)
 {
 	switch (sprite) {

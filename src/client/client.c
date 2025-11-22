@@ -123,28 +123,33 @@ static inline uint32_t load_ulong(const void *p)
 	memcpy(&v, p, sizeof v);
 	return v;
 }
+
 static inline uint32_t load_u32(const void *p)
 {
 	uint32_t v;
 	memcpy(&v, p, sizeof v);
 	return v;
 }
+
 static inline uint16_t load_u16(const void *p)
 {
 	uint16_t v;
 	memcpy(&v, p, sizeof v);
 	return v;
 }
+
 static inline int16_t load_i16(const void *p)
 {
 	int16_t v;
 	memcpy(&v, p, sizeof v);
 	return v;
 }
+
 static inline void store_u16(void *p, uint16_t v)
 {
 	memcpy(p, &v, sizeof v);
 }
+
 static inline void store_u32(void *p, uint32_t v)
 {
 	memcpy(p, &v, sizeof v);
@@ -364,7 +369,6 @@ int sv_ping(char *buf)
 	return 5;
 }
 
-
 void sv_scroll_right(struct map *cmap)
 {
 	memmove(cmap, cmap + 1, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - 1));
@@ -414,11 +418,13 @@ void sv_setval(unsigned char *buf, int nr)
 	int n;
 
 	n = buf[1];
-	if (n < 0 || n >= (*game_v_max))
+	if (n < 0 || n >= (*game_v_max)) {
 		return;
+	}
 
-	if (nr != 0 || n != V_PROFESSION)
+	if (nr != 0 || n != V_PROFESSION) {
 		value[nr][n] = load_i16(buf + 2);
+	}
 
 	update_skltab = 1;
 }
@@ -453,8 +459,9 @@ void sv_setitem(unsigned char *buf)
 	int n;
 
 	n = buf[1];
-	if (n < 0 || n >= INVENTORYSIZE)
+	if (n < 0 || n >= INVENTORYSIZE) {
 		return;
+	}
 
 	item[n] = load_u32(buf + 2);
 	item_flags[n] = load_u32(buf + 6);
@@ -503,8 +510,9 @@ void sv_act(unsigned char *buf)
 	actx = load_u16(buf + 3);
 	acty = load_u16(buf + 5);
 
-	if (act)
+	if (act) {
 		teleporter = 0;
+	}
 }
 
 int sv_text(unsigned char *buf)
@@ -541,8 +549,9 @@ int sv_text(unsigned char *buf)
 				strcpy(pent_str[6], line + 2);
 			}
 		} else {
-			if (!hover_capture_text(line))
+			if (!hover_capture_text(line)) {
 				addline("%s", line);
+			}
 		}
 	}
 
@@ -610,9 +619,9 @@ int sv_name(unsigned char *buf)
 	len = buf[12];
 	cn = load_u16(buf + 1);
 
-	if (cn < 1 || cn >= MAXCHARS)
+	if (cn < 1 || cn >= MAXCHARS) {
 		addline("illegal cn %d in sv_name", cn);
-	else {
+	} else {
 		memcpy(player[cn].name, buf + 13, len);
 		player[cn].name[len] = 0;
 
@@ -814,10 +823,11 @@ void sv_ueffect(unsigned char *buf)
 	for (n = 0; n < MAXEF; n++) {
 		i = n / 8;
 		b = 1 << (n & 7);
-		if (buf[i + 1] & b)
+		if (buf[i + 1] & b) {
 			ueffect[n] = 1;
-		else
+		} else {
 			ueffect[n] = 0;
+		}
 	}
 }
 
@@ -1057,8 +1067,9 @@ void sv_special(unsigned char *buf)
 		display_time = tick;
 		break;
 	default:
-		if (type > 0 && type < 1000)
+		if (type > 0 && type < 1000) {
 			play_sound(type, opt1, opt2);
+		}
 		break;
 	}
 }
@@ -1070,10 +1081,11 @@ void sv_teleport(unsigned char *buf)
 	for (n = 0; n < 64 + 32; n++) {
 		i = n / 8;
 		b = 1 << (n & 7);
-		if (buf[i + 1] & b)
+		if (buf[i + 1] & b) {
 			may_teleport[n] = 1;
-		else
+		} else {
 			may_teleport[n] = 0;
+		}
 	}
 	teleporter = 1;
 	newmirror = mirror;
@@ -1128,13 +1140,13 @@ void process(unsigned char *buf, int size)
 	int len = 0, panic = 0, last = -1;
 
 	while (size > 0 && panic++ < 20000) {
-		if ((buf[0] & (64 + 128)) == SV_MAP01)
+		if ((buf[0] & (64 + 128)) == SV_MAP01) {
 			len = sv_map01(buf, &last, map);
-		else if ((buf[0] & (64 + 128)) == SV_MAP10)
+		} else if ((buf[0] & (64 + 128)) == SV_MAP10) {
 			len = sv_map10(buf, &last, map);
-		else if ((buf[0] & (64 + 128)) == SV_MAP11)
+		} else if ((buf[0] & (64 + 128)) == SV_MAP11) {
 			len = sv_map11(buf, &last, map);
-		else
+		} else {
 			switch (buf[0]) {
 			case SV_SCROLL_UP:
 				sv_scroll_up(map);
@@ -1218,8 +1230,9 @@ void process(unsigned char *buf, int size)
 				break;
 
 			case SV_ACT:
-				if (!(game_options & GO_PREDICT))
+				if (!(game_options & GO_PREDICT)) {
 					sv_act(buf);
+				}
 				len = 7;
 				break;
 			case SV_EXIT:
@@ -1357,6 +1370,7 @@ void process(unsigned char *buf, int size)
 				}
 				break;
 			}
+		}
 
 		size -= len;
 		buf += len;
@@ -1374,13 +1388,13 @@ int prefetch(unsigned char *buf, int size)
 	static int prefetch_tick = 0;
 
 	while (size > 0 && panic++ < 20000) {
-		if ((buf[0] & (64 + 128)) == SV_MAP01)
+		if ((buf[0] & (64 + 128)) == SV_MAP01) {
 			len = sv_map01(buf, &last, map2); // ANKH
-		else if ((buf[0] & (64 + 128)) == SV_MAP10)
+		} else if ((buf[0] & (64 + 128)) == SV_MAP10) {
 			len = sv_map10(buf, &last, map2); // ANKH
-		else if ((buf[0] & (64 + 128)) == SV_MAP11)
+		} else if ((buf[0] & (64 + 128)) == SV_MAP11) {
 			len = sv_map11(buf, &last, map2); // ANKH
-		else
+		} else {
 			switch (buf[0]) {
 			case SV_SCROLL_UP:
 				sv_scroll_up(map2);
@@ -1439,8 +1453,9 @@ int prefetch(unsigned char *buf, int size)
 				break;
 
 			case SV_SETITEM:
-				if (game_options & GO_PREDICT)
+				if (game_options & GO_PREDICT) {
 					sv_setitem(buf);
+				}
 				len = 10;
 				break;
 
@@ -1452,14 +1467,16 @@ int prefetch(unsigned char *buf, int size)
 				len = 5;
 				break;
 			case SV_SETCITEM:
-				if (game_options & GO_PREDICT)
+				if (game_options & GO_PREDICT) {
 					sv_setcitem(buf);
+				}
 				len = 9;
 				break;
 
 			case SV_ACT:
-				if (game_options & GO_PREDICT)
+				if (game_options & GO_PREDICT) {
 					sv_act(buf);
+				}
 				len = 7;
 				break;
 
@@ -1572,6 +1589,7 @@ int prefetch(unsigned char *buf, int size)
 				}
 				break;
 			}
+		}
 
 		size -= len;
 		buf += len;
@@ -1589,8 +1607,9 @@ int prefetch(unsigned char *buf, int size)
 
 DLL_EXPORT void client_send(void *buf, int len)
 {
-	if (len > MAX_OUTBUF - outused)
+	if (len > MAX_OUTBUF - outused) {
 		return;
+	}
 
 	memcpy(outbuf + outused, buf, len);
 	outused += len;
@@ -1846,13 +1865,15 @@ void cmd_text(char *text)
 	char buf[512];
 	int len;
 
-	if (!text)
+	if (!text) {
 		return;
+	}
 
 	buf[0] = CL_TEXT;
 
-	for (len = 0; text[len] && text[len] != DDT && len < 254; len++)
+	for (len = 0; text[len] && text[len] != DDT && len < 254; len++) {
 		buf[len + 2] = text[len];
+	}
 
 	buf[2 + len] = 0;
 	buf[1] = len + 1;
@@ -1865,13 +1886,15 @@ void cmd_log(char *text)
 	char buf[512];
 	int len;
 
-	if (!text)
+	if (!text) {
 		return;
+	}
 
 	buf[0] = CL_LOG;
 
-	for (len = 0; len < 254 && text[len]; len++)
+	for (len = 0; len < 254 && text[len]; len++) {
 		buf[len + 2] = text[len];
+	}
 
 	buf[2 + len] = 0;
 	buf[1] = len + 1;
@@ -2017,6 +2040,7 @@ int close_client(void)
 }
 
 #define MAXPASSWORD 16
+
 void decrypt(const char *name, char *password)
 {
 	int i;
@@ -2056,8 +2080,9 @@ int poll_network(void)
 
 	// create nonblocking socket
 	if (sockstate == 0 && !kicked_out) {
-		if (SDL_GetTicks() < socktime)
+		if (SDL_GetTicks() < socktime) {
 			return 0;
+		}
 
 		// reset socket
 		if (sock) {
@@ -2101,8 +2126,9 @@ int poll_network(void)
 
 	// wait until connect is ok
 	if (sockstate == 1) {
-		if (SDL_GetTicks() < socktime)
+		if (SDL_GetTicks() < socktime) {
 			return 0;
+		}
 
 		n = astonia_net_poll(sock, 2, 50);
 		if (n == 0) { /* timeout -> try next frame */
@@ -2230,8 +2256,9 @@ int poll_network(void)
 			lastticksize += 1 + (*(inbuf + lastticksize) & 0x3F);
 		} else if (inused >= lastticksize + 2) {
 			lastticksize += 2 + (net_read16(inbuf + lastticksize) & 0x3FFF);
-		} else
+		} else {
 			break;
+		}
 
 		lasttick++;
 	}
@@ -2247,12 +2274,14 @@ void auto_tick(struct map *cmap)
 	for (y = 0; y < MAPDY; y++) {
 		for (x = 0; x < MAPDX; x++) {
 			mn = mapmn(x, y);
-			if (!(cmap[mn].csprite))
+			if (!(cmap[mn].csprite)) {
 				continue;
+			}
 
 			cmap[mn].step++;
-			if (cmap[mn].step < cmap[mn].duration)
+			if (cmap[mn].step < cmap[mn].duration) {
 				continue;
+			}
 			cmap[mn].step = 0;
 		}
 	}
@@ -2264,19 +2293,22 @@ int next_tick(void)
 	int size, ret, attick;
 
 	// no room for next tick, leave it in in-queue
-	if (q_size == Q_SIZE)
+	if (q_size == Q_SIZE) {
 		return 0;
+	}
 
 	// do we have a new tick
 	if (inused >= 1 && (*(inbuf) & 0x40)) {
 		ticksize = 1 + (*(inbuf) & 0x3F);
-		if (inused < ticksize)
+		if (inused < ticksize) {
 			return 0;
+		}
 		indone = 1;
 	} else if (inused >= 2 && !(*(inbuf) & 0x40)) {
 		ticksize = 2 + (net_read16(inbuf) & 0x3FFF);
-		if (inused < ticksize)
+		if (inused < ticksize) {
 			return 0;
+		}
 		indone = 2;
 	} else {
 		return 0;
@@ -2316,10 +2348,11 @@ int next_tick(void)
 	q_size++;
 
 	// remove tick from inbuf
-	if (inused - ticksize >= 0)
+	if (inused - ticksize >= 0) {
 		memmove(inbuf, inbuf + ticksize, inused - ticksize);
-	else
+	} else {
 		note("kuckuck!");
+	}
 	inused = inused - ticksize;
 
 	// adjust some values
@@ -2341,8 +2374,9 @@ int do_tick(void)
 
 		// increase tick
 		tick++;
-		if (tick % TICKS == 0)
+		if (tick % TICKS == 0) {
 			realtime++;
+		}
 
 		return 1;
 	}
@@ -2362,8 +2396,9 @@ void cl_ticker(void)
 // X exp yield level Y
 DLL_EXPORT int exp2level(int val)
 {
-	if (val < 1)
+	if (val < 1) {
 		return 1;
+	}
 
 	return max(1, (int)(sqrt(sqrt(val))));
 }

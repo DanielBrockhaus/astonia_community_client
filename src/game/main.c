@@ -125,11 +125,12 @@ void xlog(FILE *logfp, char *format, ...)
 	va_end(args);
 
 	tm = localtime(&time_now);
-	if (tm)
+	if (tm) {
 		fprintf(logfp, "%02d.%02d.%02d %02d:%02d:%02d: %s\n", tm->tm_mday, tm->tm_mon + 1, tm->tm_year - 100,
 		    tm->tm_hour, tm->tm_min, tm->tm_sec, buf);
-	else
+	} else {
 		fprintf(logfp, "%s\n", buf);
+	}
 	fflush(logfp);
 }
 
@@ -155,8 +156,9 @@ DLL_EXPORT void addline(const char *format, ...)
 	buf[sizeof(buf) - 1] = 0;
 	va_end(va);
 
-	if (dd_text_init_done())
+	if (dd_text_init_done()) {
 		dd_add_text(buf);
+	}
 }
 
 // io
@@ -167,10 +169,12 @@ int rread(FILE *fp, void *ptr, int size)
 
 	while (size > 0) {
 		n = fread(ptr, 1, size, fp);
-		if (n < 0)
+		if (n < 0) {
 			return -1;
-		if (n == 0)
+		}
+		if (n == 0) {
 			return 1;
+		}
 		size -= n;
 		ptr = ((unsigned char *)(ptr)) + n;
 	}
@@ -183,8 +187,9 @@ char *load_ascii_file(char *filename, int ID)
 	int size;
 	char *ptr;
 
-	if (!(fp = fopen(filename, "rb")))
+	if (!(fp = fopen(filename, "rb"))) {
 		return NULL;
+	}
 	if (fseek(fp, 0, SEEK_END) != 0) {
 		fclose(fp);
 		return NULL;
@@ -244,8 +249,9 @@ void list_mem(void)
 			note("%s %.2fMB in %d ptrs", memname[i], memsize[i] / (1024.0 * 1024.0), memptrs[i]);
 		}
 	}
-	if (flag)
+	if (flag) {
 		note("%s %.2fMB in %d ptrs", memname[0], memsize[0] / (1024.0 * 1024.0), memptrs[0]);
+	}
 	note("%s %.2fMB in %d ptrs", "MEM_MAX", maxmemsize / (1024.0 * 1024.0), maxmemptrs);
 	note("---------------------------");
 	note("Texture Cache: %.2fMB", mem_tex / (1024.0 * 1024.0));
@@ -262,8 +268,9 @@ int xmemcheck(void *ptr)
 	struct memhead *mem;
 	unsigned char *head, *tail, *rptr;
 
-	if (!ptr)
+	if (!ptr) {
 		return 0;
+	}
 
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
@@ -299,13 +306,15 @@ void *xmalloc(int size, int ID)
 	unsigned char *head, *tail, *rptr;
 
 	if (!memcheckset) {
-		for (memcheckset = 0; memcheckset < sizeof(memcheck); memcheckset++)
+		for (memcheckset = 0; memcheckset < sizeof(memcheck); memcheckset++) {
 			memcheck[memcheckset] = rrand(256);
+		}
 		sprintf(memcheck, "!MEMCKECK MIGHT FAIL!");
 	}
 
-	if (!size)
+	if (!size) {
 		return NULL;
+	}
 
 	memptrused++;
 
@@ -329,10 +338,12 @@ void *xmalloc(int size, int ID)
 	memsize[0] += mem->size;
 	memptrs[0] += 1;
 
-	if (memsize[0] > maxmemsize)
+	if (memsize[0] > maxmemsize) {
 		maxmemsize = memsize[0];
-	if (memptrs[0] > maxmemptrs)
+	}
+	if (memptrs[0] > maxmemptrs) {
 		maxmemptrs = memptrs[0];
+	}
 
 	head = ((unsigned char *)(mem)) + 8;
 	rptr = ((unsigned char *)(mem)) + 8 + sizeof(memcheck);
@@ -355,23 +366,25 @@ char *xstrdup(const char *src, int ID)
 	size = strlen(src) + 1;
 
 	dst = xmalloc(size, ID);
-	if (!dst)
+	if (!dst) {
 		return NULL;
+	}
 
 	memcpy(dst, src, size);
 
 	return dst;
 }
 
-
 void xfree(void *ptr)
 {
 	struct memhead *mem;
 
-	if (!ptr)
+	if (!ptr) {
 		return;
-	if (xmemcheck(ptr))
+	}
+	if (xmemcheck(ptr)) {
 		return;
+	}
 
 	// get mem
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
@@ -412,14 +425,16 @@ void *xrealloc(void *ptr, int size, int ID)
 	struct memhead *mem;
 	unsigned char *head, *tail, *rptr;
 
-	if (!ptr)
+	if (!ptr) {
 		return xmalloc(size, ID);
+	}
 	if (!size) {
 		xfree(ptr);
 		return NULL;
 	}
-	if (xmemcheck(ptr))
+	if (xmemcheck(ptr)) {
 		return NULL;
+	}
 
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
@@ -453,10 +468,12 @@ void *xrealloc(void *ptr, int size, int ID)
 	memsize[0] += mem->size;
 	memptrs[0] += 1;
 
-	if (memsize[0] > maxmemsize)
+	if (memsize[0] > maxmemsize) {
 		maxmemsize = memsize[0];
-	if (memptrs[0] > maxmemptrs)
+	}
+	if (memptrs[0] > maxmemptrs) {
 		maxmemptrs = memptrs[0];
+	}
 
 	head = ((unsigned char *)(mem)) + 8;
 	rptr = ((unsigned char *)(mem)) + 8 + sizeof(memcheck);
@@ -474,14 +491,16 @@ void *xrecalloc(void *ptr, int size, int ID)
 	struct memhead *mem;
 	unsigned char *head, *tail, *rptr;
 
-	if (!ptr)
+	if (!ptr) {
 		return xmalloc(size, ID);
+	}
 	if (!size) {
 		xfree(ptr);
 		return NULL;
 	}
-	if (xmemcheck(ptr))
+	if (xmemcheck(ptr)) {
 		return NULL;
+	}
 
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
@@ -520,10 +539,12 @@ void *xrecalloc(void *ptr, int size, int ID)
 	memsize[0] += mem->size;
 	memptrs[0] += 1;
 
-	if (memsize[0] > maxmemsize)
+	if (memsize[0] > maxmemsize) {
 		maxmemsize = memsize[0];
-	if (memptrs[0] > maxmemptrs)
+	}
+	if (memptrs[0] > maxmemptrs) {
 		maxmemptrs = memptrs[0];
+	}
 
 	head = ((unsigned char *)(mem)) + 8;
 	rptr = ((unsigned char *)(mem)) + 8 + sizeof(memcheck);
@@ -606,81 +627,97 @@ int parse_cmd(char *s)
 	int n;
 	char *end;
 
-	while (isspace(*s))
+	while (isspace(*s)) {
 		s++;
+	}
 
 	while (*s) {
 		if (*s == '-') {
 			s++;
 			if (tolower(*s) == 'u') { // -u <username>
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				n = 0;
-				while (n < 39 && *s && !isspace(*s))
+				while (n < 39 && *s && !isspace(*s)) {
 					username[n++] = *s++;
+				}
 				username[n] = 0;
 			} else if (tolower(*s) == 'p') { // -p <password>
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				n = 0;
-				while (n < 15 && *s && !isspace(*s))
+				while (n < 15 && *s && !isspace(*s)) {
 					password[n++] = *s++;
+				}
 				password[n] = 0;
 			} else if (tolower(*s) == 'd') { // -d <server url>
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				n = 0;
-				while (n < 250 && *s && !isspace(*s))
+				while (n < 250 && *s && !isspace(*s)) {
 					server_url[n++] = *s++;
+				}
 			} else if (tolower(*s) == 'h') { // -h <horizontal_resolution>
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				want_height = strtol(s, &end, 10);
 				s = end;
-				if (*s == 'p')
+				if (*s == 'p') {
 					s++;
+				}
 			} else if (tolower(*s) == 'w') { // -w <vertical_resolution>
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				if (isdigit(*s)) {
 					want_width = strtol(s, &end, 10);
 					s = end;
-				} else
+				} else {
 					want_width = 800;
+				}
 			} else if (tolower(*s) == 'm') { // -m Multi-Threaded
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				sdl_multi = strtol(s, &end, 10);
 				s = end;
 			} else if (tolower(*s) == 'o') { // -o option
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				game_options = strtoull(s, &end, 10);
 				s = end;
 			} else if (tolower(*s) == 'c') { // -c cachesize
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				sdl_cache_size = strtol(s, &end, 10);
 				s = end;
 			} else if (tolower(*s) == 'k') { // -k frames per second
 				s++;
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				frames_per_second = strtol(s, &end, 10);
 				s = end;
 			} else if (tolower(*s) == 't') { // -t server port
 				s++;
 
-				while (isspace(*s))
+				while (isspace(*s)) {
 					s++;
+				}
 				server_port = strtol(s, &end, 10);
 				s = end;
 			} else {
@@ -691,8 +728,9 @@ int parse_cmd(char *s)
 			display_usage();
 			return -2;
 		}
-		while (isspace(*s))
+		while (isspace(*s)) {
 			s++;
+		}
 	}
 	return 0;
 }
@@ -702,14 +740,16 @@ void save_options(void)
 	FILE *fp;
 	char filename[MAX_PATH];
 
-	if (localdata)
+	if (localdata) {
 		sprintf(filename, "%s%s", localdata, "moac.dat");
-	else
+	} else {
 		sprintf(filename, "%s", "bin/data/moac.dat");
+	}
 
 	fp = fopen(filename, "wb");
-	if (!fp)
+	if (!fp) {
 		return;
+	}
 
 	fwrite(&user_keys, sizeof(user_keys), 1, fp);
 	fwrite(&action_row, sizeof(action_row), 1, fp);
@@ -723,14 +763,16 @@ void load_options(void)
 	FILE *fp;
 	char filename[MAX_PATH];
 
-	if (localdata)
+	if (localdata) {
 		sprintf(filename, "%s%s", localdata, "moac.dat");
-	else
+	} else {
 		sprintf(filename, "%s", "bin/data/moac.dat");
+	}
 
 	fp = fopen(filename, "rb");
-	if (!fp)
+	if (!fp) {
 		return;
+	}
 
 	fread(&user_keys, sizeof(user_keys), 1, fp);
 	fread(&action_row, sizeof(action_row), 1, fp);
@@ -750,8 +792,9 @@ void convert_cmd_line(char *d, int argc, char *args[], int maxsize)
 	maxsize -= 2;
 
 	for (n = 1; n < argc && maxsize > 0; n++) {
-		for (s = args[n]; *s && maxsize > 0; *d++ = *s++)
+		for (s = args[n]; *s && maxsize > 0; *d++ = *s++) {
 			maxsize--;
+		}
 		*d++ = ' ';
 		maxsize--;
 	}
@@ -768,18 +811,21 @@ int main(int argc, char *args[])
 	char filename[MAX_PATH];
 
 	convert_cmd_line(buffer, argc, args, 1000);
-	if ((ret = parse_cmd(buffer)) != 0)
+	if ((ret = parse_cmd(buffer)) != 0) {
 		return -1;
+	}
 
 	if (game_options & GO_APPDATA) {
 		localdata = SDL_GetPrefPath(ORG_NAME, APP_NAME);
 		sprintf(filename, "%s%s", localdata, "moac.log");
-	} else
+	} else {
 		sprintf(filename, "%s", "moac.log");
+	}
 
 	errorfp = fopen(filename, "a");
-	if (!errorfp)
+	if (!errorfp) {
 		errorfp = stderr;
+	}
 
 #ifdef ENABLE_CRASH_HANDLER
 	register_crash_handler();
@@ -806,39 +852,42 @@ int main(int argc, char *args[])
 
 	target_server = server_url;
 
-	if (server_port)
+	if (server_port) {
 		target_port = server_port;
+	}
 
 	// init random
 	rrandomize();
 
 	if (!want_height) {
-		if (want_width == 800)
+		if (want_width == 800) {
 			want_height = 600;
-		else if (want_width == 1600)
+		} else if (want_width == 1600) {
 			want_height = 1200;
-		else if (want_width == 2400)
+		} else if (want_width == 2400) {
 			want_height = 1800;
-		else if (want_width == 3200)
+		} else if (want_width == 3200) {
 			want_height = 2400;
-		else if (want_width)
+		} else if (want_width) {
 			want_height = want_width * 9 / 16;
+		}
 	}
 	if (!want_width) {
-		if (want_height == 600)
+		if (want_height == 600) {
 			want_width = 800;
-		else if (want_height == 1000)
+		} else if (want_height == 1000) {
 			want_width = 1600;
-		else if (want_height == 1200)
+		} else if (want_height == 1200) {
 			want_width = 1600;
-		else if (want_height == 1800)
+		} else if (want_height == 1800) {
 			want_width = 2400;
-		else if (want_height == 2000)
+		} else if (want_height == 2000) {
 			want_width = 3200;
-		else if (want_height == 2400)
+		} else if (want_height == 2400) {
 			want_width = 3200;
-		else if (want_height)
+		} else if (want_height) {
 			want_width = want_height * 16 / 9;
+		}
 	}
 
 	sprintf(buf, "Astonia 3 v%d.%d.%d", (VERSION >> 16) & 255, (VERSION >> 8) & 255, (VERSION) & 255);
@@ -871,13 +920,16 @@ int main(int argc, char *args[])
 
 	list_mem();
 
-	if (panic_reached)
+	if (panic_reached) {
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "recursion panic", panic_reached_str, NULL);
-	if (xmemcheck_failed)
+	}
+	if (xmemcheck_failed) {
 		SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "memory panic", memcheck_failed_str, NULL);
+	}
 
-	if (localdata)
+	if (localdata) {
 		SDL_free(localdata);
+	}
 
 	xlog(errorfp, "Clean client shutdown. Thank you for playing!");
 	fclose(errorfp);
