@@ -2,16 +2,14 @@ use std::ffi::CStr;
 use std::io;
 use std::net::{IpAddr, SocketAddr, ToSocketAddrs};
 use std::os::raw::{c_char, c_int};
+#[cfg(unix)]
+use std::os::unix::io::AsRawFd;
+#[cfg(windows)]
+use std::os::windows::io::AsRawSocket;
 use std::time::{Duration, Instant};
 
 use mio::net::TcpStream as MioTcp;
 use mio::{Events, Interest, Poll, Token};
-
-#[cfg(unix)]
-use std::os::unix::io::AsRawFd;
-
-#[cfg(windows)]
-use std::os::windows::io::AsRawSocket;
 
 const POLL_READ: c_int = 1;
 const POLL_WRITE: c_int = 2;
@@ -29,10 +27,7 @@ fn resolve_one(host: &str, port: u16) -> Option<SocketAddr> {
     if let Ok(ip) = host.parse::<IpAddr>() {
         Some(SocketAddr::new(ip, port))
     } else {
-        (host, port)
-            .to_socket_addrs()
-            .ok()
-            .and_then(|mut it| it.next())
+        (host, port).to_socket_addrs().ok().and_then(|mut it| it.next())
     }
 }
 
@@ -65,10 +60,10 @@ fn drive_connect(s: &mut AstoniaSock, total_to: Option<Duration>) -> io::Result<
 
     loop {
         let to = remaining_timeout(start, total_to);
-        if let Some(t) = total_to {
-            if start.elapsed() >= t {
-                return Ok(false);
-            }
+        if let Some(t) = total_to
+            && start.elapsed() >= t
+        {
+            return Ok(false);
         }
 
         // Respect remaining timeout (or None = wait forever).
@@ -190,6 +185,8 @@ fn try_send_from(s: &MioTcp, buf: &[u8]) -> io::Result<usize> {
     })
 }
 
+// Safe because we null check before dereferencing host.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[unsafe(no_mangle)]
 pub extern "C" fn astonia_net_connect(
     host: *const c_char,
@@ -219,20 +216,12 @@ pub extern "C" fn astonia_net_connect(
         Err(_) => return std::ptr::null_mut(),
     };
     let token = Token(0);
-    if poll
-        .registry()
-        .register(&mut mio, token, Interest::WRITABLE)
-        .is_err()
-    {
+    if poll.registry().register(&mut mio, token, Interest::WRITABLE).is_err() {
         return std::ptr::null_mut();
     }
 
-    let mut s = Box::new(AstoniaSock {
-        mio,
-        poll,
-        events: Events::with_capacity(8),
-        connecting: true,
-    });
+    let mut s =
+        Box::new(AstoniaSock { mio, poll, events: Events::with_capacity(8), connecting: true });
 
     // If caller wants immediate return, leave connection pending.
     if timeout_ms == 0 {
@@ -251,8 +240,12 @@ pub extern "C" fn astonia_net_connect(
     }
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. It can be null, but it has to always
+/// be valid (the caller must not free it, and leave freeing up to
+/// astonia_net_close). If a null pointer is passed, we will return -1.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_poll(
+pub unsafe extern "C" fn astonia_net_poll(
     sock: *mut AstoniaSock,
     mask: c_int,
     timeout_ms: c_int,
@@ -278,8 +271,9 @@ pub extern "C" fn astonia_net_poll(
                 // Connected now; continue to normal poll below.
             }
             Ok(false) => {
-                // Still pending; if the caller only asked writable, reflect that we’re not writable yet.
-                // Return 0 (no events) rather than block here—game loop keeps calling us.
+                // Still pending; if the caller only asked writable, reflect that we’re not writable
+                // yet. Return 0 (no events) rather than block here—game loop keeps
+                // calling us.
                 return 0;
             }
             Err(_) => return -1,
@@ -322,8 +316,19 @@ pub extern "C" fn astonia_net_poll(
     res
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. It can be null, but it has to always
+/// be valid (the caller must not free it, and leave freeing up to
+/// astonia_net_close). If a null pointer is passed, we will return -1.
+///
+/// dst must also be valid if it's non null (not freed). If it's null, we will
+/// return 0.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_recv(sock: *mut AstoniaSock, dst: *mut u8, cap: usize) -> isize {
+pub unsafe extern "C" fn astonia_net_recv(
+    sock: *mut AstoniaSock,
+    dst: *mut u8,
+    cap: usize,
+) -> isize {
     let Some(s) = (unsafe { sock.as_mut() }) else {
         return -1;
     };
@@ -339,8 +344,19 @@ pub extern "C" fn astonia_net_recv(sock: *mut AstoniaSock, dst: *mut u8, cap: us
     }
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. It can be null, but it has to always
+/// be valid (the caller must not free it, and leave freeing up to
+/// astonia_net_close). If a null pointer is passed, we will return -1.
+///
+/// src must also be valid if it's non null (not freed). If it's null, we will
+/// return 0.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_send(sock: *mut AstoniaSock, src: *const u8, len: usize) -> isize {
+pub unsafe extern "C" fn astonia_net_send(
+    sock: *mut AstoniaSock,
+    src: *const u8,
+    len: usize,
+) -> isize {
     let Some(s) = (unsafe { sock.as_mut() }) else {
         return -1;
     };
@@ -356,8 +372,15 @@ pub extern "C" fn astonia_net_send(sock: *mut AstoniaSock, src: *const u8, len: 
     }
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. It can be null, but it has to always
+/// be valid (the caller must not free it, and leave freeing up to
+/// astonia_net_close). If a null pointer is passed, we will return -1.
+///
+/// out_be must also be valid if it's non null (not freed). If it's null, we will
+/// return -1.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_local_ipv4(sock: *mut AstoniaSock, out_be: *mut u32) -> c_int {
+pub unsafe extern "C" fn astonia_net_local_ipv4(sock: *mut AstoniaSock, out_be: *mut u32) -> c_int {
     use std::net::SocketAddr;
     let Some(s) = (unsafe { sock.as_mut() }) else {
         return -1;
@@ -380,8 +403,15 @@ pub extern "C" fn astonia_net_local_ipv4(sock: *mut AstoniaSock, out_be: *mut u3
     0
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. It can be null, but it has to always
+/// be valid (the caller must not free it, and leave freeing up to
+/// astonia_net_close). If a null pointer is passed, we will return -1.
+///
+/// out_be must also be valid if it's non null (not freed). If it's null, we will
+/// return -1.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_peer_ipv4(sock: *mut AstoniaSock, out_be: *mut u32) -> c_int {
+pub unsafe extern "C" fn astonia_net_peer_ipv4(sock: *mut AstoniaSock, out_be: *mut u32) -> c_int {
     use std::net::SocketAddr;
     let Some(s) = (unsafe { sock.as_mut() }) else {
         return -1;
@@ -404,8 +434,11 @@ pub extern "C" fn astonia_net_peer_ipv4(sock: *mut AstoniaSock, out_be: *mut u32
     0
 }
 
+/// # Safety
+/// Safe if sock is valid when passed in. We are the ones responsible for
+/// freeing it. The memory must still be valid for us to free it from the heap.
 #[unsafe(no_mangle)]
-pub extern "C" fn astonia_net_close(sock: *mut AstoniaSock) {
+pub unsafe extern "C" fn astonia_net_close(sock: *mut AstoniaSock) {
     if !sock.is_null() {
         drop(unsafe { Box::from_raw(sock) });
     }

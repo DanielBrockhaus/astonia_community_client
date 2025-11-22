@@ -98,19 +98,19 @@ jobs:
     timeout-minutes: 5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        components: rustfmt
-        cache: false
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+          components: rustfmt
+          cache: false
 
-    - name: Check Rust formatting
-      run: cargo fmt --check
-      working-directory: astonia_net
+      - name: Check Rust formatting
+        run: cargo fmt --check
+        working-directory: astonia_net
 
   clippy:
     name: Rust Linting
@@ -118,20 +118,20 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Rust
-      uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: stable
-        components: clippy
-        cache: true
-        cache-workspaces: astonia_net
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          components: clippy
+          cache: true
+          cache-workspaces: astonia_net
 
-    - name: Run clippy
-      run: cargo clippy -- -D warnings
-      working-directory: astonia_net
+      - name: Run clippy
+        run: cargo clippy -- -D warnings
+        working-directory: astonia_net
 
   file-consistency:
     name: File Consistency Checks
