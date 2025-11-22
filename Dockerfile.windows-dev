@@ -1,0 +1,163 @@
+FROM archlinux:latest
+
+# Full Windows development environment with Clang
+# Use this for development, debugging, and advanced tooling
+
+# Configure MSYS2 repositories
+RUN cat >> /etc/pacman.conf <<EOF
+
+[clang64]
+SigLevel = Optional TrustAll
+Server = https://repo.msys2.org/mingw/clang64
+
+[mingw64]
+SigLevel = Optional TrustAll
+Server = https://repo.msys2.org/mingw/mingw64
+EOF
+
+# Install development tools and utilities
+RUN pacman -Syu --noconfirm \
+    base-devel \
+    git \
+    make \
+    cmake \
+    ninja \
+    clang \
+    lld \
+    gdb \
+    valgrind \
+    strace \
+    vim \
+    nano \
+    tree \
+    htop \
+    curl \
+    wget \
+    zip \
+    unzip \
+    && pacman -Scc --noconfirm
+
+# Install comprehensive Clang/LLVM toolchain
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-clang \
+    mingw-w64-clang-x86_64-lld \
+    mingw-w64-clang-x86_64-llvm \
+    mingw-w64-clang-x86_64-llvm-libs \
+    mingw-w64-clang-x86_64-llvm-tools \
+    mingw-w64-clang-x86_64-compiler-rt \
+    mingw-w64-clang-x86_64-libc++ \
+    mingw-w64-clang-x86_64-libunwind \
+    && pacman -Scc --noconfirm
+
+# Install development and analysis tools
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-clang-analyzer \
+    mingw-w64-clang-x86_64-clang-tools-extra \
+    mingw-w64-clang-x86_64-mlir \
+    mingw-w64-clang-x86_64-polly \
+    || true  # Some packages might not exist
+
+# Install libraries (both clang64 and mingw64 for flexibility)
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-SDL2 \
+    mingw-w64-clang-x86_64-SDL2_mixer \
+    mingw-w64-clang-x86_64-zlib \
+    mingw-w64-clang-x86_64-libpng \
+    mingw-w64-clang-x86_64-libzip \
+    mingw-w64-clang-x86_64-dwarfstack \
+    mingw-w64-x86_64-SDL2 \
+    mingw-w64-x86_64-SDL2_mixer \
+    mingw-w64-x86_64-zlib \
+    mingw-w64-x86_64-libpng \
+    mingw-w64-x86_64-libzip \
+    mingw-w64-x86_64-dwarfstack \
+    && pacman -Scc --noconfirm
+
+# Install GCC toolchain for comparison/fallback
+RUN pacman -S --noconfirm \
+    mingw-w64-gcc \
+    mingw-w64-binutils \
+    mingw-w64-headers \
+    mingw-w64-crt \
+    mingw-w64-winpthreads \
+    && pacman -Scc --noconfirm
+
+# Install Rust with Windows target
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup target add x86_64-pc-windows-gnullvm
+RUN rustup component add clippy rustfmt
+
+# Create comprehensive build script with multiple compiler options
+RUN printf '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "=== Astonia Windows Development Build ==="\n\
+echo "Select compiler:"\n\
+echo "1) GCC (mingw-w64-gcc)"\n\
+echo "2) Clang with GNU libstdc++"\n\
+echo "3) Clang with LLVM libc++"\n\
+echo "4) Interactive shell"\n\
+\n\
+COMPILER_CHOICE=${COMPILER_CHOICE:-2}\n\
+\n\
+case $COMPILER_CHOICE in\n\
+    1)\n\
+        echo "Building with GCC..."\n\
+        export CC=x86_64-w64-mingw32-gcc\n\
+        export CXX=x86_64-w64-mingw32-g++\n\
+        printf '"'"'#!/bin/bash\ncase "$1" in\n  --cflags) echo "-I/mingw64/include/SDL2" ;;\n  --libs) echo "-L/mingw64/lib -lSDL2main -lSDL2" ;;\n  --prefix) echo "/mingw64" ;;\nesac\n'"'"' > /usr/local/bin/sdl2-config\n\
+        chmod +x /usr/local/bin/sdl2-config\n\
+        ;;\n\
+    2)\n\
+        echo "Building with Clang (GNU libstdc++)..."\n\
+        export CC="clang"\n\
+        export CFLAGS="--target=x86_64-w64-mingw32 --sysroot=/clang64 -I/clang64/include -fms-extensions -fdeclspec -D_WIN32 -D_WIN32_WINNT=0x0600 -DWIN32 -fuse-ld=lld --rtlib=compiler-rt -resource-dir=/clang64/lib/clang/21"\n\
+        export LDFLAGS="-O3 -gdwarf-4 --target=x86_64-w64-mingw32 --sysroot=/clang64 -fuse-ld=lld --rtlib=compiler-rt -resource-dir=/clang64/lib/clang/21 -Wl,-subsystem,windows"\n\
+        printf '"'"'#!/bin/bash\ncase "$1" in\n  --cflags) echo "-I/clang64/include/SDL2" ;;\n  --libs) echo "-L/clang64/lib -lSDL2main -lSDL2" ;;\n  --prefix) echo "/clang64" ;;\nesac\n'"'"' > /usr/local/bin/sdl2-config\n\
+        chmod +x /usr/local/bin/sdl2-config\n\
+        ;;\n\
+    3)\n\
+        echo "Building with Clang (LLVM libc++)..."\n\
+        export CC="clang --target=x86_64-w64-mingw32 --sysroot=/clang64 -stdlib=libc++"\n\
+        export CXX="clang++ --target=x86_64-w64-mingw32 --sysroot=/clang64 -stdlib=libc++"\n\
+        ;;\n\
+    4)\n\
+        echo "Starting interactive shell..."\n\
+        echo "Available tools: clang, clang++, gcc, gdb, valgrind, clang-tidy, clang-format"\n\
+        echo "Build with: make -f build/make/Makefile.windows"\n\
+        exec /bin/bash\n\
+        ;;\n\
+esac\n\
+\n\
+if [ "$COMPILER_CHOICE" != "4" ]; then\n\
+    echo "Compiler version:"\n\
+    $CC --version || echo "Compiler check failed"\n\
+    \n\
+    echo "Starting build..."\n\
+    make -f build/make/Makefile.windows CC="$CC" CXX="$CXX" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"\n\
+    \n\
+    echo "Build completed successfully!"\n\
+    echo "Output: bin/moac.exe"\n\
+    ls -la bin/moac.exe 2>/dev/null || echo "No executable found"\n\
+fi\n' > /usr/local/bin/build-dev.sh && \
+    chmod +x /usr/local/bin/build-dev.sh
+
+# Create analysis tools script
+RUN printf '#!/bin/bash\n\
+echo "=== Code Analysis Tools ==="\n\
+echo "1) clang-tidy (static analysis)"\n\
+echo "2) clang-format (code formatting)"\n\
+echo "3) scan-build (static analyzer)"\n\
+echo "4) Run all checks"\n\
+\n\
+case ${ANALYSIS_CHOICE:-1} in\n\
+    1) find src -name "*.c" -exec clang-tidy {} -- --target=x86_64-w64-mingw32 -I/clang64/include ;;\n\
+    2) find src -name "*.c" -exec clang-format -i {} \; ;;\n\
+    3) scan-build make -f build/make/Makefile.windows ;;\n\
+    4) echo "Running comprehensive analysis..." ;;\n\
+esac\n' > /usr/local/bin/analyze.sh && \
+    chmod +x /usr/local/bin/analyze.sh
+
+WORKDIR /app
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/build-dev.sh"]

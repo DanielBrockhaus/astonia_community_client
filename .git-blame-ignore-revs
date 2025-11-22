@@ -1,0 +1,6 @@
+# This file contains commit hashes that should be ignored by git blame
+# Use with: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Global clang-format and rustfmt formatting
+f439f310a6251f4469f79ffbe2ede2fb1ce9cdf8
+1e26bac58acde504334967afcd1cb30ea0a4fb98

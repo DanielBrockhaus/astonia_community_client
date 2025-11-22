@@ -1,0 +1,21 @@
+# Detailed explanation for individual config items can be found at https://rust-lang.github.io/rustfmt/
+edition = "2024"
+
+# Overall maximum line length, in characters
+max_width = 100
+# Maximum line length for a method chain, in characters
+chain_width = 80
+# Maximum line length for a single-line struct literal
+struct_lit_width = 80
+# Maximum line length for comments
+comment_width = 100
+# Enforce maximum line length on comments
+wrap_comments = true
+
+# Group imports together as core/alloc/std, everything external, and then crate-local
+group_imports = "StdExternalCrate"
+# Merge imports from the same module into a single `use` statement.
+imports_granularity = "Module"
+
+# Within an impl block, places associated types and consts above functions
+reorder_impl_items = true

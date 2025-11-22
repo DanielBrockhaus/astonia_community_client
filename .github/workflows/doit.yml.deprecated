@@ -1,0 +1,56 @@
+# DEPRECATED: This workflow has been replaced by release.yml
+# The new workflow supports all three platforms (Linux, Windows, macOS)
+# and includes proper build stripping and artifact management.
+# This file is kept for reference only.
+
+name: Compile and Package Client (DEPRECATED)
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  do-it:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: true
+
+      - name: Install Rust toolchain (GNU variant)
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable-x86_64-pc-windows-gnu
+          override: true
+
+      - name: Setup MSYS2 (clang64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: clang64
+          path-type: inherit
+          update: true
+          install: >
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-SDL2
+            mingw-w64-clang-x86_64-libpng
+            mingw-w64-clang-x86_64-SDL2_mixer
+            mingw-w64-clang-x86_64-libzip
+            mingw-w64-clang-x86_64-dwarfstack
+            make
+            zip
+
+      - name: Build
+        shell: msys2 {0}
+        run: |
+          make CC=clang
+          make distrib
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: windows_client.zip

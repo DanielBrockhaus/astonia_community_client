@@ -1,0 +1,65 @@
+FROM archlinux:latest
+
+# Minimal Windows build environment with Clang
+# Use this for CI/CD and production builds
+
+# Configure MSYS2 clang64 repository
+RUN cat >> /etc/pacman.conf <<EOF
+
+[clang64]
+SigLevel = Optional TrustAll
+Server = https://mirror.msys2.org/mingw/clang64
+EOF
+
+# Install minimal build essentials
+RUN pacman -Syu --noconfirm \
+    base-devel \
+    make \
+    clang \
+    lld \
+    && pacman -Scc --noconfirm
+
+# Install Clang Windows cross-compilation toolchain
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-clang \
+    mingw-w64-clang-x86_64-lld \
+    mingw-w64-clang-x86_64-compiler-rt \
+    && pacman -Scc --noconfirm
+
+# Install required libraries
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-SDL2 \
+    mingw-w64-clang-x86_64-SDL2_mixer \
+    mingw-w64-clang-x86_64-zlib \
+    mingw-w64-clang-x86_64-libpng \
+    mingw-w64-clang-x86_64-libzip \
+    mingw-w64-clang-x86_64-dwarfstack \
+    && pacman -Scc --noconfirm
+
+# Install Rust for astonia_net component
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup target add x86_64-pc-windows-gnullvm
+
+# Create build script
+RUN printf '#!/bin/bash\n\
+set -e\n\
+\n\
+echo "Building with Clang for Windows..."\n\
+export CC="clang"\n\
+export CFLAGS="--target=x86_64-w64-mingw32 --sysroot=/clang64 -I/clang64/include -fms-extensions -fdeclspec -D_WIN32 -D_WIN32_WINNT=0x0600 -DWIN32 -fuse-ld=lld --rtlib=compiler-rt -resource-dir=/clang64/lib/clang/21"\n\
+export LDFLAGS="-O3 -gdwarf-4 --target=x86_64-w64-mingw32 --sysroot=/clang64 -fuse-ld=lld --rtlib=compiler-rt -resource-dir=/clang64/lib/clang/21 -Wl,-subsystem,windows"\n\
+\n\
+# Create sdl2-config wrapper\n\
+printf '"'"'#!/bin/bash\ncase "$1" in\n  --cflags) echo "-I/clang64/include/SDL2" ;;\n  --libs) echo "-L/clang64/lib -lSDL2main -lSDL2" ;;\n  --prefix) echo "/clang64" ;;\nesac\n'"'"' > /usr/local/bin/sdl2-config\n\
+chmod +x /usr/local/bin/sdl2-config\n\
+\n\
+clang --version\n\
+make -f build/make/Makefile.windows CC="$CC" CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"\n\
+\n\
+echo "Build completed successfully!"\n\
+echo "Output: bin/moac.exe"\n' > /usr/local/bin/build.sh && \
+    chmod +x /usr/local/bin/build.sh
+
+WORKDIR /app
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/build.sh"]

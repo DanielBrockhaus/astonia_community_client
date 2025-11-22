@@ -24,8 +24,8 @@ OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/g
 			src/game/memory_linux.o
 
 bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
-		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) $(ASTONIA_NET_LIB)
 		cp $(ASTONIA_NET_LIB) bin/
+		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) -Lbin -lastonia_net
 
 $(ASTONIA_NET_LIB):
 		rustup target add $(ASTONIA_NET_TGT)
@@ -80,7 +80,26 @@ clean:
 		-rm -rf astonia_net/target
 
 distrib:
-	tar czf linux_client.tar.gz bin res
+	@echo "Bundling libraries for distribution..."
+	@ldd bin/moac bin/libastonia_net.so | grep "=> /" | awk '{print $$3}' | sort -u | while read lib; do \
+		case "$$lib" in \
+			/lib/x86_64-linux-gnu/libc.so*|/lib/x86_64-linux-gnu/libm.so*|/lib/x86_64-linux-gnu/libpthread.so*|\
+			/lib/x86_64-linux-gnu/libdl.so*|/lib/x86_64-linux-gnu/librt.so*|/lib64/ld-linux-x86-64.so*|\
+			/lib/x86_64-linux-gnu/libgcc_s.so*|/lib/x86_64-linux-gnu/libresolv.so*) ;; \
+			*) [ ! -f "bin/$$(basename "$$lib")" ] && cp "$$lib" bin/ 2>/dev/null || true ;; \
+		esac; \
+	done
+	@for lib in bin/*.so*; do \
+		[ -f "$$lib" ] || continue; \
+		ldd "$$lib" 2>/dev/null | grep "=> /" | awk '{print $$3}' | while read dep; do \
+			case "$$dep" in \
+				/lib/x86_64-linux-gnu/libc.so*|/lib/x86_64-linux-gnu/libm.so*|/lib/x86_64-linux-gnu/libpthread.so*|\
+				/lib/x86_64-linux-gnu/libdl.so*|/lib/x86_64-linux-gnu/librt.so*|/lib64/ld-linux-x86-64.so*|\
+				/lib/x86_64-linux-gnu/libgcc_s.so*|/lib/x86_64-linux-gnu/libresolv.so*) ;; \
+				*) [ ! -f "bin/$$(basename "$$dep")" ] && cp "$$dep" bin/ 2>/dev/null || true ;; \
+			esac; \
+		done; \
+	done
 
 amod:		bin/amod.so bin/moac
 convert:	bin/convert

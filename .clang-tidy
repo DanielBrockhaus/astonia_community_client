@@ -1,0 +1,38 @@
+---
+# Clang-Tidy configuration for Astonia Client
+# Gentle rules to start - can be expanded over time
+
+# Only enable basic, non-controversial checks
+Checks: >
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-narrowing-conversions,
+  -bugprone-signed-char-misuse,
+  clang-analyzer-*,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  performance-*,
+  -performance-no-int-to-ptr,
+  readability-braces-around-statements,
+  readability-inconsistent-declaration-parameter-name,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-simplify-boolean-expr,
+
+# Don't treat warnings as errors by default (handled in CI)
+WarningsAsErrors: ''
+
+# Header filter to analyze project headers
+HeaderFilterRegex: '.*'
+
+# Disabled checks explanation:
+# - easily-swappable-parameters: Too noisy for existing code
+# - implicit-widening: Common pattern in game code
+# - narrowing-conversions: Would require significant refactoring
+# - signed-char-misuse: Platform-specific, not critical
+# - insecureAPI warnings: Game client, not security-critical infrastructure
+# - no-int-to-ptr: Used for specific low-level operations
+
+CheckOptions:
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: '2'

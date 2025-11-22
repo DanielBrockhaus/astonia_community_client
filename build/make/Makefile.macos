@@ -63,8 +63,8 @@ OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/g
 			src/game/memory_macos.o
 
 bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
-		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) $(ASTONIA_NET_LIB)
 		cp $(ASTONIA_NET_LIB) bin/
+		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) -Lbin -lastonia_net
 
 $(ASTONIA_NET_LIB):
 		rustup target add $(ASTONIA_NET_TGT)
@@ -119,7 +119,18 @@ clean:
 		-rm -rf astonia_net/target
 
 distrib:
-	tar czf macos_client.tar.gz --exclude='bin/*.dSYM' bin res
+	@echo "Bundling libraries for distribution..."
+	@for binary in bin/moac bin/libastonia_net.dylib; do \
+		otool -L "$$binary" | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read lib; do \
+			[ -f "$$lib" ] && [ ! -f "bin/$$(basename "$$lib")" ] && cp "$$lib" bin/ 2>/dev/null || true; \
+		done; \
+	done
+	@for lib in bin/*.dylib; do \
+		[ -f "$$lib" ] || continue; \
+		otool -L "$$lib" 2>/dev/null | grep -E "($(BREW_PREFIX)|/usr/local|/opt/homebrew)" | awk '{print $$1}' | while read dep; do \
+			[ -f "$$dep" ] && [ ! -f "bin/$$(basename "$$dep")" ] && cp "$$dep" bin/ 2>/dev/null || true; \
+		done; \
+	done
 
 amod:		bin/amod.dylib bin/moac
 convert:	bin/convert

@@ -46,7 +46,7 @@ LDFLAGS=$(OPT) $(DEBUG) -Wl,-subsystem,windows
 LDFLAGS_CONSOLE=$(OPT) $(DEBUG) -Wl,-subsystem,console
 
 SDL_LIBS=$(shell $(SDL_CONFIG) --libs)
-LIBS = -lwsock32 -lws2_32 -lz -lpng -lzip -ldwarfstack $(SDL_LIBS) -lSDL2_mixer
+LIBS = -lwsock32 -lws2_32 -lpsapi -lz -lpng -lzip -ldwarfstack $(SDL_LIBS) -lSDL2_mixer
 
 ASTONIA_NET_DIR=astonia_net
 ASTONIA_NET_TGT=x86_64-pc-windows-gnu
