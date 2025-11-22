@@ -2,7 +2,7 @@
  * Example of modding the skill table (using vanilla data for easy editing)
  */
 
-#define MOD_V_MAX 63
+#define MOD_V_MAX      63
 #define MOD_V_PROFBASE 43
 
 DLL_EXPORT int game_v_max = MOD_V_MAX;

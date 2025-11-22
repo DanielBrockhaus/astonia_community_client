@@ -85,6 +85,7 @@ DLL_EXPORT int amod_keydown(int key)
 {
 	return 0;
 }
+
 DLL_EXPORT int amod_keyup(int key)
 {
 	return 0;
@@ -95,7 +96,6 @@ DLL_EXPORT int amod_is_playersprite(int sprite)
 	return (sprite == 800 || sprite == 801);
 }
 
-
 DLL_EXPORT int amod_process(const char *buf)
 {
 	switch (buf[0]) {
@@ -105,6 +105,7 @@ DLL_EXPORT int amod_process(const char *buf)
 	}
 	return 0;
 }
+
 DLL_EXPORT int amod_prefetch(const char *buf)
 {
 	switch (buf[0]) {

@@ -20,17 +20,17 @@
 
 #define MAXSPRITE 250000
 
-#define TICKS 24 // ticks (game data updates) per second
+#define TICKS  24 // ticks (game data updates) per second
 #define FRAMES (frames_per_second) // frames (display updates) per second
-#define MPT (1000 / TICKS) // milliseconds per tick
-#define MPF (1000 / FRAMES) // milliseconds per frame
+#define MPT    (1000 / TICKS) // milliseconds per tick
+#define MPF    (1000 / FRAMES) // milliseconds per frame
 
 #define DIST 25
-#define FDX 40 // width of a map tile
-#define FDY 20 // height of a map tile
+#define FDX  40 // width of a map tile
+#define FDY  20 // height of a map tile
 
-#define XRES 800
-#define YRES (__yres)
+#define XRES  800
+#define YRES  (__yres)
 #define YRES0 600
 #define YRES1 650
 #define YRES2 500
@@ -41,32 +41,32 @@
 #define bzero(ptr, size) memset(ptr, 0, size)
 #endif
 
-#define MEM_NONE 0
-#define MEM_GLOB 1
-#define MEM_TEMP 2
-#define MEM_ELSE 3
-#define MEM_DL 4
-#define MEM_IC 5
-#define MEM_SC 6
-#define MEM_VC 7
-#define MEM_PC 8
-#define MEM_GUI 9
-#define MEM_GAME 10
-#define MEM_TEMP11 11
-#define MEM_VPC 12
-#define MEM_VSC 13
-#define MEM_VLC 14
-#define MEM_SDL_BASE 15
-#define MEM_SDL_PIXEL 16
-#define MEM_SDL_PNG 17
+#define MEM_NONE       0
+#define MEM_GLOB       1
+#define MEM_TEMP       2
+#define MEM_ELSE       3
+#define MEM_DL         4
+#define MEM_IC         5
+#define MEM_SC         6
+#define MEM_VC         7
+#define MEM_PC         8
+#define MEM_GUI        9
+#define MEM_GAME       10
+#define MEM_TEMP11     11
+#define MEM_VPC        12
+#define MEM_VSC        13
+#define MEM_VLC        14
+#define MEM_SDL_BASE   15
+#define MEM_SDL_PIXEL  16
+#define MEM_SDL_PNG    17
 #define MEM_SDL_PIXEL2 18
-#define MEM_TEMP5 19
-#define MEM_TEMP6 20
-#define MEM_TEMP7 21
-#define MEM_TEMP8 22
-#define MEM_TEMP9 23
-#define MEM_TEMP10 24
-#define MAX_MEM 25
+#define MEM_TEMP5      19
+#define MEM_TEMP6      20
+#define MEM_TEMP7      21
+#define MEM_TEMP8      22
+#define MEM_TEMP9      23
+#define MEM_TEMP10     24
+#define MAX_MEM        25
 
 #ifndef min
 #define min(a, b) (((a) < (b)) ? (a) : (b))
@@ -84,8 +84,8 @@
 #define ARRAYSIZE(a) (sizeof(a) / sizeof((a)[0]))
 #endif
 
-#define DOT_TL 0 // top left?
-#define DOT_BR 1 // bottom right?
+#define DOT_TL  0 // top left?
+#define DOT_BR  1 // bottom right?
 #define DOT_WEA 2 // worn equipment
 #define DOT_INV 3 // inventory
 #define DOT_CON 4 // container
@@ -127,25 +127,25 @@ extern int quit;
 DLL_EXPORT extern int frames_per_second;
 extern char *localdata;
 
-#define GO_DARK (1ull << 0) // Dark GUI by Tegra
-#define GO_CONTEXT (1ull << 1) // Right-Click Context Menu
-#define GO_ACTION (1ull << 2) // Action Bar and Key Bindings
+#define GO_DARK     (1ull << 0) // Dark GUI by Tegra
+#define GO_CONTEXT  (1ull << 1) // Right-Click Context Menu
+#define GO_ACTION   (1ull << 2) // Action Bar and Key Bindings
 #define GO_SMALLBOT (1ull << 3) // Smaller Bottom Window
 #define GO_SMALLTOP (1ull << 4) // Smaller Top Window
-#define GO_BIGBAR (1ull << 5) // Show big health bar etc.
-#define GO_SOUND (1ull << 6) // Enable sound
-#define GO_LARGE (1ull << 7) // Use large font
-#define GO_FULL (1ull << 8) // Use true full screen mode
-#define GO_WHEEL (1ull << 9) // Use old mouse wheel logic
-#define GO_PREDICT (1ull << 10) // Process some commands early for faster responses (prefetch() instead of process())
-#define GO_SHORT (1ull << 11) // Less command delay, more stutter in animations
-#define GO_APPDATA (1ull << 12) // Use Windows %appdata% to store configuration and logs
-#define GO_MAPSAVE (1ull << 13) // Load/Save minimap data
-#define GO_LIGHTER (1ull << 14) // Gamma increase, sort of
+#define GO_BIGBAR   (1ull << 5) // Show big health bar etc.
+#define GO_SOUND    (1ull << 6) // Enable sound
+#define GO_LARGE    (1ull << 7) // Use large font
+#define GO_FULL     (1ull << 8) // Use true full screen mode
+#define GO_WHEEL    (1ull << 9) // Use old mouse wheel logic
+#define GO_PREDICT  (1ull << 10) // Process some commands early for faster responses (prefetch() instead of process())
+#define GO_SHORT    (1ull << 11) // Less command delay, more stutter in animations
+#define GO_APPDATA  (1ull << 12) // Use Windows %appdata% to store configuration and logs
+#define GO_MAPSAVE  (1ull << 13) // Load/Save minimap data
+#define GO_LIGHTER  (1ull << 14) // Gamma increase, sort of
 #define GO_LIGHTER2 (1ull << 15) // More gamma increase
-#define GO_TINYTOP (1ull << 16) // Slide out top only when mouse cursor is over window border
+#define GO_TINYTOP  (1ull << 16) // Slide out top only when mouse cursor is over window border
 #define GO_LOWLIGHT (1ull << 17) // Simplify Light calculations for slow CPUs
-#define GO_NOMAP (1ull << 18) // Disable minimap completely
+#define GO_NOMAP    (1ull << 18) // Disable minimap completely
 
 #define GO_NOTSET (1ull << 63) // No -o given on command line
 

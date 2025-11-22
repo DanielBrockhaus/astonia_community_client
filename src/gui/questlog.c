@@ -125,18 +125,22 @@ int questproz(int cnt)
 }
 
 int questlist[MAXQUEST], questinit = 0;
+
 int questcmp(const void *a, const void *b)
 {
 	int *va = (int *)a, *vb = (int *)b;
 
-	if (game_questlog[*va].minlevel != game_questlog[*vb].minlevel)
+	if (game_questlog[*va].minlevel != game_questlog[*vb].minlevel) {
 		return game_questlog[*vb].minlevel - game_questlog[*va].minlevel;
-	if (game_questlog[*va].maxlevel != game_questlog[*vb].maxlevel)
+	}
+	if (game_questlog[*va].maxlevel != game_questlog[*vb].maxlevel) {
 		return game_questlog[*vb].maxlevel - game_questlog[*va].maxlevel;
+	}
 	return *va - *vb;
 }
 
 int (*do_display_random)(void) = _do_display_random;
+
 DLL_EXPORT int _do_display_random(void)
 {
 	int y = doty(DOT_HLP) + 15, x, n, idx, bit, m;
@@ -161,8 +165,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (indec[n] < shrine.continuity)
+			if (indec[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", indec[n]);
+			}
 		}
 	}
 	y += 12;
@@ -175,8 +180,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (bribes[n] < shrine.continuity)
+			if (bribes[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", bribes[n]);
+			}
 		}
 	}
 	y += 12;
@@ -189,8 +195,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (welding[n] < shrine.continuity)
+			if (welding[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", welding[n]);
+			}
 		}
 	}
 	y += 12;
@@ -203,8 +210,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (edge[n] < shrine.continuity)
+			if (edge[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", edge[n]);
+			}
 		}
 	}
 	y += 12;
@@ -217,8 +225,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (kindness[n] < shrine.continuity)
+			if (kindness[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", kindness[n]);
+			}
 		}
 	}
 	y += 12;
@@ -231,8 +240,9 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (security[n] < shrine.continuity)
+			if (security[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", security[n]);
+			}
 		}
 	}
 	y += 12;
@@ -245,31 +255,35 @@ DLL_EXPORT int _do_display_random(void)
 		if (shrine.used[idx] & bit) {
 			x = dd_drawtext(x, y, graycolor, 0, "- ");
 		} else {
-			if (jobless[n] < shrine.continuity)
+			if (jobless[n] < shrine.continuity) {
 				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", jobless[n]);
+			}
 		}
 	}
 	y += 12;
 
 	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Vitality: ");
-	if (shrine.used[50 / 32] & (1 << (50 & 31)))
+	if (shrine.used[50 / 32] & (1 << (50 & 31))) {
 		dd_drawtext(x, y, graycolor, 0, "- ");
-	else if (30 < shrine.continuity)
+	} else if (30 < shrine.continuity) {
 		dd_drawtext(x, y, graycolor, 0, "30");
+	}
 	y += 12;
 
 	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Death: ");
-	if (shrine.used[51 / 32] & (1 << (51 & 31)))
+	if (shrine.used[51 / 32] & (1 << (51 & 31))) {
 		dd_drawtext(x, y, graycolor, 0, "- ");
-	else if (37 < shrine.continuity)
+	} else if (37 < shrine.continuity) {
 		dd_drawtext(x, y, graycolor, 0, "37");
+	}
 	y += 12;
 
 	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Braveness: ");
-	if (shrine.used[52 / 32] & (1 << (52 & 31)))
+	if (shrine.used[52 / 32] & (1 << (52 & 31))) {
 		dd_drawtext(x, y, graycolor, 0, "- ");
-	else if (51 < shrine.continuity)
+	} else if (51 < shrine.continuity) {
 		dd_drawtext(x, y, graycolor, 0, "51");
+	}
 	y += 12;
 
 	y += 12;
@@ -286,8 +300,9 @@ int do_display_questlog(int nr)
 	char buf[256];
 
 	if (!questinit) {
-		for (n = 0; n < *game_questcount; n++)
+		for (n = 0; n < *game_questcount; n++) {
 			questlist[n] = n;
+		}
 		qsort(questlist, *game_questcount, sizeof(int), questcmp);
 		questinit = 1;
 	}
@@ -297,11 +312,13 @@ int do_display_questlog(int nr)
 		havequest = 1;
 	}
 
-	for (n = 0; n < 10; n++)
+	for (n = 0; n < 10; n++) {
 		questonscreen[n] = -1;
+	}
 
-	if (nr == 10)
+	if (nr == 10) {
 		return do_display_random();
+	}
 
 	off = (nr - 1) * 9;
 
@@ -312,10 +329,12 @@ int do_display_questlog(int nr)
 			if ((pass == 0 && (quest[n].flags) == QF_OPEN && quest[n].done < 10) ||
 			    (pass == 1 && (quest[n].flags) == QF_DONE)) {
 				if (cnt >= off) {
-					if ((game_questlog[n].flags & QLF_REPEATABLE) && (quest[n].flags & QF_DONE) && quest[n].done < 10)
+					if ((game_questlog[n].flags & QLF_REPEATABLE) && (quest[n].flags & QF_DONE) && quest[n].done < 10) {
 						dd_drawtext(dotx(DOT_HLP) + 200, y, lightbluecolor, DD_RIGHT, "Re-Open");
-					if ((game_questlog[n].flags & QLF_XREPEAT) && (quest[n].flags & QF_DONE))
+					}
+					if ((game_questlog[n].flags & QLF_XREPEAT) && (quest[n].flags & QF_DONE)) {
 						dd_drawtext(dotx(DOT_HLP) + 200, y, graycolor, DD_RIGHT, "(Junk Item)");
+					}
 					sprintf(buf, "Quest: %s", game_questlog[n].name);
 					dd_drawtext(dotx(DOT_HLP) + 10, y, whitecolor, 0, buf);
 					y += 10;
@@ -337,15 +356,18 @@ int do_display_questlog(int nr)
 					}
 					y += 10;
 				}
-				if (cnt - off >= 0 && cnt - off < 10)
+				if (cnt - off >= 0 && cnt - off < 10) {
 					questonscreen[cnt - off] = n;
+				}
 				cnt++;
-				if (cnt >= off + 9)
+				if (cnt >= off + 9) {
 					break;
+				}
 			}
 		}
-		if (cnt >= off + 9)
+		if (cnt >= off + 9) {
 			break;
+		}
 	}
 	if (cnt == 0) {
 		y += 50;
@@ -357,8 +379,9 @@ int do_display_questlog(int nr)
 
 void quest_select(int nr)
 {
-	if (nr < 0 || nr > 9)
+	if (nr < 0 || nr > 9) {
 		return;
+	}
 
 	if (questonscreen[nr] != -1) {
 		cmd_reopen_quest(questonscreen[nr]);

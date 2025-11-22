@@ -39,10 +39,12 @@ DL *dl_next(void)
 		dllist = xrealloc(dllist, (dlmax + DL_STEP) * sizeof(DL), MEM_DL);
 		dlsort = xrealloc(dlsort, (dlmax + DL_STEP) * sizeof(DL *), MEM_DL);
 		diff = (unsigned char *)dllist - (unsigned char *)rem;
-		for (d = 0; d < dlmax; d++)
+		for (d = 0; d < dlmax; d++) {
 			dlsort[d] = (DL *)(((unsigned char *)(dlsort[d])) + diff);
-		for (d = dlmax; d < dlmax + DL_STEP; d++)
+		}
+		for (d = dlmax; d < dlmax + DL_STEP; d++) {
 			dlsort[d] = &dllist[d];
+		}
 		dlmax += DL_STEP;
 	} else if (dlused > dlmax) {
 		fail("dlused normally shouldn't exceed dlmax - the error is somewhere else ;-)");
@@ -161,10 +163,11 @@ DL *dl_call_bless(int layer, int x, int y, int ticker, int strength, int front)
 	dl->call_x3 = front;
 
 	dl->x = x;
-	if (front)
+	if (front) {
 		dl->y = y + 8;
-	else
+	} else {
 		dl->y = y - 8;
+	}
 
 	return dl;
 }
@@ -223,10 +226,11 @@ DL *dl_call_potion(int layer, int x, int y, int ticker, int strength, int front)
 	dl->call_x3 = front;
 
 	dl->x = x;
-	if (front)
+	if (front) {
 		dl->y = y + 8;
-	else
+	} else {
 		dl->y = y - 8;
+	}
 
 	return dl;
 }
@@ -271,10 +275,11 @@ DL *dl_call_rain2(int layer, int x, int y, int ticker, int strength, int front)
 	dl->call_x3 = front;
 
 	dl->x = x;
-	if (front)
+	if (front) {
 		dl->y = y + 10;
-	else
+	} else {
 		dl->y = y - 10;
+	}
 
 	return dl;
 }
@@ -304,24 +309,30 @@ int dl_qcmp(const void *ca, const void *cb)
 	a = *(DL **)ca;
 	b = *(DL **)cb;
 
-	if (a->call == DLC_DUMMY && b->call == DLC_DUMMY)
+	if (a->call == DLC_DUMMY && b->call == DLC_DUMMY) {
 		return 0;
-	if (a->call == DLC_DUMMY)
+	}
+	if (a->call == DLC_DUMMY) {
 		return -1;
-	if (b->call == DLC_DUMMY)
+	}
+	if (b->call == DLC_DUMMY) {
 		return 1;
+	}
 
 	diff = a->layer - b->layer;
-	if (diff)
+	if (diff) {
 		return diff;
+	}
 
 	diff = a->y - b->y;
-	if (diff)
+	if (diff) {
 		return diff;
+	}
 
 	diff = a->x - b->x;
-	if (diff)
+	if (diff) {
 		return diff;
+	}
 
 	return a->ddfx.sprite - b->ddfx.sprite;
 }
@@ -436,24 +447,32 @@ void set_map_lights(struct map *cmap)
 		cmap[mn].mmf = 0;
 
 		if (cmap[mn].rlight == 15) {
-			if (cmap[quick[i].mn[1]].flags & CMF_VISIBLE)
+			if (cmap[quick[i].mn[1]].flags & CMF_VISIBLE) {
 				cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[1]].flags & CMF_LIGHT);
-			if (cmap[quick[i].mn[3]].flags & CMF_VISIBLE)
+			}
+			if (cmap[quick[i].mn[3]].flags & CMF_VISIBLE) {
 				cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[3]].flags & CMF_LIGHT);
-			if (cmap[quick[i].mn[5]].flags & CMF_VISIBLE)
+			}
+			if (cmap[quick[i].mn[5]].flags & CMF_VISIBLE) {
 				cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[5]].flags & CMF_LIGHT);
-			if (cmap[quick[i].mn[7]].flags & CMF_VISIBLE)
+			}
+			if (cmap[quick[i].mn[7]].flags & CMF_VISIBLE) {
 				cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[7]].flags & CMF_LIGHT);
+			}
 
 			if (cmap[mn].rlight == 15) {
-				if (cmap[quick[i].mn[0]].flags & CMF_VISIBLE)
+				if (cmap[quick[i].mn[0]].flags & CMF_VISIBLE) {
 					cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[0]].flags & CMF_LIGHT);
-				if (cmap[quick[i].mn[2]].flags & CMF_VISIBLE)
+				}
+				if (cmap[quick[i].mn[2]].flags & CMF_VISIBLE) {
 					cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[2]].flags & CMF_LIGHT);
-				if (cmap[quick[i].mn[6]].flags & CMF_VISIBLE)
+				}
+				if (cmap[quick[i].mn[6]].flags & CMF_VISIBLE) {
 					cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[6]].flags & CMF_LIGHT);
-				if (cmap[quick[i].mn[8]].flags & CMF_VISIBLE)
+				}
+				if (cmap[quick[i].mn[8]].flags & CMF_VISIBLE) {
 					cmap[mn].rlight = min((unsigned)cmap[mn].rlight, cmap[quick[i].mn[8]].flags & CMF_LIGHT);
+				}
 
 				if (cmap[mn].rlight == 15) {
 					cmap[mn].rlight = 0;
@@ -520,7 +539,8 @@ void sprites_colorbalance(struct map *cmap, int mn, int r, int g, int b)
 }
 
 #define RANDOM(a) (rand() % (a))
-#define MAXBUB 100
+#define MAXBUB    100
+
 struct bubble {
 	int type;
 	int origx, origy;
@@ -529,7 +549,6 @@ struct bubble {
 };
 
 struct bubble bubble[MAXBUB];
-
 
 void add_bubble(int x, int y, int h)
 {
@@ -566,12 +585,14 @@ void show_bubbles(void)
 	// if (oo!=mapaddx) addline("shown bubble at %d,%d %d,%d",offx,offy,oo=mapaddx,mapaddy);
 
 	for (n = 0; n < MAXBUB; n++) {
-		if (!bubble[n].state)
+		if (!bubble[n].state) {
 			continue;
+		}
 
 		spr = (bubble[n].state - 1) % 6;
-		if (spr > 3)
+		if (spr > 3) {
 			spr = 3 - (spr - 3);
+		}
 		spr += bubble[n].type * 3;
 
 		dl = dl_next_set(GME_LAY, 1140 + spr, bubble[n].cx - offx, bubble[n].origy - offy, DDFX_NLIGHT);
@@ -579,10 +600,12 @@ void show_bubbles(void)
 		bubble[n].state++;
 		bubble[n].cx += 2 - RANDOM(5);
 		bubble[n].cy -= 1 + RANDOM(3);
-		if (bubble[n].cy < 1)
+		if (bubble[n].cy < 1) {
 			bubble[n].state = 0;
-		if (bubble[n].state > 50)
+		}
+		if (bubble[n].state > 50) {
 			bubble[n].state = 0;
+		}
 	}
 }
 
@@ -593,33 +616,38 @@ void set_map_sprites(struct map *cmap, int attick)
 	for (i = 0; i < maxquick; i++) {
 		mn = quick[i].mn[4];
 
-		if (!cmap[mn].rlight)
+		if (!cmap[mn].rlight) {
 			continue;
+		}
 
-		if (cmap[mn].gsprite)
+		if (cmap[mn].gsprite) {
 			cmap[mn].rg.sprite = trans_asprite(mn, cmap[mn].gsprite, attick, &cmap[mn].rg.scale, &cmap[mn].rg.cr,
 			    &cmap[mn].rg.cg, &cmap[mn].rg.cb, &cmap[mn].rg.light, &cmap[mn].rg.sat, &cmap[mn].rg.c1,
 			    &cmap[mn].rg.c2, &cmap[mn].rg.c3, &cmap[mn].rg.shine);
-		else
+		} else {
 			cmap[mn].rg.sprite = 0;
-		if (cmap[mn].fsprite)
+		}
+		if (cmap[mn].fsprite) {
 			cmap[mn].rf.sprite = trans_asprite(mn, cmap[mn].fsprite, attick, &cmap[mn].rf.scale, &cmap[mn].rf.cr,
 			    &cmap[mn].rf.cg, &cmap[mn].rf.cb, &cmap[mn].rf.light, &cmap[mn].rf.sat, &cmap[mn].rf.c1,
 			    &cmap[mn].rf.c2, &cmap[mn].rf.c3, &cmap[mn].rf.shine);
-		else
+		} else {
 			cmap[mn].rf.sprite = 0;
-		if (cmap[mn].gsprite2)
+		}
+		if (cmap[mn].gsprite2) {
 			cmap[mn].rg2.sprite = trans_asprite(mn, cmap[mn].gsprite2, attick, &cmap[mn].rg2.scale, &cmap[mn].rg2.cr,
 			    &cmap[mn].rg2.cg, &cmap[mn].rg2.cb, &cmap[mn].rg2.light, &cmap[mn].rg2.sat, &cmap[mn].rg2.c1,
 			    &cmap[mn].rg2.c2, &cmap[mn].rg2.c3, &cmap[mn].rg2.shine);
-		else
+		} else {
 			cmap[mn].rg2.sprite = 0;
-		if (cmap[mn].fsprite2)
+		}
+		if (cmap[mn].fsprite2) {
 			cmap[mn].rf2.sprite = trans_asprite(mn, cmap[mn].fsprite2, attick, &cmap[mn].rf2.scale, &cmap[mn].rf2.cr,
 			    &cmap[mn].rf2.cg, &cmap[mn].rf2.cb, &cmap[mn].rf2.light, &cmap[mn].rf2.sat, &cmap[mn].rf2.c1,
 			    &cmap[mn].rf2.c2, &cmap[mn].rf2.c3, &cmap[mn].rf2.shine);
-		else
+		} else {
 			cmap[mn].rf2.sprite = 0;
+		}
 
 		if (cmap[mn].isprite) {
 			cmap[mn].ri.sprite = trans_asprite(mn, cmap[mn].isprite, attick, &cmap[mn].ri.scale, &cmap[mn].ri.cr,
@@ -631,12 +659,15 @@ void set_map_sprites(struct map *cmap, int attick)
 				cmap[mn].ri.c3 = cmap[mn].ic3;
 			}
 
-			if (is_door_sprite(cmap[mn].ri.sprite))
+			if (is_door_sprite(cmap[mn].ri.sprite)) {
 				cmap[mn].mmf |= MMF_DOOR;
-		} else
+			}
+		} else {
 			cmap[mn].ri.sprite = 0;
-		if (cmap[mn].csprite)
+		}
+		if (cmap[mn].csprite) {
 			trans_csprite(mn, cmap, attick);
+		}
 	}
 }
 
@@ -645,17 +676,19 @@ static void set_map_cut(struct map *cmap)
 	int i, mn, mn2, i2;
 	unsigned int tmp;
 
-	if (nocut)
+	if (nocut) {
 		return;
+	}
 
 	// change sprites
 	for (i = 0; i < maxquick; i++) {
 		mn = quick[i].mn[0];
 		i2 = quick[i].qi[0];
-		if (mn)
+		if (mn) {
 			mn2 = quick[i2].mn[0];
-		else
+		} else {
 			mn2 = 0;
+		}
 
 		if ((!mn || !cmap[mn].rlight ||
 		        ((unsigned)abs(is_cut_sprite(cmap[mn].rf.sprite)) != cmap[mn].rf.sprite &&
@@ -670,80 +703,97 @@ static void set_map_cut(struct map *cmap)
 		        ((unsigned)abs(is_cut_sprite(cmap[mn2].rf2.sprite)) != cmap[mn2].rf2.sprite &&
 		            is_cut_sprite(cmap[mn2].rf2.sprite) > 0) ||
 		        ((unsigned)abs(is_cut_sprite(cmap[mn2].ri.sprite)) != cmap[mn2].ri.sprite &&
-		            is_cut_sprite(cmap[mn2].ri.sprite) > 0)))
+		            is_cut_sprite(cmap[mn2].ri.sprite) > 0))) {
 			continue;
+		}
 
 
 		cmap[quick[i].mn[4]].mmf |= MMF_CUT;
 	}
 	for (i = 0; i < maxquick; i++) {
-		if (!(cmap[quick[i].mn[4]].mmf & MMF_CUT))
+		if (!(cmap[quick[i].mn[4]].mmf & MMF_CUT)) {
 			continue;
+		}
 
 		if (is_cut_sprite(cmap[quick[i].mn[4]].rf.sprite) < 0 &&
 		    ((!(cmap[quick[i].mn[1]].mmf & MMF_CUT) && is_cut_sprite(cmap[quick[i].mn[1]].rf.sprite)) ||
-		        (!(cmap[quick[i].mn[3]].mmf & MMF_CUT) && is_cut_sprite(cmap[quick[i].mn[3]].rf.sprite))))
+		        (!(cmap[quick[i].mn[3]].mmf & MMF_CUT) && is_cut_sprite(cmap[quick[i].mn[3]].rf.sprite)))) {
 			continue;
+		}
 
 		tmp = abs(is_cut_sprite(cmap[quick[i].mn[4]].rf.sprite));
-		if (tmp != cmap[quick[i].mn[4]].rf.sprite)
+		if (tmp != cmap[quick[i].mn[4]].rf.sprite) {
 			cmap[quick[i].mn[4]].rf.sprite = tmp;
+		}
 
 		tmp = abs(is_cut_sprite(cmap[quick[i].mn[4]].rf2.sprite));
-		if (tmp != cmap[quick[i].mn[4]].rf2.sprite)
+		if (tmp != cmap[quick[i].mn[4]].rf2.sprite) {
 			cmap[quick[i].mn[4]].rf2.sprite = tmp;
+		}
 
 		tmp = abs(is_cut_sprite(cmap[quick[i].mn[4]].ri.sprite));
-		if (tmp != cmap[quick[i].mn[4]].ri.sprite)
+		if (tmp != cmap[quick[i].mn[4]].ri.sprite) {
 			cmap[quick[i].mn[4]].ri.sprite = tmp;
+		}
 	}
 }
 
 void set_map_straight(struct map *cmap)
 {
-	int i, mn, mna, vl, vr, vt, vb, wl, wr, wt, wb;
+	int i, mna, vl, vr, vt, vb, wl, wr, wt, wb;
 
 	for (i = 0; i < maxquick; i++) {
-		mn = quick[i].mn[4];
+		int mn = quick[i].mn[4];
 
-		if (!cmap[mn].rlight)
+		if (!cmap[mn].rlight) {
 			continue;
+		}
 
 		if ((mna = quick[i].mn[3]) != 0) {
 			vl = cmap[mna].rlight;
 			wl = cmap[mna].mmf & MMF_SIGHTBLOCK;
-		} else
+		} else {
 			vl = wl = 0;
+		}
 		if ((mna = quick[i].mn[5]) != 0) {
 			vr = cmap[mna].rlight;
 			wr = cmap[mna].mmf & MMF_SIGHTBLOCK;
-		} else
+		} else {
 			vr = wr = 0;
+		}
 		if ((mna = quick[i].mn[1]) != 0) {
 			vt = cmap[mna].rlight;
 			wt = cmap[mna].mmf & MMF_SIGHTBLOCK;
-		} else
+		} else {
 			vt = wt = 0;
+		}
 		if ((mna = quick[i].mn[7]) != 0) {
 			vb = cmap[mna].rlight;
 			wb = cmap[mna].mmf & MMF_SIGHTBLOCK;
-		} else
+		} else {
 			vb = wb = 0;
+		}
 
 		if (!(cmap[mn].mmf & MMF_SIGHTBLOCK)) {
-			if ((!vl || wl) && (!vb || wb) && vt && vr && (!wl || !wb))
+			if ((!vl || wl) && (!vb || wb) && vt && vr && (!wl || !wb)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_L;
-			if (vl && vb && (!vt || wt) && (!vr || wr) && (!wt || !wr))
+			}
+			if (vl && vb && (!vt || wt) && (!vr || wr) && (!wt || !wr)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_R;
-			if ((!vl || wl) && vb && (!vt || wt) && vr && (!wl || !wt))
+			}
+			if ((!vl || wl) && vb && (!vt || wt) && vr && (!wl || !wt)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_T;
-			if (vl && (!vb || wb) && vt && (!vr || wr) && (!wb || !wr))
+			}
+			if (vl && (!vb || wb) && vt && (!vr || wr) && (!wb || !wr)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_B;
+			}
 		} else {
-			if (!vt && !vr && !(wl && wb))
+			if (!vt && !vr && !(wl && wb)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_R;
-			if (!vb && !vl && !(wr && wt))
+			}
+			if (!vb && !vl && !(wr && wt)) {
 				cmap[mn].mmf |= MMF_STRAIGHT_L;
+			}
 		}
 	}
 }
@@ -826,54 +876,61 @@ static int trans_y(int frx, int fry, int tox, int toy, int step, int start)
 
 static void display_game_spells(void)
 {
-	int i, mn, scrx, scry, x, y, dx, sprite, start;
+	int i, x, y, dx, sprite, start;
 	int nr, fn, e;
 	int mapx, mapy, mna, x1, y1, x2, y2, h1, h2, size, n;
 	DL *dl;
-	int light;
 	float alpha;
 
 	start = SDL_GetTicks();
 
 	for (i = 0; i < maxquick; i++) {
-		mn = quick[i].mn[4];
-		scrx = mapaddx + quick[i].cx;
-		scry = mapaddy + quick[i].cy;
-		light = map[mn].rlight;
+		int mn = quick[i].mn[4];
+		int scrx = mapaddx + quick[i].cx;
+		int scry = mapaddy + quick[i].cy;
+		int light = map[mn].rlight;
 
-		if (!light)
+		if (!light) {
 			continue;
+		}
 
 		map[mn].sink = 0;
 
-		if (map[mn].gsprite >= 59405 && map[mn].gsprite <= 59413)
+		if (map[mn].gsprite >= 59405 && map[mn].gsprite <= 59413) {
 			map[mn].sink = 8;
-		if (map[mn].gsprite >= 59414 && map[mn].gsprite <= 59422)
+		}
+		if (map[mn].gsprite >= 59414 && map[mn].gsprite <= 59422) {
 			map[mn].sink = 16;
-		if (map[mn].gsprite >= 59423 && map[mn].gsprite <= 59431)
+		}
+		if (map[mn].gsprite >= 59423 && map[mn].gsprite <= 59431) {
 			map[mn].sink = 24;
-		if (map[mn].gsprite >= 20815 && map[mn].gsprite <= 20823)
+		}
+		if (map[mn].gsprite >= 20815 && map[mn].gsprite <= 20823) {
 			map[mn].sink = 36;
+		}
 
 		for (e = 0; e < 68; e++) {
 			if (e < 4) {
-				if ((fn = map[mn].ef[e]) != 0)
+				if ((fn = map[mn].ef[e]) != 0) {
 					nr = find_ceffect(fn);
-				else
+				} else {
 					continue;
+				}
 			} else if (map[mn].cn) {
 				for (nr = e - 4; nr < MAXEF; nr++) {
 					if (ueffect[nr] && is_char_ceffect(ceffect[nr].generic.type) &&
-					    (unsigned)ceffect[nr].flash.cn == map[mn].cn)
+					    (unsigned)ceffect[nr].flash.cn == map[mn].cn) {
 						break;
+					}
 				}
-				if (nr == MAXEF)
+				if (nr == MAXEF) {
 					break;
-				else
+				} else {
 					e = nr + 4;
-			} else
+				}
+			} else {
 				break;
-			;
+			};
 
 			if (nr != -1) {
 				// addline("%d %d %d %d %d",fn,e,nr,ceffect[nr].generic.type,map[mn].cn);
@@ -927,8 +984,9 @@ static void display_game_spells(void)
 					h2 = 25;
 
 					// sanity check
-					if (abs(x1 - x2) + abs(y1 - y2) > 200)
+					if (abs(x1 - x2) + abs(y1 - y2) > 200) {
 						break;
+					}
 
 					// mn is target
 					dl_call_strike(GME_LAY, x1, y1, h1, x2, y2, h2);
@@ -963,8 +1021,9 @@ static void display_game_spells(void)
 							}
 							break;
 						}
-						if (ceffect[nr].explode.base == 50451)
+						if (ceffect[nr].explode.base == 50451) {
 							dl->ddfx.c1 = IRGB(16, 12, 0);
+						}
 
 						dl = dl_next_set(GME_LAY2, min(sprite + 8 + tick - ceffect[nr].explode.start, sprite + 15), x,
 						    y + dx, DDFX_NLIGHT);
@@ -973,8 +1032,9 @@ static void display_game_spells(void)
 							break;
 						}
 						dl->h = dx;
-						if (ceffect[nr].explode.base == 50451)
+						if (ceffect[nr].explode.base == 50451) {
 							dl->ddfx.c1 = IRGB(16, 12, 0);
+						}
 					}
 
 					break;
@@ -1097,8 +1157,9 @@ static void display_game_spells(void)
 					h2 = 25;
 
 					// sanity check
-					if (abs(x1 - x2) + abs(y1 - y2) > 200)
+					if (abs(x1 - x2) + abs(y1 - y2) > 200) {
 						break;
+					}
 
 					// mn is target
 					dl_call_pulseback(GME_LAY, x1, y1, h1, x2, y2, h2);
@@ -1123,10 +1184,11 @@ static void display_game_spells(void)
 					}
 					break;
 				case 24: // forever blowing bubbles...
-					if (ceffect[nr].bubble.yoff)
+					if (ceffect[nr].bubble.yoff) {
 						add_bubble(scrx + map[mn].xadd, scry + map[mn].yadd, ceffect[nr].bubble.yoff);
-					else
+					} else {
 						add_bubble(scrx, scry, ceffect[nr].bubble.yoff);
+					}
 					break;
 				}
 			}
@@ -1142,8 +1204,9 @@ static void display_game_spells2(void)
 	DL *dl;
 
 	for (nr = 0; nr < MAXEF; nr++) {
-		if (!ueffect[nr])
+		if (!ueffect[nr]) {
 			continue;
+		}
 
 		switch (ceffect[nr].generic.type) {
 		case 2: // ball
@@ -1154,8 +1217,9 @@ static void display_game_spells2(void)
 
 			stom(x, y, &mapx, &mapy);
 			mn = mapmn(mapx, mapy);
-			if (!map[mn].rlight)
+			if (!map[mn].rlight) {
 				break;
+			}
 
 			dl = dl_next_set(GME_LAY, 1008, x, y, DDFX_NLIGHT); // shade
 			if (!dl) {
@@ -1177,8 +1241,9 @@ static void display_game_spells2(void)
 
 			stom(x, y, &mapx, &mapy);
 			mn = mapmn(mapx, mapy);
-			if (!map[mn].rlight)
+			if (!map[mn].rlight) {
 				break;
+			}
 
 			dl = dl_next_set(GME_LAY, 1007, x, y, DDFX_NLIGHT); // shade
 			if (!dl) {
@@ -1208,8 +1273,9 @@ static void display_game_spells2(void)
 
 			stom(x, y, &mapx, &mapy);
 			mn = mapmn(mapx, mapy);
-			if (!map[mn].rlight)
+			if (!map[mn].rlight) {
 				break;
+			}
 
 			dl = dl_next_set(GME_LAY, 50281, x, y, DDFX_NLIGHT); // shade
 			if (!dl) {
@@ -1223,8 +1289,9 @@ static void display_game_spells2(void)
 			}
 			dl->h = 10;
 
-			if (ceffect[nr].edemonball.base == 1)
+			if (ceffect[nr].edemonball.base == 1) {
 				dl->ddfx.c1 = IRGB(16, 12, 0);
+			}
 			// else if (ceffect[nr].edemonball.base==2) dl->ddfx.tint=EDEMONBALL_TINT3;
 			// else if (ceffect[nr].edemonball.base==3) dl->ddfx.tint=EDEMONBALL_TINT4;
 
@@ -1239,8 +1306,9 @@ static char *roman(int nr)
 	static char buf[80];
 	char *ptr = buf;
 
-	if (nr > 399)
+	if (nr > 399) {
 		return "???";
+	}
 
 	h = nr / 100;
 	nr -= h * 100;
@@ -1298,7 +1366,7 @@ static char *roman(int nr)
 
 static void display_game_names(void)
 {
-	int i, mn, scrx, scry, x, y, col, frame;
+	int i, x, y, col, frame;
 	char *sign;
 	unsigned short clancolor[33];
 
@@ -1339,18 +1407,22 @@ static void display_game_names(void)
 	clancolor[32] = IRGB(31, 8, 31);
 
 	for (i = 0; i < maxquick; i++) {
-		mn = quick[i].mn[4];
-		scrx = mapaddx + quick[i].cx;
-		scry = mapaddy + quick[i].cy;
+		int mn = quick[i].mn[4];
+		int scrx = mapaddx + quick[i].cx;
+		int scry = mapaddy + quick[i].cy;
 
-		if (!map[mn].rlight)
+		if (!map[mn].rlight) {
 			continue;
-		if (!map[mn].csprite)
+		}
+		if (!map[mn].csprite) {
 			continue;
-		if (map[mn].gsprite == 51066)
+		}
+		if (map[mn].gsprite == 51066) {
 			continue;
-		if (map[mn].gsprite == 51067)
+		}
+		if (map[mn].gsprite == 51067) {
 			continue;
+		}
 
 		x = scrx + map[mn].xadd;
 		y = scry + 4 + map[mn].yadd + get_chr_height(map[mn].csprite) - 25 + get_sink(mn, map);
@@ -1360,29 +1432,33 @@ static void display_game_names(void)
 
 		if (player[map[mn].cn].clan) {
 			col = clancolor[player[map[mn].cn].clan];
-			if (player[map[mn].cn].clan == 3)
+			if (player[map[mn].cn].clan == 3) {
 				frame = DD_WFRAME;
+			}
 		}
 
 		sign = "";
-		if (player[map[mn].cn].pk_status == 5)
+		if (player[map[mn].cn].pk_status == 5) {
 			sign = " **";
-		else if (player[map[mn].cn].pk_status == 4)
+		} else if (player[map[mn].cn].pk_status == 4) {
 			sign = " *";
-		else if (player[map[mn].cn].pk_status == 3)
+		} else if (player[map[mn].cn].pk_status == 3) {
 			sign = " ++";
-		else if (player[map[mn].cn].pk_status == 2)
+		} else if (player[map[mn].cn].pk_status == 2) {
 			sign = " +";
-		else if (player[map[mn].cn].pk_status == 1)
+		} else if (player[map[mn].cn].pk_status == 1) {
 			sign = " -";
+		}
 
-		if (namesize != DD_SMALL)
+		if (namesize != DD_SMALL) {
 			y -= 3;
+		}
 		dd_drawtext_fmt(x, y, col, DD_CENTER | namesize | frame, "%s%s", player[map[mn].cn].name, sign);
 
 
-		if (namesize != DD_SMALL)
+		if (namesize != DD_SMALL) {
 			y += 3;
+		}
 		y += 12;
 		dd_drawtext(x, y, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, roman(player[map[mn].cn].level));
 
@@ -1408,12 +1484,10 @@ static void display_game_names(void)
 
 static void display_game_act(void)
 {
-	int mn, scrx, scry, mapx, mapy;
-	char *actstr;
 	int acttyp;
 
 	// act
-	actstr = NULL;
+	const char *actstr = NULL;
 
 	switch (act) {
 	case PAC_MOVE:
@@ -1489,14 +1563,16 @@ static void display_game_act(void)
 	}
 
 	if (acttyp != -1 && actstr) {
-		mn = mapmn(actx - originx + MAPDX / 2, acty - originy + MAPDY / 2);
-		mapx = mn % MAPDX;
-		mapy = mn / MAPDX;
+		int mn = mapmn(actx - originx + MAPDX / 2, acty - originy + MAPDY / 2);
+		int mapx = mn % MAPDX;
+		int mapy = mn / MAPDX;
+		int scrx, scry;
 		mtos(mapx, mapy, &scrx, &scry);
-		if (acttyp == 0)
+		if (acttyp == 0) {
 			dl_next_set(GNDSEL_LAY, 5, scrx, scry, DDFX_NLIGHT);
-		else
+		} else {
 			dd_drawtext(scrx, scry, textcolor, DD_CENTER | DD_SMALL | DD_FRAME, actstr);
+		}
 	}
 }
 
@@ -1510,8 +1586,9 @@ int get_sink(int mn, struct map *cmap)
 	xp = mn % MAPDX;
 	yp = mn / MAPDX;
 
-	if (x == 0 && y == 0)
+	if (x == 0 && y == 0) {
 		return cmap[mn].sink;
+	}
 
 	if (x > 0 && y == 0 && xp < MAPDX - 1) {
 		tot = 40;
@@ -1547,8 +1624,9 @@ int get_sink(int mn, struct map *cmap)
 		mn2 = mn - 1;
 	}
 
-	if (mn2 == -1)
+	if (mn2 == -1) {
 		return cmap[mn].sink;
+	}
 
 	x = abs(x);
 	y = abs(y);
@@ -1584,22 +1662,26 @@ void display_game_map(struct map *cmap)
 				continue;
 			}
 
-			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight))
+			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ll = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ll = light;
-			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.rl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.rl = light;
-			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ul = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ul = light;
-			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.dl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.dl = light;
+			}
 
 			dl->ddfx.scale = cmap[mn].rg.scale;
 			dl->ddfx.cr = cmap[mn].rg.cr;
@@ -1633,22 +1715,26 @@ void display_game_map(struct map *cmap)
 				continue;
 			}
 
-			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight))
+			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ll = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ll = light;
-			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.rl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.rl = light;
-			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ul = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ul = light;
-			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.dl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.dl = light;
+			}
 
 			dl->ddfx.scale = cmap[mn].rg2.scale;
 			dl->ddfx.cr = cmap[mn].rg2.cr;
@@ -1673,14 +1759,18 @@ void display_game_map(struct map *cmap)
 			g2sprite_cnt++;
 		}
 
-		if (cmap[mn].mmf & MMF_STRAIGHT_T)
+		if (cmap[mn].mmf & MMF_STRAIGHT_T) {
 			dl_next_set(GNDSTR_LAY, 50, scrx, scry, DDFX_NLIGHT);
-		if (cmap[mn].mmf & MMF_STRAIGHT_B)
+		}
+		if (cmap[mn].mmf & MMF_STRAIGHT_B) {
 			dl_next_set(GNDSTR_LAY, 51, scrx, scry, DDFX_NLIGHT);
-		if (cmap[mn].mmf & MMF_STRAIGHT_L)
+		}
+		if (cmap[mn].mmf & MMF_STRAIGHT_L) {
 			dl_next_set(GNDSTR_LAY, 52, scrx, scry, DDFX_NLIGHT);
-		if (cmap[mn].mmf & MMF_STRAIGHT_R)
+		}
+		if (cmap[mn].mmf & MMF_STRAIGHT_R) {
 			dl_next_set(GNDSTR_LAY, 53, scrx, scry, DDFX_NLIGHT);
+		}
 
 		// blit fsprites
 		if (cmap[mn].rf.sprite) {
@@ -1690,25 +1780,30 @@ void display_game_map(struct map *cmap)
 				continue;
 			}
 			dl->h = -9;
-			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight))
+			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ll = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ll = light;
-			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.rl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.rl = light;
-			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ul = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ul = light;
-			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.dl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.dl = light;
+			}
 
-			if (no_lighting_sprite(cmap[mn].fsprite))
+			if (no_lighting_sprite(cmap[mn].fsprite)) {
 				dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
+			}
 
 			// fsprite can increase the height of items and fsprite2
 			heightadd = is_yadd_sprite(cmap[mn].rf.sprite);
@@ -1739,8 +1834,9 @@ void display_game_map(struct map *cmap)
 			}
 
 			fsprite_cnt++;
-		} else
+		} else {
 			heightadd = 0;
+		}
 
 		// ... 2nd (fsprite2)
 		if (cmap[mn].rf2.sprite) {
@@ -1750,25 +1846,30 @@ void display_game_map(struct map *cmap)
 				continue;
 			}
 			dl->h = 1;
-			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight))
+			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ll = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ll = light;
-			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.rl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.rl = light;
-			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.ul = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.ul = light;
-			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight))
+			}
+			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
 				dl->ddfx.dl = cmap[mna].rlight;
-			else
+			} else {
 				dl->ddfx.dl = light;
+			}
 
-			if (no_lighting_sprite(cmap[mn].fsprite2))
+			if (no_lighting_sprite(cmap[mn].fsprite2)) {
 				dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
+			}
 
 			dl->y += 1;
 			dl->h += 1;
@@ -1812,15 +1913,15 @@ void display_game_map(struct map *cmap)
 
 
 #if 0
-            // Disabled shaded lighting for items. It is often wrong and needs re-doing
-            if ((mna=quick[i].mn[3])!=0 && (cmap[mna].rlight)) dl->ddfx.ll=cmap[mna].rlight;
-            else dl->ddfx.ll=light;
-            if ((mna=quick[i].mn[5])!=0 && (cmap[mna].rlight)) dl->ddfx.rl=cmap[mna].rlight;
-            else dl->ddfx.rl=light;
-            if ((mna=quick[i].mn[1])!=0 && (cmap[mna].rlight)) dl->ddfx.ul=cmap[mna].rlight;
-            else dl->ddfx.ul=light;
-            if ((mna=quick[i].mn[7])!=0 && (cmap[mna].rlight)) dl->ddfx.dl=cmap[mna].rlight;
-            else dl->ddfx.dl=light;
+	        // Disabled shaded lighting for items. It is often wrong and needs re-doing
+	        if ((mna=quick[i].mn[3])!=0 && (cmap[mna].rlight)) dl->ddfx.ll=cmap[mna].rlight;
+	        else dl->ddfx.ll=light;
+	        if ((mna=quick[i].mn[5])!=0 && (cmap[mna].rlight)) dl->ddfx.rl=cmap[mna].rlight;
+	        else dl->ddfx.rl=light;
+	        if ((mna=quick[i].mn[1])!=0 && (cmap[mna].rlight)) dl->ddfx.ul=cmap[mna].rlight;
+	        else dl->ddfx.ul=light;
+	        if ((mna=quick[i].mn[7])!=0 && (cmap[mna].rlight)) dl->ddfx.dl=cmap[mna].rlight;
+	        else dl->ddfx.dl=light;
 #else
 			dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
 #endif
@@ -1890,8 +1991,9 @@ void display_game_map(struct map *cmap)
 
 			// check for spells on char
 			for (nr = 0; nr < MAXEF; nr++) {
-				if (!ueffect[nr])
+				if (!ueffect[nr]) {
 					continue;
+				}
 				if ((unsigned int)ceffect[nr].freeze.cn == map[mn].cn && ceffect[nr].generic.type == 11) { // freeze
 					int diff;
 
@@ -1901,8 +2003,9 @@ void display_game_map(struct map *cmap)
 						continue;
 					} else if ((diff = ceffect[nr].freeze.stop - tick) < DDFX_MAX_FREEZE * 4) { // ending
 						dl->ddfx.freeze = diff / 4;
-					} else
+					} else {
 						dl->ddfx.freeze = DDFX_MAX_FREEZE - 1; // running
+					}
 				}
 				if ((unsigned int)ceffect[nr].curse.cn == map[mn].cn && ceffect[nr].generic.type == 18) { // curse
 
@@ -1956,30 +2059,35 @@ void display_game_map(struct map *cmap)
 	if (cmap == map) { // avoid acting on prefetch
 		// selection on ground
 		if (mapsel != -1 || context_getnm() != -1) {
-			if (context_getnm() != -1)
+			if (context_getnm() != -1) {
 				mn = context_getnm();
-			else
+			} else {
 				mn = mapsel;
+			}
 			mapx = mn % MAPDX;
 			mapy = mn / MAPDX;
 			mtos(mapx, mapy, &scrx, &scry);
-			if (cmap[mn].rlight == 0 || (cmap[mn].mmf & MMF_SIGHTBLOCK))
+			if (cmap[mn].rlight == 0 || (cmap[mn].mmf & MMF_SIGHTBLOCK)) {
 				sprite = SPR_FFIELD;
-			else
+			} else {
 				sprite = SPR_FIELD;
+			}
 			dl = dl_next_set(GNDSEL_LAY, sprite, scrx, scry, DDFX_NLIGHT);
-			if (!dl)
+			if (!dl) {
 				note("error in game #10");
+			}
 		}
 		// act (field) quick and dirty
-		if (act == PAC_MOVE)
+		if (act == PAC_MOVE) {
 			display_game_act();
+		}
 
 		dl_play();
 
 		// act (text)  quick and dirty
-		if (act != PAC_MOVE)
+		if (act != PAC_MOVE) {
 			display_game_act();
+		}
 	}
 }
 
@@ -2005,10 +2113,11 @@ void display_pents(void)
 		default:
 			continue;
 		}
-		if (context_action_enabled())
+		if (context_action_enabled()) {
 			yoff = 30;
-		else
+		} else {
 			yoff = 0;
+		}
 		dd_drawtext(dotx(DOT_BOT) + 550, doty(DOT_BOT) - 80 + n * 10 - yoff, col, DD_SMALL | DD_FRAME, pent_str[n] + 1);
 	}
 }
@@ -2031,10 +2140,11 @@ int quick_qcmp(const void *va, const void *vb)
 	a = (QUICK *)va;
 	b = (QUICK *)vb;
 
-	if (a->mapx + a->mapy < b->mapx + b->mapy)
+	if (a->mapx + a->mapy < b->mapx + b->mapy) {
 		return -1;
-	else if (a->mapx + a->mapy > b->mapx + b->mapy)
+	} else if (a->mapx + a->mapy > b->mapx + b->mapy) {
 		return 1;
+	}
 
 	return a->mapx - b->mapx;
 }
@@ -2094,19 +2204,24 @@ void make_quick(int game, int mcx, int mcy)
 		for (y = -1; y <= 1; y++) {
 			for (x = -1; x <= 1; x++) {
 				if (x == 1 || (x == 0 && y == 1)) {
-					for (ii = i + 1; ii < maxquick; ii++)
-						if (quick[i].mapx + x == quick[ii].mapx && quick[i].mapy + y == quick[ii].mapy)
+					for (ii = i + 1; ii < maxquick; ii++) {
+						if (quick[i].mapx + x == quick[ii].mapx && quick[i].mapy + y == quick[ii].mapy) {
 							break;
-						else
+						} else {
 							cnt++;
+						}
+					}
 				} else if (x == -1 || (x == 0 && y == -1)) {
-					for (ii = i - 1; ii >= 0; ii--)
-						if (quick[i].mapx + x == quick[ii].mapx && quick[i].mapy + y == quick[ii].mapy)
+					for (ii = i - 1; ii >= 0; ii--) {
+						if (quick[i].mapx + x == quick[ii].mapx && quick[i].mapy + y == quick[ii].mapy) {
 							break;
-						else
+						} else {
 							cnt++;
-					if (ii == -1)
+						}
+					}
+					if (ii == -1) {
 						ii = maxquick;
+					}
 				} else {
 					ii = i;
 				}

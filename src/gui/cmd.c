@@ -20,7 +20,7 @@
 #include "../../src/modder.h"
 
 #define MAXCMDLINE 199
-#define MAXHIST 20
+#define MAXHIST    20
 
 static char cmdline[MAXCMDLINE + 1] = {""};
 static char *history[MAXHIST];
@@ -44,13 +44,16 @@ char *strcasestr(const char *haystack, const char *needle)
 	for (ptr = needle; *haystack; haystack++) {
 		if (toupper(*ptr) == toupper(*haystack)) {
 			ptr++;
-			if (!*ptr)
+			if (!*ptr) {
 				return (char *)(haystack + (needle - ptr + 1));
-		} else
+			}
+		} else {
 			ptr = needle;
+		}
 	}
 	return NULL;
 }
+
 void cmd_version(void)
 {
 	int i;
@@ -60,8 +63,9 @@ void cmd_version(void)
 
 	for (i = 0; i < MAXMOD; i++) {
 		ptr = amod_version(i);
-		if (ptr)
+		if (ptr) {
 			addline("%c-mod version: %s", 'A' + i, ptr);
+		}
 	}
 }
 
@@ -102,10 +106,12 @@ int client_cmd(char *buf)
 	}
 	if (!strncmp(buf, "#volume ", 8) || !strncmp(buf, "/volume ", 8)) {
 		int new_sound_volume = atoi(&buf[8]);
-		if (new_sound_volume < 0)
+		if (new_sound_volume < 0) {
 			new_sound_volume = 0;
-		if (new_sound_volume >= 128)
+		}
+		if (new_sound_volume >= 128) {
 			new_sound_volume = 128;
+		}
 		sound_volume = new_sound_volume;
 		addline("Volume is now at %d", sound_volume);
 		return 1;
@@ -120,18 +126,22 @@ int client_cmd(char *buf)
 
 		ptr = buf + 5;
 
-		while (isspace(*ptr))
+		while (isspace(*ptr)) {
 			ptr++;
+		}
 		what = atoi(ptr);
-		if (what == 0)
+		if (what == 0) {
 			what = 9;
-		else
+		} else {
 			what--;
+		}
 
-		while (isdigit(*ptr))
+		while (isdigit(*ptr)) {
 			ptr++;
-		while (isspace(*ptr))
+		}
+		while (isspace(*ptr)) {
 			ptr++;
+		}
 		key = toupper(*ptr);
 
 		if (what < 0 || what > 9) {
@@ -163,41 +173,53 @@ int client_cmd(char *buf)
 
 char rem_buf[10][256] = {""};
 int rem_in = 0, rem_out = 0;
+
 void cmd_remember(char *ptr)
 {
 	char *start = ptr, *dst;
 	char tmp[256];
 
-	if (*ptr != '#' && *ptr != '/')
+	if (*ptr != '#' && *ptr != '/') {
 		return;
+	}
 	ptr++;
-	if (*ptr != 't' && *ptr != 'T')
+	if (*ptr != 't' && *ptr != 'T') {
 		return;
+	}
 	ptr++;
-	if (*ptr == ' ')
+	if (*ptr == ' ') {
 		goto do_remember;
-	if (*ptr != 'e' && *ptr != 'E')
+	}
+	if (*ptr != 'e' && *ptr != 'E') {
 		return;
+	}
 	ptr++;
-	if (*ptr == ' ')
+	if (*ptr == ' ') {
 		goto do_remember;
-	if (*ptr != 'l' && *ptr != 'L')
+	}
+	if (*ptr != 'l' && *ptr != 'L') {
 		return;
+	}
 	ptr++;
-	if (*ptr == ' ')
+	if (*ptr == ' ') {
 		goto do_remember;
-	if (*ptr != 'l' && *ptr != 'L')
+	}
+	if (*ptr != 'l' && *ptr != 'L') {
 		return;
+	}
 	ptr++;
-	if (*ptr == ' ')
+	if (*ptr == ' ') {
 		goto do_remember;
+	}
 	return;
 
 do_remember:
-	while (isspace(*ptr))
+	while (isspace(*ptr)) {
 		ptr++;
-	while (*ptr && !isspace(*ptr))
+	}
+	while (*ptr && !isspace(*ptr)) {
 		ptr++;
+	}
 
 	for (dst = tmp; start <= ptr; *dst++ = *start++)
 		;
@@ -212,20 +234,23 @@ do_remember:
 
 void cmd_fetch(char *ptr)
 {
-	if (rem_out != (rem_in + 1) % 10)
+	if (rem_out != (rem_in + 1) % 10) {
 		strcpy(ptr, rem_buf[rem_out]);
+	}
 	rem_out = (rem_out + 9) % 10;
 }
 
 void cmd_proc(int key)
 {
-	if (context_key(key))
+	if (context_key(key)) {
 		return;
+	}
 
 	switch (key) {
 	case CMD_BACK:
-		if (cmdcursor < 1)
+		if (cmdcursor < 1) {
 			break;
+		}
 		memmove(cmdline + cmdcursor - 1, cmdline + cmdcursor, MAXCMDLINE - cmdcursor);
 		cmdline[MAXCMDLINE - 1] = 0;
 		cmdcursor--;
@@ -236,14 +261,16 @@ void cmd_proc(int key)
 		break;
 
 	case CMD_LEFT:
-		if (cmdcursor > 0)
+		if (cmdcursor > 0) {
 			cmdcursor--;
+		}
 		break;
 
 	case CMD_RIGHT:
 		if (cmdcursor < MAXCMDLINE - 1) {
-			if (cmdline[cmdcursor] == 0)
+			if (cmdline[cmdcursor] == 0) {
 				cmdline[cmdcursor] = ' ';
+			}
 			cmdcursor++;
 		}
 		break;
@@ -253,29 +280,34 @@ void cmd_proc(int key)
 		break;
 
 	case CMD_END:
-		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--)
-			if (cmdline[cmdcursor])
+		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--) {
+			if (cmdline[cmdcursor]) {
 				break;
+			}
+		}
 		cmdcursor++;
 		break;
 
 	case CMD_UP:
-		if (histpos < MAXHIST - 1 && history[histpos + 1])
+		if (histpos < MAXHIST - 1 && history[histpos + 1]) {
 			histpos++;
-		else
+		} else {
 			break;
+		}
 		bzero(cmdline, sizeof(cmdline));
 		strcpy(cmdline, history[histpos]);
-		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--)
-			if (cmdline[cmdcursor])
+		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--) {
+			if (cmdline[cmdcursor]) {
 				break;
+			}
+		}
 		cmdcursor++;
 		break;
 
 	case CMD_DOWN:
-		if (histpos > 0)
+		if (histpos > 0) {
 			histpos--;
-		else {
+		} else {
 			bzero(cmdline, sizeof(cmdline));
 			cmdcursor = 0;
 			histpos = -1;
@@ -283,19 +315,23 @@ void cmd_proc(int key)
 		}
 		bzero(cmdline, sizeof(cmdline));
 		strcpy(cmdline, history[histpos]);
-		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--)
-			if (cmdline[cmdcursor])
+		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--) {
+			if (cmdline[cmdcursor]) {
 				break;
+			}
+		}
 		cmdcursor++;
 		break;
 
 	case CMD_RETURN:
 	case 13:
-		if (!client_cmd(cmdline) && cmdline[0])
+		if (!client_cmd(cmdline) && cmdline[0]) {
 			cmd_text(cmdline);
+		}
 		cmd_remember(cmdline);
-		if (history[MAXHIST - 1])
+		if (history[MAXHIST - 1]) {
 			xfree(history[MAXHIST - 1]);
+		}
 		memmove(history + 1, history, sizeof(history) - sizeof(history[0]));
 		history[0] = xstrdup(cmdline, MEM_TEMP);
 		cmdcursor = cmddisplay = 0;
@@ -306,9 +342,11 @@ void cmd_proc(int key)
 	case 9:
 		bzero(cmdline, sizeof(cmdline));
 		cmd_fetch(cmdline);
-		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--)
-			if (cmdline[cmdcursor])
+		for (cmdcursor = MAXCMDLINE - 2; cmdcursor >= 0; cmdcursor--) {
+			if (cmdline[cmdcursor]) {
 				break;
+			}
+		}
 		cmdcursor++;
 		break;
 
@@ -328,19 +366,22 @@ void cmd_add_text(const char *buf, int typ)
 {
 	context_key_set(1);
 
-	while (*buf)
+	while (*buf) {
 		cmd_proc(*buf++);
+	}
 }
 
 void display_cmd(void)
 {
 	int n, x, tmp;
 
-	if (!context_key_isset())
+	if (!context_key_isset()) {
 		return;
+	}
 
-	if (cmdcursor < cmddisplay)
+	if (cmdcursor < cmddisplay) {
 		cmddisplay = 0;
+	}
 
 	for (x = 0, n = cmdcursor; n > cmddisplay; n--) {
 		x += dd_char_len(cmdline[n]);
@@ -355,21 +396,24 @@ void display_cmd(void)
 	}
 
 	for (x = 0, n = cmddisplay; n < MAXCMDLINE; n++) {
-		if (cmdline[n])
+		if (cmdline[n]) {
 			tmp = dd_drawtext_char(dotx(DOT_TXT) + x, doty(DOT_TX2) - 1, cmdline[n], IRGB(31, 31, 31));
-		else
+		} else {
 			tmp = 0;
+		}
 		if (n == cmdcursor) {
-			if (cmdline[n])
+			if (cmdline[n]) {
 				dd_shaded_rect(dotx(DOT_TXT) + x - 1, doty(DOT_TX2) - 2, dotx(DOT_TXT) + x + tmp + 1, doty(DOT_TX2) + 8,
 				    0xffe0, 95);
-			else
+			} else {
 				dd_shaded_rect(
 				    dotx(DOT_TXT) + x, doty(DOT_TX2) - 2, dotx(DOT_TXT) + x + 4, doty(DOT_TX2) + 8, 0xffe0, 95);
+			}
 		}
 		x += tmp;
-		if (x > dotx(DOT_TX2) - dotx(DOT_TXT) - 8)
+		if (x > dotx(DOT_TX2) - dotx(DOT_TXT) - 8) {
 			break;
+		}
 	}
 }
 

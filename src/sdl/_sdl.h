@@ -9,20 +9,20 @@
 
 #define STX_NONE (-1)
 
-#define IGET_A(c) ((((uint32_t)(c)) >> 24) & 0xFF)
-#define IGET_R(c) ((((uint32_t)(c)) >> 16) & 0xFF)
-#define IGET_G(c) ((((uint32_t)(c)) >> 8) & 0xFF)
-#define IGET_B(c) ((((uint32_t)(c)) >> 0) & 0xFF)
-#define IRGB(r, g, b) (((r) << 0) | ((g) << 8) | ((b) << 16))
+#define IGET_A(c)         ((((uint32_t)(c)) >> 24) & 0xFF)
+#define IGET_R(c)         ((((uint32_t)(c)) >> 16) & 0xFF)
+#define IGET_G(c)         ((((uint32_t)(c)) >> 8) & 0xFF)
+#define IGET_B(c)         ((((uint32_t)(c)) >> 0) & 0xFF)
+#define IRGB(r, g, b)     (((r) << 0) | ((g) << 8) | ((b) << 16))
 #define IRGBA(r, g, b, a) (((uint32_t)(a) << 24) | ((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b) << 0))
 
-#define SF_USED (1 << 0)
-#define SF_SPRITE (1 << 1)
-#define SF_TEXT (1 << 2)
+#define SF_USED     (1 << 0)
+#define SF_SPRITE   (1 << 1)
+#define SF_TEXT     (1 << 2)
 #define SF_DIDALLOC (1 << 3)
-#define SF_DIDMAKE (1 << 4)
-#define SF_DIDTEX (1 << 5)
-#define SF_BUSY (1 << 6)
+#define SF_DIDMAKE  (1 << 4)
+#define SF_DIDTEX   (1 << 5)
+#define SF_BUSY     (1 << 6)
 
 struct sdl_texture {
 	SDL_Texture *tex;
@@ -71,6 +71,7 @@ struct sdl_image {
 
 #ifndef HAVE_DDFONT
 #define HAVE_DDFONT
+
 struct ddfont {
 	int dim;
 	unsigned char *raw;
@@ -84,7 +85,7 @@ int sdl_pre_backgnd(void *ptr);
 int sdl_create_cursors(void);
 
 #define MAX_SOUND_CHANNELS 32
-#define MAXSOUND 100
+#define MAXSOUND           100
 
 struct png_helper;
 int png_load_helper(struct png_helper *p);

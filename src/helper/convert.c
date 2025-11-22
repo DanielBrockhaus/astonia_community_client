@@ -56,11 +56,11 @@ void write_png_file(char *filename, uint32_t *pixel, int width, int height, int 
 
 #ifdef STANDALONE
 
-#define IGET_A(c) ((((uint32_t)(c)) >> 24) & 0xFF)
-#define IGET_R(c) ((((uint32_t)(c)) >> 16) & 0xFF)
-#define IGET_G(c) ((((uint32_t)(c)) >> 8) & 0xFF)
-#define IGET_B(c) ((((uint32_t)(c)) >> 0) & 0xFF)
-#define IRGB(r, g, b) (((r) << 0) | ((g) << 8) | ((b) << 16))
+#define IGET_A(c)         ((((uint32_t)(c)) >> 24) & 0xFF)
+#define IGET_R(c)         ((((uint32_t)(c)) >> 16) & 0xFF)
+#define IGET_G(c)         ((((uint32_t)(c)) >> 8) & 0xFF)
+#define IGET_B(c)         ((((uint32_t)(c)) >> 0) & 0xFF)
+#define IRGB(r, g, b)     (((r) << 0) | ((g) << 8) | ((b) << 16))
 #define IRGBA(r, g, b, a) (((uint32_t)(a) << 24) | ((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b) << 0))
 
 struct sdl_image {
@@ -84,12 +84,14 @@ int png_load_helper(struct png_helper *p)
 
 	if (p->zip) {
 		zp = zip_fopen(p->zip, p->filename, 0);
-		if (!zp)
+		if (!zp) {
 			return -1;
+		}
 	} else {
 		fp = fopen(p->filename, "rb");
-		if (!fp)
+		if (!fp) {
 			return -1;
+		}
 	}
 
 	p->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
@@ -128,11 +130,11 @@ int png_load_helper(struct png_helper *p)
 
 	tmp = png_get_rowbytes(p->png_ptr, p->info_ptr);
 
-	if (tmp == p->xres * 3)
+	if (tmp == p->xres * 3) {
 		p->bpp = 24;
-	else if (tmp == p->xres * 4)
+	} else if (tmp == p->xres * 4) {
 		p->bpp = 32;
-	else {
+	} else {
 		fclose(fp);
 		png_destroy_read_struct(&p->png_ptr, &p->info_ptr, (png_infopp)NULL);
 		fprintf(stderr, "rowbytes!=xres*4 (%d, %d, %s)", tmp, p->xres, p->filename);
@@ -152,10 +154,11 @@ int png_load_helper(struct png_helper *p)
 		return -1;
 	}
 
-	if (p->zip)
+	if (p->zip) {
 		zip_fclose(zp);
-	else
+	} else {
 		fclose(fp);
+	}
 
 	return 0;
 }
@@ -222,17 +225,20 @@ int convert_to_wall(struct sdl_image *si, int sprite, int sdl_scale, struct png_
 	for (y = 0; y < cres; y++) {
 		for (x = 0; x < xres; x++) {
 			sx = x * sc + off * p->xres / scale;
-			while (sx >= p->xres)
+			while (sx >= p->xres) {
 				sx -= p->xres;
+			}
 
 			sy = y * sc;
-			if (x < xres / 2)
+			if (x < xres / 2) {
 				sy -= (x / 2 + tres) * sc;
-			else
+			} else {
 				sy -= ((xres - x) / 2 + tres) * sc;
+			}
 
-			while (sy >= p->yres)
+			while (sy >= p->yres) {
 				sy -= p->yres;
+			}
 
 			if (y < abs(x - xres / 2) / 2 || cres - y < abs(x - xres / 2) / 2) { // corners
 				r = b = g = a = 0;
@@ -251,8 +257,9 @@ int convert_to_wall(struct sdl_image *si, int sprite, int sdl_scale, struct png_
 						b = p->row[(sy)][(sx) * 3 + 2];
 						a = 255;
 					}
-				} else
+				} else {
 					r = g = b = a = 0;
+				}
 			} else { // sides
 				if (p->bpp == 32) {
 					r = p->row[(sy)][(sx) * 4 + 0];
@@ -368,10 +375,11 @@ int convert_to_floor(struct sdl_image *si, int sprite, int sdl_scale, struct png
 
 	for (y = 0; y < yres; y++) {
 		for (x = 0; x < xres; x++) {
-			if (x - xres / 2 >= 0)
+			if (x - xres / 2 >= 0) {
 				l = (x - xres / 2) / 2;
-			else
+			} else {
 				l = (xres / 2 - x - 1) / 2;
+			}
 
 			if (y < l || yres - y <= l) { // corners
 				r = b = g = a = 0;
@@ -391,8 +399,9 @@ int convert_to_floor(struct sdl_image *si, int sprite, int sdl_scale, struct png
 						b = p->row[(sy)][(sx) * 3 + 2];
 						a = 255;
 					}
-				} else
+				} else {
 					r = g = b = a = 0;
+				}
 			}
 			si->pixel[x + y * xres] = IRGBA(r, g, b, a);
 		}
@@ -417,19 +426,23 @@ void write_png_file(char *filename, uint32_t *pixel, int width, int height, int 
 	line = malloc(width * sizeof(uint32_t));
 
 	FILE *fp = fopen(filename, "wb");
-	if (!fp)
+	if (!fp) {
 		abort();
+	}
 
 	png_structp png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-	if (!png)
+	if (!png) {
 		abort();
+	}
 
 	png_infop info = png_create_info_struct(png);
-	if (!info)
+	if (!info) {
 		abort();
+	}
 
-	if (setjmp(png_jmpbuf(png)))
+	if (setjmp(png_jmpbuf(png))) {
 		abort();
+	}
 
 	png_init_io(png, fp);
 

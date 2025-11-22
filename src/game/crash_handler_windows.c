@@ -18,8 +18,9 @@ void main_dump(FILE *fp)
 	fprintf(fp, "game_options: %llu\n", (unsigned long long)game_options);
 	for (i = 0; i < 64; i++) {
 		tmp = 1llu << i;
-		if (game_options & tmp)
+		if (game_options & tmp) {
 			fprintf(fp, "game_option: %llu\n", tmp);
+		}
 	}
 
 
@@ -30,11 +31,13 @@ static void errPrint(uint64_t addr, const char *filename, int lineno, const char
 {
 	int *count = context;
 	const char *delim = strrchr(filename, '/');
-	if (delim)
+	if (delim) {
 		filename = delim + 1;
+	}
 	delim = strrchr(filename, '\\');
-	if (delim)
+	if (delim) {
 		filename = delim + 1;
+	}
 
 	void *ptr = (void *)(uintptr_t)addr;
 	switch (lineno) {
@@ -46,15 +49,15 @@ static void errPrint(uint64_t addr, const char *filename, int lineno, const char
 	case DWST_NOT_FOUND:
 	case DWST_NO_DBG_SYM:
 	case DWST_NO_SRC_FILE:
-		fprintf(stderr, "    stack %02d: 0x%p (%s)\n", (*count), ptr, filename);
-		fprintf(errorfp, "    stack %02d: 0x%p (%s)\n", (*count), ptr, filename);
+		fprintf(stderr, "    stack %02d: 0x%p (%s)\n", *count, ptr, filename);
+		fprintf(errorfp, "    stack %02d: 0x%p (%s)\n", *count, ptr, filename);
 		(*count)++;
 		break;
 
 	default:
 		if (ptr) {
-			fprintf(stderr, "    stack %02d: 0x%p", (*count), ptr);
-			fprintf(errorfp, "    stack %02d: 0x%p", (*count), ptr);
+			fprintf(stderr, "    stack %02d: 0x%p", *count, ptr);
+			fprintf(errorfp, "    stack %02d: 0x%p", *count, ptr);
 			(*count)++;
 		} else {
 			fprintf(stderr, "                %*s", (int)sizeof(void *) * 2, "");
@@ -147,10 +150,11 @@ static LONG WINAPI exceptionPrinter(LPEXCEPTION_POINTERS ep)
 	fflush(errorfp);
 	fclose(errorfp);
 
-	if (localdata)
+	if (localdata) {
 		sprintf(filename, "Details written to %s%s", localdata, "moac.log");
-	else
+	} else {
 		sprintf(filename, "Details written to %s", "moac.log");
+	}
 	display_messagebox("Application Crashed", filename);
 
 #ifdef DEVELOPER

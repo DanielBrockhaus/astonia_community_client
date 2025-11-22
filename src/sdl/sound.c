@@ -31,8 +31,9 @@ int init_sound(void)
 	SDL_RWops *rw;
 	char *buf;
 
-	if (!(game_options & GO_SOUND))
+	if (!(game_options & GO_SOUND)) {
 		return -1;
+	}
 
 	sz = zip_open("res/sx.zip", ZIP_RDONLY, &err);
 	if (!sz) {
@@ -108,11 +109,13 @@ void play_sdl_sound(int nr, int distance, int angle)
 	uint64_t time_start;
 
 	// Check if sound is enabled
-	if (!(game_options & GO_SOUND))
+	if (!(game_options & GO_SOUND)) {
 		return;
+	}
 
-	if (nr < 1 || nr >= sfx_name_cnt || nr >= MAXSOUND)
+	if (nr < 1 || nr >= sfx_name_cnt || nr >= MAXSOUND) {
 		return;
+	}
 
 	// For debugging/optimization
 	time_start = SDL_GetTicks64();
@@ -132,8 +135,9 @@ void play_sdl_sound(int nr, int distance, int angle)
 
 	// Increment sound channel so the next sound played is on it's own layer and doesn't cancel this one
 	sound_channel++;
-	if (sound_channel >= MAX_SOUND_CHANNELS)
+	if (sound_channel >= MAX_SOUND_CHANNELS) {
 		sound_channel = 0;
+	}
 
 	// For debug/optimization
 	time_play_sound += SDL_GetTicks64() - time_start;
@@ -144,19 +148,24 @@ void play_sdl_sound(int nr, int distance, int angle)
 void play_sound(int nr, int vol, int p)
 {
 	int dist, angle;
-	if (!(game_options & GO_SOUND))
+	if (!(game_options & GO_SOUND)) {
 		return;
+	}
 
 	// force volume and pan to sane values
-	if (vol > 0)
+	if (vol > 0) {
 		vol = 0;
-	if (vol < -9999)
+	}
+	if (vol < -9999) {
 		vol = -9999;
+	}
 
-	if (p > 9999)
+	if (p > 9999) {
 		p = 9999;
-	if (p < -9999)
+	}
+	if (p < -9999) {
 		p = -9999;
+	}
 
 	// translate parameters to SDL
 	// TODO: change client server protocol to provide angle instead of position
@@ -169,7 +178,6 @@ void play_sound(int nr, int vol, int p)
 
 	play_sdl_sound(nr, dist, angle);
 }
-
 
 static char *sfx_name[] = {
     "sfx/null.wav", // 0

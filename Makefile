@@ -79,4 +79,8 @@ docker-windows-dev:
 	docker build -f Dockerfile.windows-dev -t astonia-windows-dev .
 	docker run --rm -it -e HOST_UID=$(shell id -u) -e HOST_GID=$(shell id -g) -v "$(PWD):/app" -w /app astonia-windows-dev
 
+docker-linux-dev:
+	docker build -f Dockerfile.linux-dev -t astonia-linux-dev .
+	docker run --rm -it -e HOST_UID=$(shell id -u) -e HOST_GID=$(shell id -g) -v "$(PWD):/app" -w /app astonia-linux-dev
+
 .PHONY: all windows linux macos clean distrib amod convert anicopy zig-build docker-linux docker-windows docker-windows-dev

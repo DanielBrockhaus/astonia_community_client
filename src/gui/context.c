@@ -21,9 +21,9 @@
 
 static int c_on = 0, c_x, c_y, d_y, csel, isel, msel, ori_x, ori_y;
 
-#define MAXLINE 20
-#define MAXLEN 120
-#define MENUWIDTH 100
+#define MAXLINE    20
+#define MAXLEN     120
+#define MENUWIDTH  100
 #define MENUHEIGHT (8 * 10 + 8)
 
 struct menu {
@@ -41,28 +41,31 @@ static void update_ori(void)
 	if (msel != -1) {
 		x = (msel % MAPDX) + ori_x - originx;
 		y = (msel / MAPDX) + ori_y - originy;
-		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX)
+		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX) {
 			msel = -1;
-		else
+		} else {
 			msel = x + y * MAPDX;
+		}
 	}
 
 	if (isel != -1) {
 		x = (isel % MAPDX) + ori_x - originx;
 		y = (isel / MAPDX) + ori_y - originy;
-		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX)
+		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX) {
 			isel = -1;
-		else
+		} else {
 			isel = x + y * MAPDX;
+		}
 	}
 
 	if (csel != -1) {
 		x = (csel % MAPDX) + ori_x - originx;
 		y = (csel / MAPDX) + ori_y - originy;
-		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX)
+		if (x < 0 || x >= MAPDX || y < 0 || y >= MAPDX) {
 			csel = -1;
-		else
+		} else {
 			csel = x + y * MAPDX;
+		}
 	}
 
 	ori_x = originx;
@@ -79,22 +82,24 @@ static void makemenu(void)
 	if (csel != -1) {
 		co = map[csel].cn;
 		if (co > 0 && co < MAXCHARS) {
-			if (player[co].name[0])
+			if (player[co].name[0]) {
 				name = player[co].name;
-		} else
+			}
+		} else {
 			csel = -1;
+		}
 	}
 
 	menu.linecnt = 0;
 
 #if 0
-    if (csel!=MAPDX*MAPDY/2) {
-        sprintf(menu.line[menu.linecnt],"Walk");
-        menu.cmd[menu.linecnt]=CMD_MAP_MOVE;
-        menu.opt1[menu.linecnt]=originx-MAPDX/2+msel%MAPDX;
-        menu.opt2[menu.linecnt]=originy-MAPDY/2+msel/MAPDX;
-        menu.linecnt++;
-    }
+	if (csel!=MAPDX*MAPDY/2) {
+	    sprintf(menu.line[menu.linecnt],"Walk");
+	    menu.cmd[menu.linecnt]=CMD_MAP_MOVE;
+	    menu.opt1[menu.linecnt]=originx-MAPDX/2+msel%MAPDX;
+	    menu.opt2[menu.linecnt]=originy-MAPDY/2+msel/MAPDX;
+	    menu.linecnt++;
+	}
 #endif
 
 	if (isel != -1) {
@@ -105,10 +110,11 @@ static void makemenu(void)
 			menu.opt2[menu.linecnt] = originy - MAPDY / 2 + isel / MAPDX;
 			menu.linecnt++;
 		} else if (map[isel].flags & CMF_USE) {
-			if (csprite)
+			if (csprite) {
 				sprintf(menu.line[menu.linecnt], "Use Item with");
-			else
+			} else {
 				sprintf(menu.line[menu.linecnt], "Use Item");
+			}
 			menu.cmd[menu.linecnt] = CMD_ITM_USE;
 			menu.opt1[menu.linecnt] = originx - MAPDX / 2 + isel % MAPDX;
 			menu.opt2[menu.linecnt] = originy - MAPDY / 2 + isel / MAPDX;
@@ -259,8 +265,9 @@ static void makemenu(void)
 
 int context_open(int mx, int my)
 {
-	if (!(game_options & GO_CONTEXT))
+	if (!(game_options & GO_CONTEXT)) {
 		return 0;
+	}
 
 	csel = get_near_char(mx, my, 1);
 	isel = get_near_item(mx, my, CMF_USE | CMF_TAKE, 1);
@@ -279,34 +286,41 @@ int context_open(int mx, int my)
 	c_y = my - 10;
 	d_y = 8;
 
-	if (c_x < dotx(DOT_MTL) + 10)
+	if (c_x < dotx(DOT_MTL) + 10) {
 		c_x = dotx(DOT_MTL) + 10;
-	if (c_x > dotx(DOT_MBR) - MENUWIDTH - 10)
+	}
+	if (c_x > dotx(DOT_MBR) - MENUWIDTH - 10) {
 		c_x = dotx(DOT_MBR) - MENUWIDTH - 10;
-	if (c_y < doty(DOT_MTL) + 10)
+	}
+	if (c_y < doty(DOT_MTL) + 10) {
 		c_y = doty(DOT_MTL) + 10;
-	if (c_y > doty(DOT_MBR) - MENUHEIGHT - 10)
+	}
+	if (c_y > doty(DOT_MBR) - MENUHEIGHT - 10) {
 		c_y = doty(DOT_MBR) - MENUHEIGHT - 10;
+	}
 
 	return 1;
 }
 
 int context_getnm(void)
 {
-	if (!(game_options & GO_CONTEXT))
+	if (!(game_options & GO_CONTEXT)) {
 		return -1;
+	}
 	update_ori();
 
-	if (c_on)
+	if (c_on) {
 		return msel;
-	else
+	} else {
 		return -1;
+	}
 }
 
 void context_stop(void)
 {
 	c_on = 0;
 }
+
 void context_display(int mx, int my)
 {
 	int x, y, n;
@@ -321,10 +335,11 @@ void context_display(int mx, int my)
 		y = c_y + 4;
 
 		for (n = 0; n < menu.linecnt; n++) {
-			if (mousex > c_x && mousex < c_x + MENUWIDTH && mousey >= c_y + n * 10 + 4 && mousey < c_y + n * 10 + 14)
+			if (mousex > c_x && mousex < c_x + MENUWIDTH && mousey >= c_y + n * 10 + 4 && mousey < c_y + n * 10 + 14) {
 				dd_drawtext(x, y, whitecolor, DD_LEFT, menu.line[n]);
-			else
+			} else {
 				dd_drawtext(x, y, graycolor, DD_LEFT, menu.line[n]);
+			}
 			y += 10;
 		}
 	}
@@ -339,10 +354,12 @@ int context_click(int mx, int my)
 
 		if (mx > c_x && mx < c_x + MENUWIDTH && my >= c_y && my < c_y + menu.linecnt * 10 + 8) {
 			n = (my - c_y - 4) / 10;
-			if (n < 0)
+			if (n < 0) {
 				n = 0;
-			if (n >= menu.linecnt)
+			}
+			if (n >= menu.linecnt) {
 				n = menu.linecnt - 1;
+			}
 			switch (menu.cmd[n]) {
 			case CMD_MAP_MOVE:
 				cmd_move(menu.opt1[n], menu.opt2[n]);
@@ -390,8 +407,9 @@ static int keyupblock = 0;
 
 int context_key(int key)
 {
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return 0;
+	}
 
 	keyupblock = 0;
 
@@ -406,8 +424,9 @@ int context_key(int key)
 		keymode = 1;
 		return 1;
 	}
-	if (keymode)
+	if (keymode) {
 		return 0;
+	}
 
 	return 1;
 }
@@ -421,21 +440,25 @@ void context_key_reset(void)
 
 int context_key_click(void)
 {
-	if (lcmd_override != CMD_NONE)
+	if (lcmd_override != CMD_NONE) {
 		return CMD_MAP_MOVE;
+	}
 	return CMD_NONE;
 }
 
 void context_keydown(int key)
 {
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return;
-	if (keymode)
+	}
+	if (keymode) {
 		return;
+	}
 
 	// ignore key-down while over action bar
-	if (actsel != -1)
+	if (actsel != -1) {
 		return;
+	}
 
 	switch (action_key2slot(key)) {
 	case 0:
@@ -479,12 +502,15 @@ void context_keydown(int key)
 
 int context_key_set_cmd(void)
 {
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return 0;
-	if (keymode)
+	}
+	if (keymode) {
 		return 0;
-	if (lcmd_override == CMD_NONE)
+	}
+	if (lcmd_override == CMD_NONE) {
 		return 0;
+	}
 
 	switch (lcmd_override) {
 	case CMD_CHR_ATTACK:
@@ -526,20 +552,23 @@ int context_key_set_cmd(void)
 				itmsel = -1;
 				lcmd_override = CMD_CHR_GIVE;
 			} else if (itmsel != -1) {
-				if (map[itmsel].flags & CMF_USE)
+				if (map[itmsel].flags & CMF_USE) {
 					lcmd_override = CMD_ITM_USE_WITH;
-				else
+				} else {
 					itmsel = -1;
-			} else if (mapsel != -1)
+				}
+			} else if (mapsel != -1) {
 				lcmd_override = CMD_MAP_DROP;
+			}
 		} else {
 			if (itmsel != -1) {
-				if (map[itmsel].flags & CMF_TAKE)
+				if (map[itmsel].flags & CMF_TAKE) {
 					lcmd_override = CMD_ITM_TAKE;
-				else if (map[itmsel].flags & CMF_USE)
+				} else if (map[itmsel].flags & CMF_USE) {
 					lcmd_override = CMD_ITM_USE;
-				else
+				} else {
 					itmsel = -1;
+				}
 			}
 			chrsel = -1;
 		}
@@ -556,19 +585,25 @@ void context_keyup(int key)
 
 	lcmd_override = CMD_NONE;
 
-	if (amod_keyup(key))
+	if (amod_keyup(key)) {
 		return;
+	}
 
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return;
-	if (keymode)
+	}
+	if (keymode) {
 		return;
-	if (keyupblock)
+	}
+	if (keyupblock) {
 		return;
-	if (key == '-')
+	}
+	if (key == '-') {
 		return;
-	if (key & 0xffffff00)
+	}
+	if (key & 0xffffff00) {
 		return;
+	}
 
 	if (actsel != -1 && !act_lck) {
 		action_set_key(actsel, key);
@@ -579,61 +614,72 @@ void context_keyup(int key)
 		csel = get_near_char(mousex, mousey, 3);
 		isel = get_near_item(mousex, mousey, CMF_USE | CMF_TAKE, csprite ? 0 : 3);
 		msel = get_near_ground(mousex, mousey);
-	} else
+	} else {
 		csel = isel = msel = -1;
+	}
 
 	switch (action_key2slot(key)) {
 	case 0:
-		if (csel != -1)
+		if (csel != -1) {
 			cmd_kill(map[csel].cn);
+		}
 		break;
 	case 1:
-		if (csel != -1)
+		if (csel != -1) {
 			cmd_some_spell(CL_FIREBALL, 0, 0, map[csel].cn);
+		}
 		break;
 	case 2:
-		if (csel != -1)
+		if (csel != -1) {
 			cmd_some_spell(CL_BALL, 0, 0, map[csel].cn);
+		}
 		break;
 	case 6:
-		if (csel != -1)
+		if (csel != -1) {
 			cmd_some_spell(CL_BLESS, 0, 0, map[csel].cn);
+		}
 		break;
 	case 7:
-		if (csel != -1)
+		if (csel != -1) {
 			cmd_some_spell(CL_HEAL, 0, 0, map[csel].cn);
+		}
 		break;
 	case 11:
 		if (csprite) {
-			if (csel != -1)
+			if (csel != -1) {
 				cmd_give(map[csel].cn);
-			else if (isel != -1 && (map[isel].flags & CMF_USE))
+			} else if (isel != -1 && (map[isel].flags & CMF_USE)) {
 				cmd_use(originx - MAPDX / 2 + isel % MAPDX, originy - MAPDY / 2 + isel / MAPDX);
-			else if (msel != -1)
+			} else if (msel != -1) {
 				cmd_drop(originx - MAPDX / 2 + msel % MAPDX, originy - MAPDY / 2 + msel / MAPDX);
+			}
 		} else if (isel != -1) {
-			if (map[isel].flags & CMF_TAKE)
+			if (map[isel].flags & CMF_TAKE) {
 				cmd_take(originx - MAPDX / 2 + isel % MAPDX, originy - MAPDY / 2 + isel / MAPDX);
-			else if (map[isel].flags & CMF_USE)
+			} else if (map[isel].flags & CMF_USE) {
 				cmd_use(originx - MAPDX / 2 + isel % MAPDX, originy - MAPDY / 2 + isel / MAPDX);
+			}
 		}
 		break;
 	case 13:
-		if (isel != -1)
+		if (isel != -1) {
 			cmd_look_item(originx - MAPDX / 2 + isel % MAPDX, originy - MAPDY / 2 + isel / MAPDX);
-		else if (csel != -1)
+		} else if (csel != -1) {
 			cmd_look_char(map[csel].cn);
-		else if (msel != -1)
+		} else if (msel != -1) {
 			cmd_look_map(originx - MAPDX / 2 + msel % MAPDX, originy - MAPDY / 2 + msel / MAPDX);
+		}
 		break;
 
 	case 101:
-		if (msel != -1)
+		if (msel != -1) {
 			cmd_some_spell(CL_FIREBALL, originx - MAPDX / 2 + msel % MAPDX, originy - MAPDY / 2 + msel / MAPDX, 0);
+		}
 		break;
 	case 102:
-		if (msel != -1)
+		if (msel != -1) {
 			cmd_some_spell(CL_BALL, originx - MAPDX / 2 + msel % MAPDX, originy - MAPDY / 2 + msel / MAPDX, 0);
+		}
 		break;
 	case 103:
 		cmd_some_spell(CL_FLASH, 0, 0, map[plrmn].cn);
@@ -668,8 +714,9 @@ void context_keyup(int key)
 int context_key_set(int onoff)
 {
 	int old;
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return 1;
+	}
 	old = keymode;
 	keymode = onoff;
 	return old;
@@ -677,8 +724,9 @@ int context_key_set(int onoff)
 
 int context_key_isset(void)
 {
-	if (!(game_options & GO_ACTION))
+	if (!(game_options & GO_ACTION)) {
 		return 1;
+	}
 	return keymode;
 }
 
@@ -693,6 +741,7 @@ void context_action_enable(int onoff)
 	dots_update();
 	save_options();
 }
+
 int context_action_enabled(void)
 {
 	return (game_options & GO_ACTION) && action_enabled;

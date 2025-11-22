@@ -2,35 +2,35 @@
  * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
  */
 
-#define SDL_CUR_c_only 1
-#define SDL_CUR_c_take 2
-#define SDL_CUR_c_drop 3
-#define SDL_CUR_c_attack 4
-#define SDL_CUR_c_raise 5
-#define SDL_CUR_c_give 6
-#define SDL_CUR_c_use 7
+#define SDL_CUR_c_only    1
+#define SDL_CUR_c_take    2
+#define SDL_CUR_c_drop    3
+#define SDL_CUR_c_attack  4
+#define SDL_CUR_c_raise   5
+#define SDL_CUR_c_give    6
+#define SDL_CUR_c_use     7
 #define SDL_CUR_c_usewith 8
-#define SDL_CUR_c_swap 9
-#define SDL_CUR_c_sell 10
-#define SDL_CUR_c_buy 11
-#define SDL_CUR_c_look 12
-#define SDL_CUR_c_set 13
-#define SDL_CUR_c_spell 14
-#define SDL_CUR_c_pix 15
-#define SDL_CUR_c_say 16
-#define SDL_CUR_c_junk 17
-#define SDL_CUR_c_get 18
+#define SDL_CUR_c_swap    9
+#define SDL_CUR_c_sell    10
+#define SDL_CUR_c_buy     11
+#define SDL_CUR_c_look    12
+#define SDL_CUR_c_set     13
+#define SDL_CUR_c_spell   14
+#define SDL_CUR_c_pix     15
+#define SDL_CUR_c_say     16
+#define SDL_CUR_c_junk    17
+#define SDL_CUR_c_get     18
 
 #define SDL_KEYM_SHIFT 1
-#define SDL_KEYM_CTRL 2
-#define SDL_KEYM_ALT 4
+#define SDL_KEYM_CTRL  2
+#define SDL_KEYM_ALT   4
 
-#define SDL_MOUM_NONE 0
-#define SDL_MOUM_LUP 1
+#define SDL_MOUM_NONE  0
+#define SDL_MOUM_LUP   1
 #define SDL_MOUM_LDOWN 2
-#define SDL_MOUM_RUP 3
+#define SDL_MOUM_RUP   3
 #define SDL_MOUM_RDOWN 4
-#define SDL_MOUM_MUP 5
+#define SDL_MOUM_MUP   5
 #define SDL_MOUM_MDOWN 6
 #define SDL_MOUM_WHEEL 7
 

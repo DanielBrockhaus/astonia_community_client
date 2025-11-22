@@ -98,6 +98,7 @@ void sdl_dump(FILE *fp)
 }
 
 #define GO_DEFAULTS (GO_CONTEXT | GO_ACTION | GO_BIGBAR | GO_PREDICT | GO_SHORT | GO_MAPSAVE)
+
 // #define GO_DEFAULTS (GO_CONTEXT|GO_ACTION|GO_BIGBAR|GO_PREDICT|GO_SHORT|GO_MAPSAVE|GO_NOMAP)
 
 int sdl_init(int width, int height, char *title)
@@ -143,19 +144,23 @@ int sdl_init(int width, int height, char *title)
 
 	len = sizeof(struct sdl_image) * MAXSPRITE;
 	sdli = xmalloc(len * 1, MEM_SDL_BASE);
-	if (!sdli)
+	if (!sdli) {
 		return fail("Out of memory in sdl_init");
+	}
 
 	sdlt_cache = xmalloc(MAX_TEXHASH * sizeof(int), MEM_SDL_BASE);
-	if (!sdlt_cache)
+	if (!sdlt_cache) {
 		return fail("Out of memory in sdl_init");
+	}
 
-	for (i = 0; i < MAX_TEXHASH; i++)
+	for (i = 0; i < MAX_TEXHASH; i++) {
 		sdlt_cache[i] = STX_NONE;
+	}
 
 	sdlt = xmalloc(MAX_TEXCACHE * sizeof(struct sdl_texture), MEM_SDL_BASE);
-	if (!sdlt)
+	if (!sdlt) {
 		return fail("Out of memory in sdl_init");
+	}
 
 	for (i = 0; i < MAX_TEXCACHE; i++) {
 		sdlt[i].flags = 0;
@@ -181,19 +186,21 @@ int sdl_init(int width, int height, char *title)
 	if (width != XRES || height != YRES) {
 		int tmp_scale = 1, off = 0;
 
-		if (width / XRES >= 4 && height / YRES0 >= 4)
+		if (width / XRES >= 4 && height / YRES0 >= 4) {
 			sdl_scale = 4;
-		else if (width / XRES >= 3 && height / YRES0 >= 3)
+		} else if (width / XRES >= 3 && height / YRES0 >= 3) {
 			sdl_scale = 3;
-		else if (width / XRES >= 2 && height / YRES0 >= 2)
+		} else if (width / XRES >= 2 && height / YRES0 >= 2) {
 			sdl_scale = 2;
+		}
 
-		if (width / XRES >= 4 && height / YRES2 >= 4)
+		if (width / XRES >= 4 && height / YRES2 >= 4) {
 			tmp_scale = 4;
-		else if (width / XRES >= 3 && height / YRES2 >= 3)
+		} else if (width / XRES >= 3 && height / YRES2 >= 3) {
 			tmp_scale = 3;
-		else if (width / XRES >= 2 && height / YRES2 >= 2)
+		} else if (width / XRES >= 2 && height / YRES2 >= 2) {
 			tmp_scale = 2;
+		}
 
 		if (tmp_scale > sdl_scale || height < YRES0) {
 			sdl_scale = tmp_scale;
@@ -202,23 +209,27 @@ int sdl_init(int width, int height, char *title)
 
 		YRES = height / sdl_scale;
 
-		if (game_options & GO_SMALLTOP)
+		if (game_options & GO_SMALLTOP) {
 			off += 40;
-		if (game_options & GO_SMALLBOT)
+		}
+		if (game_options & GO_SMALLBOT) {
 			off += 40;
+		}
 
-		if (YRES > YRES1 - off)
+		if (YRES > YRES1 - off) {
 			YRES = YRES1 - off;
+		}
 
 		dd_set_offset((width / sdl_scale - XRES) / 2, (height / sdl_scale - YRES) / 2);
 	}
 	if (game_options & GO_NOTSET) {
-		if (YRES >= 620)
+		if (YRES >= 620) {
 			game_options = GO_DEFAULTS;
-		else if (YRES >= 580)
+		} else if (YRES >= 580) {
 			game_options = GO_DEFAULTS | GO_SMALLBOT;
-		else
+		} else {
 			game_options = GO_DEFAULTS | GO_SMALLBOT | GO_SMALLTOP;
+		}
 	}
 	note("SDL using %dx%d scale %d, options=%" PRIu64, XRES, YRES, sdl_scale, game_options);
 
@@ -243,6 +254,8 @@ int sdl_init(int width, int height, char *title)
 		sdl_zip2 = zip_open("res/gx4.zip", ZIP_RDONLY, NULL);
 		sdl_zip2p = zip_open("res/gx4_patch.zip", ZIP_RDONLY, NULL);
 		sdl_zip2m = zip_open("res/gx4_mod.zip", ZIP_RDONLY, NULL);
+		break;
+	default:
 		break;
 	}
 
@@ -299,8 +312,9 @@ uint32_t mix_argb(uint32_t c1, uint32_t c2, float w1, float w2)
 
 	a1 = IGET_A(c1);
 	a2 = IGET_A(c2);
-	if (!a1 && !a2)
+	if (!a1 && !a2) {
 		return 0; // save some work
+	}
 
 	r1 = IGET_R(c1);
 	g1 = IGET_G(c1);
@@ -424,8 +438,9 @@ void sdl_premulti(uint32_t *pixel, int xres, int yres, int scale)
 		c = pixel[n];
 
 		a = IGET_A(c);
-		if (!a)
+		if (!a) {
 			continue;
+		}
 
 		r = IGET_R(c);
 		g = IGET_G(c);
@@ -465,24 +480,30 @@ int png_load_helper(struct png_helper *p)
 
 	if (p->zip) {
 		zp = zip_fopen(p->zip, p->filename, 0);
-		if (!zp)
+		if (!zp) {
 			return -1;
+		}
 	} else {
 		fp = fopen(p->filename, "rb");
-		if (!fp)
+		if (!fp) {
 			return -1;
+		}
 	}
 
 	p->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!p->png_ptr) {
-		fclose(fp);
+		if (fp) {
+			fclose(fp);
+		}
 		warn("create read\n");
 		return -1;
 	}
 
 	p->info_ptr = png_create_info_struct(p->png_ptr);
 	if (!p->info_ptr) {
-		fclose(fp);
+		if (fp) {
+			fclose(fp);
+		}
 		png_destroy_read_struct(&p->png_ptr, (png_infopp)NULL, (png_infopp)NULL);
 		warn("create info1\n");
 		return -1;
@@ -498,7 +519,9 @@ int png_load_helper(struct png_helper *p)
 
 	p->row = png_get_rows(p->png_ptr, p->info_ptr);
 	if (!p->row) {
-		fclose(fp);
+		if (fp) {
+			fclose(fp);
+		}
 		png_destroy_read_struct(&p->png_ptr, &p->info_ptr, (png_infopp)NULL);
 		warn("read row\n");
 		return -1;
@@ -509,34 +532,41 @@ int png_load_helper(struct png_helper *p)
 
 	tmp = png_get_rowbytes(p->png_ptr, p->info_ptr);
 
-	if (tmp == p->xres * 3)
+	if (tmp == p->xres * 3) {
 		p->bpp = 24;
-	else if (tmp == p->xres * 4)
+	} else if (tmp == p->xres * 4) {
 		p->bpp = 32;
-	else {
-		fclose(fp);
+	} else {
+		if (fp) {
+			fclose(fp);
+		}
 		png_destroy_read_struct(&p->png_ptr, &p->info_ptr, (png_infopp)NULL);
 		warn("rowbytes!=xres*4 (%d, %d, %s)", tmp, p->xres, p->filename);
 		return -1;
 	}
 
 	if (png_get_bit_depth(p->png_ptr, p->info_ptr) != 8) {
-		fclose(fp);
+		if (fp) {
+			fclose(fp);
+		}
 		png_destroy_read_struct(&p->png_ptr, &p->info_ptr, (png_infopp)NULL);
 		warn("bit depth!=8\n");
 		return -1;
 	}
 	if (png_get_channels(p->png_ptr, p->info_ptr) != p->bpp / 8) {
-		fclose(fp);
+		if (fp) {
+			fclose(fp);
+		}
 		png_destroy_read_struct(&p->png_ptr, &p->info_ptr, (png_infopp)NULL);
 		warn("channels!=format\n");
 		return -1;
 	}
 
-	if (p->zip)
+	if (p->zip) {
 		zip_fclose(zp);
-	else
+	} else {
 		fclose(fp);
+	}
 
 	return 0;
 }
@@ -555,8 +585,9 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 
 	p.zip = zip;
 	p.filename = filename;
-	if (png_load_helper(&p))
+	if (png_load_helper(&p)) {
 		return -1;
+	}
 
 	// prescan
 	sx = p.xres;
@@ -567,18 +598,24 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 	for (y = 0; y < p.yres; y++) {
 		for (x = 0; x < p.xres; x++) {
 			if (p.bpp == 32 && (p.row[y][x * 4 + 3] == 0 || (p.row[y][x * 4 + 0] == 255 && p.row[y][x * 4 + 1] == 0 &&
-			                                                    p.row[y][x * 4 + 2] == 255)))
+			                                                    p.row[y][x * 4 + 2] == 255))) {
 				continue;
-			if (p.bpp == 24 && ((p.row[y][x * 3 + 0] == 255 && p.row[y][x * 3 + 1] == 0 && p.row[y][x * 3 + 2] == 255)))
+			}
+			if (p.bpp == 24 && (p.row[y][x * 3 + 0] == 255 && p.row[y][x * 3 + 1] == 0 && p.row[y][x * 3 + 2] == 255)) {
 				continue;
-			if (x < sx)
+			}
+			if (x < sx) {
 				sx = x;
-			if (x > ex)
+			}
+			if (x > ex) {
 				ex = x;
-			if (y < sy)
+			}
+			if (y < sy) {
 				sy = y;
-			if (y > ey)
+			}
+			if (y > ey) {
 				ey = y;
+			}
 		}
 	}
 
@@ -589,10 +626,12 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 	ex = ((ex + sdl_scale) / sdl_scale) * sdl_scale;
 	ey = ((ey + sdl_scale) / sdl_scale) * sdl_scale;
 
-	if (ex < sx)
+	if (ex < sx) {
 		ex = sx - 1;
-	if (ey < sy)
+	}
+	if (ey < sy) {
 		ey = sy - 1;
+	}
 
 	// write
 	si->flags = 1;
@@ -611,37 +650,40 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 	for (y = 0; y < si->yres; y++) {
 		for (x = 0; x < si->xres; x++) {
 			if (p.bpp == 32) {
-				if (sx + x >= p.xres || sy + y >= p.yres)
+				if (sx + x >= p.xres || sy + y >= p.yres) {
 					r = g = b = a = 0;
-				else {
+				} else {
 					r = p.row[(sy + y)][(sx + x) * 4 + 0];
 					g = p.row[(sy + y)][(sx + x) * 4 + 1];
 					b = p.row[(sy + y)][(sx + x) * 4 + 2];
 					a = p.row[(sy + y)][(sx + x) * 4 + 3];
 				}
 			} else {
-				if (sx + x >= p.xres || sy + y >= p.yres)
+				if (sx + x >= p.xres || sy + y >= p.yres) {
 					r = g = b = a = 0;
-				else {
+				} else {
 					r = p.row[(sy + y)][(sx + x) * 3 + 0];
 					g = p.row[(sy + y)][(sx + x) * 3 + 1];
 					b = p.row[(sy + y)][(sx + x) * 3 + 2];
-					if (r == 255 && g == 0 && b == 255)
+					if (r == 255 && g == 0 && b == 255) {
 						a = 0;
-					else
+					} else {
 						a = 255;
+					}
 				}
 			}
 
-			if (r == 255 && g == 0 && b == 255)
+			if (r == 255 && g == 0 && b == 255) {
 				a = 0;
+			}
 
 			if (a) { // pre-multiply rgb channel by alpha
 				r = min(255, r * 255 / a);
 				g = min(255, g * 255 / a);
 				b = min(255, b * 255 / a);
-			} else
+			} else {
 				r = g = b = 0;
+			}
 
 			c = IRGBA(r, g, b, a);
 
@@ -670,8 +712,9 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 
 	p.zip = zip;
 	p.filename = filename;
-	if (png_load_helper(&p))
+	if (png_load_helper(&p)) {
 		return -1;
+	}
 
 	// prescan
 	sx = p.xres;
@@ -682,25 +725,33 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 	for (y = 0; y < p.yres; y++) {
 		for (x = 0; x < p.xres; x++) {
 			if (p.bpp == 32 && (p.row[y][x * 4 + 3] == 0 || (p.row[y][x * 4 + 0] == 255 && p.row[y][x * 4 + 1] == 0 &&
-			                                                    p.row[y][x * 4 + 2] == 255)))
+			                                                    p.row[y][x * 4 + 2] == 255))) {
 				continue;
-			if (p.bpp == 24 && ((p.row[y][x * 3 + 0] == 255 && p.row[y][x * 3 + 1] == 0 && p.row[y][x * 3 + 2] == 255)))
+			}
+			if (p.bpp == 24 && (p.row[y][x * 3 + 0] == 255 && p.row[y][x * 3 + 1] == 0 && p.row[y][x * 3 + 2] == 255)) {
 				continue;
-			if (x < sx)
+			}
+			if (x < sx) {
 				sx = x;
-			if (x > ex)
+			}
+			if (x > ex) {
 				ex = x;
-			if (y < sy)
+			}
+			if (y < sy) {
 				sy = y;
-			if (y > ey)
+			}
+			if (y > ey) {
 				ey = y;
+			}
 		}
 	}
 
-	if (ex < sx)
+	if (ex < sx) {
 		ex = sx - 1;
-	if (ey < sy)
+	}
+	if (ey < sy) {
 		ey = sy - 1;
+	}
 
 	// write
 	si->flags = 1;
@@ -727,17 +778,20 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 				r = p.row[(sy + y)][(sx + x) * 3 + 0];
 				g = p.row[(sy + y)][(sx + x) * 3 + 1];
 				b = p.row[(sy + y)][(sx + x) * 3 + 2];
-				if (r == 255 && g == 0 && b == 255)
+				if (r == 255 && g == 0 && b == 255) {
 					a = 0;
-				else
+				} else {
 					a = 255;
+				}
 			}
 
-			if (r == 255 && g == 0 && b == 255)
+			if (r == 255 && g == 0 && b == 255) {
 				a = 0;
+			}
 
-			if (!a) // don't pre-multiply rgb channel by alpha because that needs to happen after scaling
+			if (!a) { // don't pre-multiply rgb channel by alpha because that needs to happen after scaling
 				r = g = b = 0;
+			}
 
 			c = IRGBA(r, g, b, a);
 
@@ -795,39 +849,49 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 	if (sdl_scale > 1 && smoothify) {
 		sdl_smoothify(si->pixel, si->xres * sdl_scale, si->yres * sdl_scale, sdl_scale);
 		sdl_premulti(si->pixel, si->xres * sdl_scale, si->yres * sdl_scale, sdl_scale);
-	} else
+	} else {
 		sdl_premulti(si->pixel, si->xres * sdl_scale, si->yres * sdl_scale, sdl_scale);
+	}
 
 	png_load_helper_exit(&p);
 
 	return 0;
 }
 
-
 int do_smoothify(int sprite)
 {
 	// TODO: add more to this list
-	if (sprite >= 50 && sprite <= 56)
+	if (sprite >= 50 && sprite <= 56) {
 		return 0;
-	if (sprite > 0 && sprite <= 1000)
+	}
+	if (sprite > 0 && sprite <= 1000) {
 		return 1; // GUI
-	if (sprite >= 10000 && sprite < 11000)
+	}
+	if (sprite >= 10000 && sprite < 11000) {
 		return 1; // items
-	if (sprite >= 11000 && sprite < 12000)
+	}
+	if (sprite >= 11000 && sprite < 12000) {
 		return 1; // coffin, berries, farn, ...
-	if (sprite >= 13000 && sprite < 14000)
+	}
+	if (sprite >= 13000 && sprite < 14000) {
 		return 1; // bones and towers, ...
-	if (sprite >= 16000 && sprite < 17000)
+	}
+	if (sprite >= 16000 && sprite < 17000) {
 		return 1; // cameron doors, carts, ...
-	if (sprite >= 20025 && sprite < 20034)
+	}
+	if (sprite >= 20025 && sprite < 20034) {
 		return 1; // torches
-	if (sprite >= 20042 && sprite < 20082)
+	}
+	if (sprite >= 20042 && sprite < 20082) {
 		return 1; // torches
-	if (sprite >= 20086 && sprite < 20119)
+	}
+	if (sprite >= 20086 && sprite < 20119) {
 		return 1; // chests, chairs
+	}
 
-	if (sprite >= 100000)
+	if (sprite >= 100000) {
 		return 1; // all character sprites
+	}
 
 	return 0;
 }
@@ -842,45 +906,51 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 	}
 
 #if 0
-    // get patch png
-    sprintf(filename,"../gfxp/x%d/%08d/%08d.png",sdl_scale,(sprite/1000)*1000,sprite);
-    if (sdl_load_image_png_(si,filename,NULL)==0) return 0;
+	// get patch png
+	sprintf(filename,"../gfxp/x%d/%08d/%08d.png",sdl_scale,(sprite/1000)*1000,sprite);
+	if (sdl_load_image_png_(si,filename,NULL)==0) return 0;
 #endif
 
 	// get high res from archive
 	if (sdl_zip2 || sdl_zip2p || sdl_zip2m) {
 		sprintf(filename, "%08d.png", sprite);
-		if (sdl_zip2m && sdl_load_image_png_(si, filename, sdl_zip2m) == 0)
+		if (sdl_zip2m && sdl_load_image_png_(si, filename, sdl_zip2m) == 0) {
 			return 0; // check mod archive first
-		if (sdl_zip2p && sdl_load_image_png_(si, filename, sdl_zip2p) == 0)
+		}
+		if (sdl_zip2p && sdl_load_image_png_(si, filename, sdl_zip2p) == 0) {
 			return 0; // check patch archive second
-		if (sdl_zip2 && sdl_load_image_png_(si, filename, sdl_zip2) == 0)
+		}
+		if (sdl_zip2 && sdl_load_image_png_(si, filename, sdl_zip2) == 0) {
 			return 0; // check base archive third
+		}
 	}
 
 #if 0
-    // get high res from base png folder
-    sprintf(filename,"../gfx/x%d/%08d/%08d.png",sdl_scale,(sprite/1000)*1000,sprite);
-    if (sdl_load_image_png_(si,filename,NULL)==0) return 0;
+	// get high res from base png folder
+	sprintf(filename,"../gfx/x%d/%08d/%08d.png",sdl_scale,(sprite/1000)*1000,sprite);
+	if (sdl_load_image_png_(si,filename,NULL)==0) return 0;
 #endif
 
 	// get standard from archive
 	if (sdl_zip1 || sdl_zip1p || sdl_zip1m) {
 		sprintf(filename, "%08d.png", sprite);
-		if (sdl_zip1m && sdl_load_image_png(si, filename, sdl_zip1m, do_smoothify(sprite)) == 0)
+		if (sdl_zip1m && sdl_load_image_png(si, filename, sdl_zip1m, do_smoothify(sprite)) == 0) {
 			return 0;
-		if (sdl_zip1p && sdl_load_image_png(si, filename, sdl_zip1p, do_smoothify(sprite)) == 0)
+		}
+		if (sdl_zip1p && sdl_load_image_png(si, filename, sdl_zip1p, do_smoothify(sprite)) == 0) {
 			return 0;
-		if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0)
+		}
+		if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0) {
 			return 0;
+		}
 	}
 
 #if 0
-    // get standard from base png folder
-    sprintf(filename,"../gfx/x1/%08d/%08d.png",(sprite/1000)*1000,sprite);
-    if (sdl_load_image_png(si,filename,NULL,do_smoothify(sprite))==0) return 0;
-    sprintf(filename,"../gfxp/x1/%08d/%08d.png",(sprite/1000)*1000,sprite);
-    if (sdl_load_image_png(si,filename,NULL,do_smoothify(sprite))==0) return 0;
+	// get standard from base png folder
+	sprintf(filename,"../gfx/x1/%08d/%08d.png",(sprite/1000)*1000,sprite);
+	if (sdl_load_image_png(si,filename,NULL,do_smoothify(sprite))==0) return 0;
+	sprintf(filename,"../gfxp/x1/%08d/%08d.png",(sprite/1000)*1000,sprite);
+	if (sdl_load_image_png(si,filename,NULL,do_smoothify(sprite))==0) return 0;
 #endif
 
 	sprintf(filename, "%08d.png", sprite);
@@ -888,8 +958,9 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 
 	// get unknown sprite image
 	sprintf(filename, "%08d.png", 2);
-	if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0)
+	if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0) {
 		return 0;
+	}
 
 	char *txt = "The client could not locate the graphics file gx1.zip. "
 	            "Please make sure you start the client from the main folder, "
@@ -910,11 +981,13 @@ int sdl_ic_load(int sprite)
 		note("illegal sprite %d wanted in sdl_ic_load", sprite);
 		return -1;
 	}
-	if (sdli[sprite].flags)
+	if (sdli[sprite].flags) {
 		return sprite;
+	}
 
-	if (sdl_load_image(sdli + sprite, sprite))
+	if (sdl_load_image(sdli + sprite, sprite)) {
 		return -1;
+	}
 
 	sdl_time_load += SDL_GetTicks64() - start;
 
@@ -939,8 +1012,9 @@ static inline int light_calc(int val, int light)
 			d -= 2;
 		}
 		return (v1 * m + v2) / d;
-	} else
+	} else {
 		return val * light / 15;
+	}
 }
 
 static inline uint32_t sdl_light(int light, uint32_t irgb)
@@ -981,15 +1055,13 @@ static inline uint32_t sdl_freeze(int freeze, uint32_t irgb)
 	return IRGBA(r, g, b, a);
 }
 
-
-#define REDCOL (0.40)
+#define REDCOL   (0.40)
 #define GREENCOL (0.70)
-#define BLUECOL (0.70)
+#define BLUECOL  (0.70)
 
 #define OGET_R(c) ((((unsigned short int)(c)) >> 10) & 0x1F)
 #define OGET_G(c) ((((unsigned short int)(c)) >> 5) & 0x1F)
 #define OGET_B(c) ((((unsigned short int)(c)) >> 0) & 0x1F)
-
 
 static uint32_t sdl_shine_pix(uint32_t irgb, unsigned short shine)
 {
@@ -1005,12 +1077,15 @@ static uint32_t sdl_shine_pix(uint32_t irgb, unsigned short shine)
 	g = ((g * g * g * g) * shine + g * (100.0 - shine)) / 200.0;
 	b = ((b * b * b * b) * shine + b * (100.0 - shine)) / 200.0;
 
-	if (r > 1.0)
+	if (r > 1.0) {
 		r = 1.0;
-	if (g > 1.0)
+	}
+	if (g > 1.0) {
 		g = 1.0;
-	if (b > 1.0)
+	}
+	if (b > 1.0) {
 		b = 1.0;
+	}
 
 	irgb = IRGBA((int)(r * 255.0), (int)(g * 255.0), (int)(b * 255.0), a);
 
@@ -1036,8 +1111,9 @@ static uint32_t sdl_colorize_pix(uint32_t irgb, unsigned short c1v, unsigned sho
 	// channel 1: green max
 	if (c1v && gm > 0.99 && rm < GREENCOL && bm < GREENCOL) {
 		c1 = gf - max(bf, rf);
-		if (c1v & 0x8000)
+		if (c1v & 0x8000) {
 			shine += gm - max(rm, bm);
+		}
 
 		gf -= c1;
 	}
@@ -1050,8 +1126,9 @@ static uint32_t sdl_colorize_pix(uint32_t irgb, unsigned short c1v, unsigned sho
 	// channel 2: blue max
 	if (c2v && bm > 0.99 && rm < BLUECOL && gm < BLUECOL) {
 		c2 = bf - max(rf, gf);
-		if (c2v & 0x8000)
+		if (c2v & 0x8000) {
 			shine += bm - max(rm, gm);
+		}
 
 		bf -= c2;
 	}
@@ -1064,8 +1141,9 @@ static uint32_t sdl_colorize_pix(uint32_t irgb, unsigned short c1v, unsigned sho
 	// channel 3: red max
 	if (c3v && rm > 0.99 && gm < REDCOL && bm < REDCOL) {
 		c3 = rf - max(gf, bf);
-		if (c3v & 0x8000)
+		if (c3v & 0x8000) {
 			shine += rm - max(gm, bm);
+		}
 
 		rf -= c3;
 	}
@@ -1084,8 +1162,9 @@ static uint32_t sdl_colorize_pix(uint32_t irgb, unsigned short c1v, unsigned sho
 
 	irgb = IRGBA(r, g, b, a);
 
-	if (shine > 0.1)
+	if (shine > 0.1) {
 		irgb = sdl_shine_pix(irgb, (int)(shine * 50));
+	}
 
 	return irgb;
 }
@@ -1095,10 +1174,12 @@ static int would_colorize(int x, int y, int xres, int yres, uint32_t *pixel, int
 	double rf, gf, bf, m, rm, gm, bm;
 	uint32_t irgb;
 
-	if (x < 0 || x >= xres * sdl_scale)
+	if (x < 0 || x >= xres * sdl_scale) {
 		return 0;
-	if (y < 0 || y >= yres * sdl_scale)
+	}
+	if (y < 0 || y >= yres * sdl_scale) {
 		return 0;
+	}
 
 	irgb = pixel[x + y * xres * sdl_scale];
 
@@ -1111,12 +1192,15 @@ static int would_colorize(int x, int y, int xres, int yres, uint32_t *pixel, int
 	gm = gf / m;
 	bm = bf / m;
 
-	if (what == 0 && gm > 0.99 && rm < GREENCOL && bm < GREENCOL)
+	if (what == 0 && gm > 0.99 && rm < GREENCOL && bm < GREENCOL) {
 		return 1;
-	if (what == 1 && bm > 0.99 && rm < BLUECOL && gm < BLUECOL)
+	}
+	if (what == 1 && bm > 0.99 && rm < BLUECOL && gm < BLUECOL) {
 		return 1;
-	if (what == 2 && rm > 0.99 && gm < REDCOL && bm < REDCOL)
+	}
+	if (what == 2 && rm > 0.99 && gm < REDCOL && bm < REDCOL) {
 		return 1;
+	}
 
 	return 0;
 }
@@ -1142,8 +1226,9 @@ static uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned sh
 	int r, g, b, a;
 
 	// use old algorithm for old sprites
-	if (sprite < 220000)
+	if (sprite < 220000) {
 		return sdl_colorize_pix(irgb, c1v, c2v, c3v);
+	}
 
 	rf = IGET_R(irgb) / 255.0;
 	gf = IGET_G(irgb) / 255.0;
@@ -1226,12 +1311,15 @@ static uint32_t sdl_colorbalance(uint32_t irgb, char cr, char cg, char cb, char 
 	g -= cb / 2;
 	b += cb;
 
-	if (r < 0)
+	if (r < 0) {
 		r = 0;
-	if (g < 0)
+	}
+	if (g < 0) {
 		g = 0;
-	if (b < 0)
+	}
+	if (b < 0) {
 		b = 0;
+	}
 
 	if (r > 255) {
 		g += (r - 255) / 2;
@@ -1249,12 +1337,15 @@ static uint32_t sdl_colorbalance(uint32_t irgb, char cr, char cg, char cb, char 
 		b = 255;
 	}
 
-	if (r > 255)
+	if (r > 255) {
 		r = 255;
-	if (g > 255)
+	}
+	if (g > 255) {
 		g = 255;
-	if (b > 255)
+	}
+	if (b > 255) {
 		b = 255;
+	}
 
 	irgb = IRGBA(r, g, b, a);
 
@@ -1269,15 +1360,17 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 	uint32_t irgb;
 	long long start;
 
-	if (si->xres == 0 || si->yres == 0)
+	if (si->xres == 0 || si->yres == 0) {
 		scale = 100; // !!! needs better handling !!!
-	else
+	} else {
 		scale = st->scale;
+	}
 
 	// hack to adjust the size of mages to old client levels
 	// this was originally done during loading from PAKs.
-	if (st->sprite >= 160000 && st->sprite < 170000)
+	if (st->sprite >= 160000 && st->sprite < 170000) {
 		scale *= 0.88;
+	}
 
 	if (scale != 100) {
 		st->xres = ceil((double)(si->xres - 1) * scale / 100.0);
@@ -1292,10 +1385,11 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 		st->yoff = si->yoff;
 	}
 
-	if (st->sink)
+	if (st->sink) {
 		sink = min(st->sink, max(0, st->yres - 4));
-	else
+	} else {
 		sink = 0;
+	}
 
 	if (!preload || preload == 1) {
 		if (st->flags & SF_DIDALLOC) {
@@ -1355,11 +1449,13 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 					ix = x * 100.0 / scale;
 					iy = y * 100.0 / scale;
 
-					if (ceil(ix) >= si->xres * sdl_scale)
+					if (ceil(ix) >= si->xres * sdl_scale) {
 						ix = si->xres * sdl_scale - 1.001;
+					}
 
-					if (ceil(iy) >= si->yres * sdl_scale)
+					if (ceil(iy) >= si->yres * sdl_scale) {
 						iy = si->yres * sdl_scale - 1.001;
+					}
 
 					high_x = ix - floor(ix);
 					high_y = iy - floor(iy);
@@ -1368,9 +1464,10 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 
 					irgb = si->pixel[(int)(floor(ix) + floor(iy) * si->xres * sdl_scale)];
 
-					if (st->c1 || st->c2 || st->c3)
+					if (st->c1 || st->c2 || st->c3) {
 						irgb = sdl_colorize_pix2(irgb, st->c1, st->c2, st->c3, floor(ix), floor(iy), si->xres, si->yres,
 						    si->pixel, st->sprite);
+					}
 					dba = IGET_A(irgb) * low_x * low_y;
 					dbr = IGET_R(irgb) * low_x * low_y;
 					dbg = IGET_G(irgb) * low_x * low_y;
@@ -1378,9 +1475,10 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 
 					irgb = si->pixel[(int)(ceil(ix) + floor(iy) * si->xres * sdl_scale)];
 
-					if (st->c1 || st->c2 || st->c3)
+					if (st->c1 || st->c2 || st->c3) {
 						irgb = sdl_colorize_pix2(irgb, st->c1, st->c2, st->c3, ceil(ix), floor(iy), si->xres, si->yres,
 						    si->pixel, st->sprite);
+					}
 					dba += IGET_A(irgb) * high_x * low_y;
 					dbr += IGET_R(irgb) * high_x * low_y;
 					dbg += IGET_G(irgb) * high_x * low_y;
@@ -1388,9 +1486,10 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 
 					irgb = si->pixel[(int)(floor(ix) + ceil(iy) * si->xres * sdl_scale)];
 
-					if (st->c1 || st->c2 || st->c3)
+					if (st->c1 || st->c2 || st->c3) {
 						irgb = sdl_colorize_pix2(irgb, st->c1, st->c2, st->c3, floor(ix), ceil(iy), si->xres, si->yres,
 						    si->pixel, st->sprite);
+					}
 					dba += IGET_A(irgb) * low_x * high_y;
 					dbr += IGET_R(irgb) * low_x * high_y;
 					dbg += IGET_G(irgb) * low_x * high_y;
@@ -1398,27 +1497,31 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 
 					irgb = si->pixel[(int)(ceil(ix) + ceil(iy) * si->xres * sdl_scale)];
 
-					if (st->c1 || st->c2 || st->c3)
+					if (st->c1 || st->c2 || st->c3) {
 						irgb = sdl_colorize_pix2(irgb, st->c1, st->c2, st->c3, ceil(ix), ceil(iy), si->xres, si->yres,
 						    si->pixel, st->sprite);
+					}
 					dba += IGET_A(irgb) * high_x * high_y;
 					dbr += IGET_R(irgb) * high_x * high_y;
 					dbg += IGET_G(irgb) * high_x * high_y;
 					dbb += IGET_B(irgb) * high_x * high_y;
 
-					irgb = IRGBA(((int)dbr), ((int)dbg), ((int)dbb), ((int)dba));
+					irgb = IRGBA((int)dbr, (int)dbg, (int)dbb, (int)dba);
 
 				} else {
 					irgb = si->pixel[x + y * si->xres * sdl_scale];
-					if (st->c1 || st->c2 || st->c3)
+					if (st->c1 || st->c2 || st->c3) {
 						irgb = sdl_colorize_pix2(
 						    irgb, st->c1, st->c2, st->c3, x, y, si->xres, si->yres, si->pixel, st->sprite);
+					}
 				}
 
-				if (st->cr || st->cg || st->cb || st->light || st->sat)
+				if (st->cr || st->cg || st->cb || st->light || st->sat) {
 					irgb = sdl_colorbalance(irgb, st->cr, st->cg, st->cb, st->light, st->sat);
-				if (st->shine)
+				}
+				if (st->shine) {
 					irgb = sdl_shine_pix(irgb, st->shine);
+				}
 
 				if (st->ll != st->ml || st->rl != st->ml || st->ul != st->ml || st->dl != st->ml) {
 					int r, g, b, a;
@@ -1436,29 +1539,33 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 							r2 = IGET_R(sdl_light(st->ll, irgb));
 							g2 = IGET_G(sdl_light(st->ll, irgb));
 							b2 = IGET_B(sdl_light(st->ll, irgb));
-						} else
+						} else {
 							v2 = 0;
+						}
 						if (x / 2 > 20 * sdl_scale - y) {
 							v3 = (x / 2 - (20 * sdl_scale - y));
 							r3 = IGET_R(sdl_light(st->rl, irgb));
 							g3 = IGET_G(sdl_light(st->rl, irgb));
 							b3 = IGET_B(sdl_light(st->rl, irgb));
-						} else
+						} else {
 							v3 = 0;
+						}
 						if (x / 2 > y) {
 							v4 = (x / 2 - y);
 							r4 = IGET_R(sdl_light(st->ul, irgb));
 							g4 = IGET_G(sdl_light(st->ul, irgb));
 							b4 = IGET_B(sdl_light(st->ul, irgb));
-						} else
+						} else {
 							v4 = 0;
+						}
 						if (x / 2 < y) {
 							v5 = -(x / 2 - y);
 							r5 = IGET_R(sdl_light(st->dl, irgb));
 							g5 = IGET_G(sdl_light(st->dl, irgb));
 							b5 = IGET_B(sdl_light(st->dl, irgb));
-						} else
+						} else {
 							v5 = 0;
+						}
 
 						v1 = 20 * sdl_scale - (v2 + v3 + v4 + v5);
 						r1 = IGET_R(sdl_light(st->ml, irgb));
@@ -1471,32 +1578,37 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 							r2 = IGET_R(sdl_light(st->ll, irgb));
 							g2 = IGET_G(sdl_light(st->ll, irgb));
 							b2 = IGET_B(sdl_light(st->ll, irgb));
-						} else
+						} else {
 							v2 = 0;
+						}
 						if (x > 10 * sdl_scale && x < 20 * sdl_scale) {
 							v3 = (x - 10 * sdl_scale) * 2 - 2;
 							r3 = IGET_R(sdl_light(st->rl, irgb));
 							g3 = IGET_G(sdl_light(st->rl, irgb));
 							b3 = IGET_B(sdl_light(st->rl, irgb));
-						} else
+						} else {
 							v3 = 0;
+						}
 						if (x > 20 * sdl_scale && x < 30 * sdl_scale) {
 							v5 = (10 * sdl_scale - (x - 20 * sdl_scale)) * 2 - 2;
 							r5 = IGET_R(sdl_light(st->dl, irgb));
 							g5 = IGET_G(sdl_light(st->dl, irgb));
 							b5 = IGET_B(sdl_light(st->dl, irgb));
-						} else
+						} else {
 							v5 = 0;
+						}
 						if (x > 30 * sdl_scale) {
-							if (x < 40 * sdl_scale)
+							if (x < 40 * sdl_scale) {
 								v4 = (x - 30 * sdl_scale) * 2 - 2;
-							else
+							} else {
 								v4 = 0;
+							}
 							r4 = IGET_R(sdl_light(st->ul, irgb));
 							g4 = IGET_G(sdl_light(st->ul, irgb));
 							b4 = IGET_B(sdl_light(st->ul, irgb));
-						} else
+						} else {
 							v4 = 0;
+						}
 
 						v1 = 20 * sdl_scale - (v2 + v3 + v4 + v5) / 2;
 						r1 = IGET_R(sdl_light(st->ml, irgb));
@@ -1506,33 +1618,42 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 
 					div = v1 + v2 + v3 + v4 + v5;
 
-					a = IGET_A(irgb);
-					r = (r1 * v1 + r2 * v2 + r3 * v3 + r4 * v4 + r5 * v5) / div;
-					g = (g1 * v1 + g2 * v2 + g3 * v3 + g4 * v4 + g5 * v5) / div;
-					b = (b1 * v1 + b2 * v2 + b3 * v3 + b4 * v4 + b5 * v5) / div;
+					if (div == 0) {
+						a = 0;
+						r = g = b = 0;
+					} else {
+						a = IGET_A(irgb);
+						r = (r1 * v1 + r2 * v2 + r3 * v3 + r4 * v4 + r5 * v5) / div;
+						g = (g1 * v1 + g2 * v2 + g3 * v3 + g4 * v4 + g5 * v5) / div;
+						b = (b1 * v1 + b2 * v2 + b3 * v3 + b4 * v4 + b5 * v5) / div;
+					}
 
 					irgb = IRGBA(r, g, b, a);
 
-				} else
+				} else {
 					irgb = sdl_light(st->ml, irgb);
-
-				if (sink) {
-					if (st->yres * sdl_scale - sink * sdl_scale < y)
-						irgb &= 0xffffff; // zero alpha to make it transparent
 				}
 
-				if (st->freeze)
+				if (sink) {
+					if (st->yres * sdl_scale - sink * sdl_scale < y) {
+						irgb &= 0xffffff; // zero alpha to make it transparent
+					}
+				}
+
+				if (st->freeze) {
 					irgb = sdl_freeze(st->freeze, irgb);
+				}
 
 				st->pixel[x + y * st->xres * sdl_scale] = irgb;
 			}
 		}
 		st->flags |= SF_DIDMAKE;
 
-		if (preload)
+		if (preload) {
 			sdl_time_preload += SDL_GetTicks64() - start;
-		else
+		} else {
 			sdl_time_make += SDL_GetTicks64() - start;
+		}
 	}
 
 	if (!preload || preload == 3) {
@@ -1561,8 +1682,9 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			}
 			SDL_UpdateTexture(texture, NULL, st->pixel, st->xres * sizeof(uint32_t) * sdl_scale);
 			SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
-		} else
+		} else {
 			texture = NULL;
+		}
 #ifdef SDL_FAST_MALLOC
 		free(st->pixel);
 #else
@@ -1628,12 +1750,15 @@ static inline unsigned int hashfunc_text(const char *text, int color, int flags)
 			t2 = text[2];
 			if (text[2]) {
 				t3 = text[3];
-			} else
+			} else {
 				t3 = 0;
-		} else
+			}
+		} else {
 			t2 = t3 = 0;
-	} else
+		}
+	} else {
 		t1 = t2 = t3 = 0;
+	}
 
 	hash = (t0 << 0) ^ (t1 << 3) ^ (t2 << 6) ^ (t3 << 9) ^ ((uint32_t)color << 0) ^ ((uint32_t)flags << 5);
 
@@ -1661,17 +1786,20 @@ static void not_busy_or_panic(struct sdl_texture *st)
 				exit(42);
 			}
 		}
-	} else
+	} else {
 		st->flags |= SF_BUSY;
+	}
 }
 
 static void unbusy(struct sdl_texture *st)
 {
-	if (sdl_multi)
+	if (sdl_multi) {
 		SDL_LockMutex(premutex);
+	}
 	st->flags &= ~SF_BUSY;
-	if (sdl_multi)
+	if (sdl_multi) {
 		SDL_UnlockMutex(premutex);
+	}
 }
 
 int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int cb, int light, int sat, int c1, int c2,
@@ -1681,10 +1809,11 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 	int stx, ptx, ntx, panic = 0;
 	int hash;
 
-	if (!text)
+	if (!text) {
 		hash = hashfunc(sprite, ml, ll, rl, ul, dl);
-	else
+	} else {
 		hash = hashfunc_text(text, text_color, text_flags);
+	}
 
 	if (sprite >= MAXSPRITE || sprite < 0) {
 		note("illegal sprite %d wanted in sdl_tx_load", sprite);
@@ -1706,66 +1835,94 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			}
 		}
 		if (text) {
-			if (!(sdlt[stx].flags & SF_TEXT))
+			if (!(sdlt[stx].flags & SF_TEXT)) {
 				continue;
-			if (!(sdlt[stx].tex))
+			}
+			if (!(sdlt[stx].tex)) {
 				continue; // text does not go through the preloader, so if the texture is empty maketext failed earlier.
-			if (!sdlt[stx].text || strcmp(sdlt[stx].text, text))
+			}
+			if (!sdlt[stx].text || strcmp(sdlt[stx].text, text) != 0) {
 				continue;
-			if (sdlt[stx].text_flags != text_flags)
+			}
+			if (sdlt[stx].text_flags != text_flags) {
 				continue;
-			if (sdlt[stx].text_color != text_color)
+			}
+			if (sdlt[stx].text_color != text_color) {
 				continue;
-			if (sdlt[stx].text_font != text_font)
+			}
+			if (sdlt[stx].text_font != text_font) {
 				continue;
+			}
 		} else {
-			if (!(sdlt[stx].flags & SF_SPRITE))
+			if (!(sdlt[stx].flags & SF_SPRITE)) {
 				continue;
-			if (sdlt[stx].sprite != sprite)
+			}
+			if (sdlt[stx].sprite != sprite) {
 				continue;
-			if (sdlt[stx].sink != sink)
+			}
+			if (sdlt[stx].sink != sink) {
 				continue;
-			if (sdlt[stx].freeze != freeze)
+			}
+			if (sdlt[stx].freeze != freeze) {
 				continue;
-			if (sdlt[stx].scale != scale)
+			}
+			if (sdlt[stx].scale != scale) {
 				continue;
-			if (sdlt[stx].cr != cr)
+			}
+			if (sdlt[stx].cr != cr) {
 				continue;
-			if (sdlt[stx].cg != cg)
+			}
+			if (sdlt[stx].cg != cg) {
 				continue;
-			if (sdlt[stx].cb != cb)
+			}
+			if (sdlt[stx].cb != cb) {
 				continue;
-			if (sdlt[stx].light != light)
+			}
+			if (sdlt[stx].light != light) {
 				continue;
-			if (sdlt[stx].sat != sat)
+			}
+			if (sdlt[stx].sat != sat) {
 				continue;
-			if (sdlt[stx].c1 != c1)
+			}
+			if (sdlt[stx].c1 != c1) {
 				continue;
-			if (sdlt[stx].c2 != c2)
+			}
+			if (sdlt[stx].c2 != c2) {
 				continue;
-			if (sdlt[stx].c3 != c3)
+			}
+			if (sdlt[stx].c3 != c3) {
 				continue;
-			if (sdlt[stx].shine != shine)
+			}
+			if (sdlt[stx].shine != shine) {
 				continue;
-			if (sdlt[stx].ml != ml)
+			}
+			if (sdlt[stx].ml != ml) {
 				continue;
-			if (sdlt[stx].ll != ll)
+			}
+			if (sdlt[stx].ll != ll) {
 				continue;
-			if (sdlt[stx].rl != rl)
+			}
+			if (sdlt[stx].rl != rl) {
 				continue;
-			if (sdlt[stx].ul != ul)
+			}
+			if (sdlt[stx].ul != ul) {
 				continue;
-			if (sdlt[stx].dl != dl)
+			}
+			if (sdlt[stx].dl != dl) {
 				continue;
+			}
 		}
 
-		if (checkonly)
+		if (checkonly) {
 			return 1;
-		if (preload == 1)
+		}
+		if (preload == 1) {
 			return -1;
+		}
 
-		if (panic > maxpanic)
+		if (panic > maxpanic) {
 			maxpanic = panic;
+		}
 
 		if (!preload && (sdlt[stx].flags & SF_SPRITE)) {
 			// load image and allocate memory if preload didn't do it yet
@@ -1782,35 +1939,41 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			}
 
 			// Make make in main if not busy
-			if (sdl_multi)
+			if (sdl_multi) {
 				SDL_LockMutex(premutex);
+			}
 
 			if (!(sdlt[stx].flags & (SF_DIDMAKE | SF_BUSY))) {
 				sdlt[stx].flags |= SF_BUSY;
 
-				if (sdl_multi)
+				if (sdl_multi) {
 					SDL_UnlockMutex(premutex);
+				}
 
 				sdl_make(sdlt + stx, sdli + sprite, 2);
 
-				if (sdl_multi)
+				if (sdl_multi) {
 					SDL_LockMutex(premutex);
+				}
 
 				sdlt[stx].flags &= ~SF_BUSY;
 				sdlt[stx].flags |= SF_DIDMAKE;
 
-				if (sdl_multi)
+				if (sdl_multi) {
 					SDL_UnlockMutex(premutex);
+				}
 			} else {
-				if (sdl_multi)
+				if (sdl_multi) {
 					SDL_UnlockMutex(premutex);
+				}
 			}
 
 			// wait for the background preloader if we have multiple threads
 			panic = 0;
 			while (sdl_multi) {
-				if ((sdlt[stx].flags & SF_DIDMAKE))
+				if (sdlt[stx].flags & SF_DIDMAKE) {
 					break;
+				}
 
 				// warn("waiting for graphics...");
 				SDL_Delay(1);
@@ -1847,19 +2010,22 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		ntx = sdlt[stx].hnext;
 		ptx = sdlt[stx].hprev;
 
-		if (ptx == STX_NONE)
+		if (ptx == STX_NONE) {
 			sdlt_cache[hash] = ntx;
-		else
+		} else {
 			sdlt[ptx].hnext = sdlt[stx].hnext;
+		}
 
-		if (ntx != STX_NONE)
+		if (ntx != STX_NONE) {
 			sdlt[ntx].hprev = sdlt[stx].hprev;
+		}
 
 		// add to top pos
 		ntx = sdlt_cache[hash];
 
-		if (ntx != STX_NONE)
+		if (ntx != STX_NONE) {
 			sdlt[ntx].hprev = stx;
+		}
 
 		sdlt[stx].hprev = STX_NONE;
 		sdlt[stx].hnext = ntx;
@@ -1867,15 +2033,18 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		sdlt_cache[hash] = stx;
 
 		// update statistics
-		if (fortick)
+		if (fortick) {
 			sdlt[stx].fortick = fortick;
-		if (!preload)
+		}
+		if (!preload) {
 			texc_hit++;
+		}
 
 		return stx;
 	}
-	if (checkonly)
+	if (checkonly) {
 		return 0;
+	}
 
 	stx = sdlt_last;
 
@@ -1883,14 +2052,15 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 	if (sdlt[stx].flags) {
 		int hash2;
 
-		if (sdlt[stx].flags & SF_SPRITE)
+		if (sdlt[stx].flags & SF_SPRITE) {
 			not_busy_or_panic(sdlt + stx);
+		}
 
-		if (sdlt[stx].flags & SF_SPRITE)
+		if (sdlt[stx].flags & SF_SPRITE) {
 			hash2 = hashfunc(sdlt[stx].sprite, sdlt[stx].ml, sdlt[stx].ll, sdlt[stx].rl, sdlt[stx].ul, sdlt[stx].dl);
-		else if (sdlt[stx].flags & SF_TEXT)
+		} else if (sdlt[stx].flags & SF_TEXT) {
 			hash2 = hashfunc_text(sdlt[stx].text, sdlt[stx].text_color, sdlt[stx].text_flags);
-		else {
+		} else {
 			hash2 = 0;
 			warn("weird entry in texture cache!");
 		}
@@ -1914,8 +2084,9 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 
 		if (sdlt[stx].flags & SF_DIDTEX) {
 			mem_tex -= sdlt[stx].xres * sdlt[stx].yres * sizeof(uint32_t);
-			if (sdlt[stx].tex)
+			if (sdlt[stx].tex) {
 				SDL_DestroyTexture(sdlt[stx].tex);
+			}
 		} else if (sdlt[stx].flags & SF_DIDALLOC) {
 			if (sdlt[stx].pixel) {
 #ifdef SDL_FAST_MALLOC
@@ -1939,8 +2110,9 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 #endif
 
 		sdlt[stx].flags = 0;
-	} else
+	} else {
 		texc_used++;
+	}
 
 	// build
 	if (text) {
@@ -1959,11 +2131,13 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			SDL_QueryTexture(sdlt[stx].tex, NULL, NULL, &w, &h);
 			sdlt[stx].xres = w;
 			sdlt[stx].yres = h;
-		} else
+		} else {
 			sdlt[stx].xres = sdlt[stx].yres = 0;
+		}
 	} else {
-		if (preload != 1)
+		if (preload != 1) {
 			sdl_ic_load(sprite);
+		}
 
 		// init
 		sdlt[stx].flags = SF_USED | SF_SPRITE | SF_BUSY;
@@ -1986,8 +2160,9 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		sdlt[stx].ul = ul;
 		sdlt[stx].dl = dl;
 
-		if (preload != 1)
+		if (preload != 1) {
 			sdl_make(sdlt + stx, sdli + sprite, preload);
+		}
 		unbusy(sdlt + stx);
 	}
 
@@ -1995,8 +2170,9 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 
 	ntx = sdlt_cache[hash];
 
-	if (ntx != STX_NONE)
+	if (ntx != STX_NONE) {
 		sdlt[ntx].hprev = stx;
+	}
 
 	sdlt[stx].hprev = STX_NONE;
 	sdlt[stx].hnext = ntx;
@@ -2006,12 +2182,13 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 	sdl_tx_best(stx);
 
 	// update statistics
-	if (fortick)
+	if (fortick) {
 		sdlt[stx].fortick = fortick;
+	}
 
-	if (preload)
+	if (preload) {
 		texc_pre++;
-	else if (sprite) { // Do not count missed text sprites. Those are expected.
+	} else if (sprite) { // Do not count missed text sprites. Those are expected.
 		texc_miss++;
 	}
 
@@ -2039,10 +2216,12 @@ static void sdl_blit_tex(
 		dy -= addy;
 		sy = clipsy;
 	}
-	if (sx + dx >= clipex)
+	if (sx + dx >= clipex) {
 		dx = clipex - sx;
-	if (sy + dy >= clipey)
+	}
+	if (sy + dy >= clipey) {
 		dy = clipey - sy;
+	}
 	dx *= sdl_scale;
 	dy *= sdl_scale;
 
@@ -2063,25 +2242,26 @@ static void sdl_blit_tex(
 
 void sdl_blit(int stx, int sx, int sy, int clipsx, int clipsy, int clipex, int clipey, int x_offset, int y_offset)
 {
-	if (sdlt[stx].tex)
+	if (sdlt[stx].tex) {
 		sdl_blit_tex(sdlt[stx].tex, sx, sy, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
+	}
 }
 
-#define DD_LEFT 0
-#define DD_CENTER 1
-#define DD_RIGHT 2
-#define DD_SHADE 4
-#define DD_LARGE 0
-#define DD_SMALL 8
-#define DD_FRAME 16
-#define DD_BIG 32
+#define DD_LEFT    0
+#define DD_CENTER  1
+#define DD_RIGHT   2
+#define DD_SHADE   4
+#define DD_LARGE   0
+#define DD_SMALL   8
+#define DD_FRAME   16
+#define DD_BIG     32
 #define DD_NOCACHE 64
 
 #define DD__SHADEFONT 128
 #define DD__FRAMEFONT 256
 
-#define R16TO32(color) (int)((((color >> 10) & 31) / 31.0f) * 255.0f)
-#define G16TO32(color) (int)((((color >> 5) & 31) / 31.0f) * 255.0f)
+#define R16TO32(color) (int)(((((color) >> 10) & 31) / 31.0f) * 255.0f)
+#define G16TO32(color) (int)(((((color) >> 5) & 31) / 31.0f) * 255.0f)
 #define B16TO32(color) (int)((((color) & 31) / 31.0f) * 255.0f)
 
 #define MAXFONTHEIGHT 64
@@ -2094,19 +2274,22 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 	const char *c, *otext = text;
 	long long start = SDL_GetTicks64();
 
-	for (sizex = 0, c = text; *c; c++)
+	for (sizex = 0, c = text; *c; c++) {
 		sizex += font[*c].dim * sdl_scale;
+	}
 
-	if (flags & (DD__FRAMEFONT | DD__SHADEFONT))
+	if (flags & (DD__FRAMEFONT | DD__SHADEFONT)) {
 		sizex += sdl_scale * 2;
+	}
 
 #ifdef SDL_FAST_MALLOC
 	pixel = calloc(sizex * MAXFONTHEIGHT, sizeof(uint32_t));
 #else
 	pixel = xmalloc(sizex * MAXFONTHEIGHT * sizeof(uint32_t), MEM_SDL_PIXEL2);
 #endif
-	if (pixel == NULL)
+	if (pixel == NULL) {
 		return NULL;
+	}
 
 	while (*text && *text != DDT) {
 		if (*text < 0) {
@@ -2128,8 +2311,9 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 				x = sx;
 				rawrun++;
 				dst = pixel + x + y * sizex;
-				if (y > sizey)
+				if (y > sizey) {
 					sizey = y;
+				}
 				continue;
 			}
 
@@ -2142,10 +2326,12 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 		sx += font[*text++].dim * sdl_scale;
 	}
 
-	if (sizex < 1)
+	if (sizex < 1) {
 		sizex = 1;
-	if (sizey < 1)
+	}
+	if (sizey < 1) {
 		sizey = 1;
+	}
 
 	sizey++;
 	sdl_time_text += SDL_GetTicks64() - start;
@@ -2178,27 +2364,36 @@ int dump_cmp(const void *ca, const void *cb)
 	a = *(int *)ca;
 	b = *(int *)cb;
 
-	if (!sdlt[a].flags)
+	if (!sdlt[a].flags) {
 		return 1;
-	if (!sdlt[b].flags)
+	}
+	if (!sdlt[b].flags) {
 		return -1;
+	}
 
-	if (sdlt[a].flags & SF_TEXT)
+	if (sdlt[a].flags & SF_TEXT) {
 		return 1;
-	if (sdlt[b].flags & SF_TEXT)
+	}
+	if (sdlt[b].flags & SF_TEXT) {
 		return -1;
+	}
 
-	if ((tmp = sdlt[a].sprite - sdlt[b].sprite) != 0)
+	if (((tmp = sdlt[a].sprite - sdlt[b].sprite) != 0)) {
 		return tmp;
+	}
 
-	if ((tmp = sdlt[a].ml - sdlt[b].ml) != 0)
+	if (((tmp = sdlt[a].ml - sdlt[b].ml) != 0)) {
 		return tmp;
-	if ((tmp = sdlt[a].ll - sdlt[b].ll) != 0)
+	}
+	if (((tmp = sdlt[a].ll - sdlt[b].ll) != 0)) {
 		return tmp;
-	if ((tmp = sdlt[a].rl - sdlt[b].rl) != 0)
+	}
+	if (((tmp = sdlt[a].rl - sdlt[b].rl) != 0)) {
 		return tmp;
-	if ((tmp = sdlt[a].ul - sdlt[b].ul) != 0)
+	}
+	if (((tmp = sdlt[a].ul - sdlt[b].ul) != 0)) {
 		return tmp;
+	}
 
 	return sdlt[a].dl - sdlt[b].dl;
 }
@@ -2211,37 +2406,44 @@ void sdl_dump_spritecache(void)
 	FILE *fp;
 
 	dumpidx = xmalloc(sizeof(int) * MAX_TEXCACHE, MEM_TEMP);
-	for (i = 0; i < MAX_TEXCACHE; i++)
+	for (i = 0; i < MAX_TEXCACHE; i++) {
 		dumpidx[i] = i;
+	}
 
 	qsort(dumpidx, MAX_TEXCACHE, sizeof(int), dump_cmp);
 
-	if (localdata)
+	if (localdata) {
 		sprintf(filename, "%s%s", localdata, "sdlt.txt");
-	else
+	} else {
 		sprintf(filename, "%s", "sdlt.txt");
+	}
 	fp = fopen(filename, "w");
+	if (fp == NULL) {
+		xfree(dumpidx);
+		return;
+	}
 
 	for (i = 0; i < MAX_TEXCACHE; i++) {
 		n = dumpidx[i];
-		if (!sdlt[n].flags)
+		if (!sdlt[n].flags) {
 			break;
+		}
 
-		if (sdlt[n].flags & SF_TEXT)
+		if (sdlt[n].flags & SF_TEXT) {
 			text++;
-		else {
-			if (i == 0)
+		} else {
+			if (i == 0 || sdlt[dumpidx[i]].sprite != sdlt[dumpidx[i - 1]].sprite) {
 				uni++;
-			else if (sdlt[dumpidx[i]].sprite != sdlt[dumpidx[i - 1]].sprite)
-				uni++;
+			}
 			cnt++;
 		}
 
-		if (sdlt[n].flags & SF_SPRITE)
+		if (sdlt[n].flags & SF_SPRITE) {
 			fprintf(fp, "Sprite: %6d (%7d) %s%s%s%s%s\n", sdlt[n].sprite, sdlt[n].fortick,
 			    (sdlt[n].flags & SF_USED) ? "SF_USED " : "", (sdlt[n].flags & SF_DIDALLOC) ? "SF_DIDALLOC " : "",
 			    (sdlt[n].flags & SF_DIDMAKE) ? "SF_DIDMAKE " : "", (sdlt[n].flags & SF_DIDTEX) ? "SF_DIDTEX " : "",
 			    (sdlt[n].flags & SF_BUSY) ? "SF_BUSY " : "");
+		}
 
 		/*fprintf(fp,"Sprite: %6d, Lights: %2d,%2d,%2d,%2d,%2d, Light: %3d, Colors: %3d,%3d,%3d, Colors: %4X,%4X,%4X,
 		   Sink: %2d, Freeze: %2d, Scale: %3d, Sat: %3d, Shine: %3d, %dx%d\n", sdlt[n].sprite, sdlt[n].ml, sdlt[n].ll,
@@ -2262,9 +2464,10 @@ void sdl_dump_spritecache(void)
 		       sdlt[n].shine,
 		       sdlt[n].xres,
 		       sdlt[n].yres);*/
-		if (sdlt[n].flags & SF_TEXT)
+		if (sdlt[n].flags & SF_TEXT) {
 			fprintf(fp, "Color: %08X, Flags: %04X, Font: %p, Text: %s (%dx%d)\n", sdlt[n].text_color,
 			    sdlt[n].text_flags, sdlt[n].text_font, sdlt[n].text, sdlt[n].xres, sdlt[n].yres);
+		}
 
 		size += sdlt[n].xres * sdlt[n].yres * sizeof(uint32_t);
 	}
@@ -2277,21 +2480,28 @@ void sdl_dump_spritecache(void)
 
 void sdl_exit(void)
 {
-	if (sdl_zip1)
+	if (sdl_zip1) {
 		zip_close(sdl_zip1);
-	if (sdl_zip1m)
+	}
+	if (sdl_zip1m) {
 		zip_close(sdl_zip1m);
-	if (sdl_zip1p)
+	}
+	if (sdl_zip1p) {
 		zip_close(sdl_zip1p);
-	if (sdl_zip2)
+	}
+	if (sdl_zip2) {
 		zip_close(sdl_zip2);
-	if (sdl_zip2m)
+	}
+	if (sdl_zip2m) {
 		zip_close(sdl_zip2m);
-	if (sdl_zip2p)
+	}
+	if (sdl_zip2p) {
 		zip_close(sdl_zip2p);
+	}
 
-	if (game_options & GO_SOUND)
+	if (game_options & GO_SOUND) {
 		Mix_Quit();
+	}
 #ifdef DEVELOPER
 	sdl_dump_spritecache();
 #endif
@@ -2305,8 +2515,9 @@ int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char
 	int r, g, b, a;
 	const char *c;
 
-	if (!*text)
+	if (!*text) {
 		return sx;
+	}
 
 	r = R16TO32(color);
 	g = G16TO32(color);
@@ -2321,19 +2532,22 @@ int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char
 		tex = sdlt[stx].tex;
 	}
 
-	for (dx = 0, c = text; *c; c++)
+	for (dx = 0, c = text; *c; c++) {
 		dx += font[*c].dim;
+	}
 
 	if (tex) {
-		if (flags & DD_CENTER)
+		if (flags & DD_CENTER) {
 			sx -= dx / 2;
-		else if (flags & DD_RIGHT)
+		} else if (flags & DD_RIGHT) {
 			sx -= dx;
+		}
 
 		sdl_blit_tex(tex, sx, sy, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
 
-		if (flags & DD_NOCACHE)
+		if (flags & DD_NOCACHE) {
 			SDL_DestroyTexture(tex);
+		}
 	}
 
 	return sx + dx;
@@ -2350,17 +2564,22 @@ void sdl_rect(int sx, int sy, int ex, int ey, unsigned short int color, int clip
 	b = B16TO32(color);
 	a = 255;
 
-	if (sx < clipsx)
+	if (sx < clipsx) {
 		sx = clipsx;
-	if (sy < clipsy)
+	}
+	if (sy < clipsy) {
 		sy = clipsy;
-	if (ex > clipex)
+	}
+	if (ex > clipex) {
 		ex = clipex;
-	if (ey > clipey)
+	}
+	if (ey > clipey) {
 		ey = clipey;
+	}
 
-	if (sx > ex || sy > ey)
+	if (sx > ex || sy > ey) {
 		return;
+	}
 
 	rc.x = (sx + x_offset) * sdl_scale;
 	rc.w = (ex - sx) * sdl_scale;
@@ -2382,17 +2601,22 @@ void sdl_shaded_rect(int sx, int sy, int ex, int ey, unsigned short int color, u
 	b = B16TO32(color);
 	a = alpha;
 
-	if (sx < clipsx)
+	if (sx < clipsx) {
 		sx = clipsx;
-	if (sy < clipsy)
+	}
+	if (sy < clipsy) {
 		sy = clipsy;
-	if (ex > clipex)
+	}
+	if (ex > clipex) {
 		ex = clipex;
-	if (ey > clipey)
+	}
+	if (ey > clipey) {
 		ey = clipey;
+	}
 
-	if (sx > ex || sy > ey)
+	if (sx > ex || sy > ey) {
 		return;
+	}
 
 	rc.x = (sx + x_offset) * sdl_scale;
 	rc.w = (ex - sx) * sdl_scale;
@@ -2503,23 +2727,31 @@ void sdl_line(int fx, int fy, int tx, int ty, unsigned short color, int clipsx, 
 	b = B16TO32(color);
 	a = 255;
 
-	if (fx < clipsx)
+	if (fx < clipsx) {
 		fx = clipsx;
-	if (fy < clipsy)
+	}
+	if (fy < clipsy) {
 		fy = clipsy;
-	if (fx >= clipex)
+	}
+	if (fx >= clipex) {
 		fx = clipex - 1;
-	if (fy >= clipey)
+	}
+	if (fy >= clipey) {
 		fy = clipey - 1;
+	}
 
-	if (tx < clipsx)
+	if (tx < clipsx) {
 		tx = clipsx;
-	if (ty < clipsy)
+	}
+	if (ty < clipsy) {
 		ty = clipsy;
-	if (tx >= clipex)
+	}
+	if (tx >= clipex) {
 		tx = clipex - 1;
-	if (ty >= clipey)
+	}
+	if (ty >= clipey) {
 		ty = clipey - 1;
+	}
 
 	fx += x_offset;
 	tx += x_offset;
@@ -2559,20 +2791,26 @@ void sdl_loop(void)
 			gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_NONE, 0);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			if (event.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_LDOWN, event.button.clicks);
-			if (event.button.button == SDL_BUTTON_MIDDLE)
+			}
+			if (event.button.button == SDL_BUTTON_MIDDLE) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_MDOWN, event.button.clicks);
-			if (event.button.button == SDL_BUTTON_RIGHT)
+			}
+			if (event.button.button == SDL_BUTTON_RIGHT) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_RDOWN, event.button.clicks);
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			if (event.button.button == SDL_BUTTON_LEFT)
+			if (event.button.button == SDL_BUTTON_LEFT) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_LUP, event.button.clicks);
-			if (event.button.button == SDL_BUTTON_MIDDLE)
+			}
+			if (event.button.button == SDL_BUTTON_MIDDLE) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_MUP, event.button.clicks);
-			if (event.button.button == SDL_BUTTON_RIGHT)
+			}
+			if (event.button.button == SDL_BUTTON_RIGHT) {
 				gui_sdl_mouseproc(event.motion.x, event.motion.y, SDL_MOUM_RUP, event.button.clicks);
+			}
 			break;
 		case SDL_MOUSEWHEEL:
 			gui_sdl_mouseproc(event.wheel.x, event.wheel.y, SDL_MOUM_WHEEL, 0);
@@ -2587,6 +2825,8 @@ void sdl_loop(void)
 				}
 			}
 #endif
+			break;
+		default:
 			break;
 		}
 	}
@@ -2611,14 +2851,17 @@ int sdlt_xoff(int stx)
 {
 	return sdlt[stx].xoff;
 }
+
 int sdlt_yoff(int stx)
 {
 	return sdlt[stx].yoff;
 }
+
 int sdlt_xres(int stx)
 {
 	return sdlt[stx].xres;
 }
+
 int sdlt_yres(int stx)
 {
 	return sdlt[stx].yres;
@@ -2635,8 +2878,9 @@ DLL_EXPORT uint32_t *sdl_load_png(char *filename, int *dx, int *dy)
 	png_infop info_ptr;
 
 	fp = fopen(filename, "rb");
-	if (!fp)
+	if (!fp) {
 		return NULL;
+	}
 
 	png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!png_ptr) {
@@ -2670,11 +2914,11 @@ DLL_EXPORT uint32_t *sdl_load_png(char *filename, int *dx, int *dy)
 
 	tmp = png_get_rowbytes(png_ptr, info_ptr);
 
-	if (tmp == xres * 3)
+	if (tmp == xres * 3) {
 		format = 3;
-	else if (tmp == xres * 4)
+	} else if (tmp == xres * 4) {
 		format = 4;
-	else {
+	} else {
 		fclose(fp);
 		png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
 		warn("rowbytes!=xres*4 (%d)", tmp);
@@ -2695,10 +2939,12 @@ DLL_EXPORT uint32_t *sdl_load_png(char *filename, int *dx, int *dy)
 	}
 
 	// prescan
-	if (dx)
+	if (dx) {
 		*dx = xres;
-	if (dy)
+	}
+	if (dy) {
 		*dy = yres;
+	}
 
 #ifdef SDL_FAST_MALLOC
 	pixel = malloc(xres * yres * sizeof(uint32_t));
@@ -2725,8 +2971,9 @@ DLL_EXPORT uint32_t *sdl_load_png(char *filename, int *dx, int *dy)
 					r = min(255, r * 255 / a);
 					g = min(255, g * 255 / a);
 					b = min(255, b * 255 / a);
-				} else
+				} else {
 					r = g = b = 0;
+				}
 
 				pixel[x + y * xres] = IRGBA(r, g, b, a);
 			}
@@ -2803,14 +3050,16 @@ SDL_Cursor *sdl_create_cursor(char *filename)
 				data2[i2] |= b2;
 				mask2[i2] |= b2;
 			} else {
-				if (data[i1] & b1)
+				if (data[i1] & b1) {
 					data2[i2] |= b2;
-				else
+				} else {
 					data2[i2] &= ~b2;
-				if (mask[i1] & b1)
+				}
+				if (mask[i1] & b1) {
 					mask2[i2] |= b2;
-				else
+				} else {
 					mask2[i2] &= ~b2;
+				}
 			}
 		}
 	}
@@ -2843,11 +3092,11 @@ int sdl_create_cursors(void)
 
 void sdl_set_cursor(int cursor)
 {
-	if (cursor < SDL_CUR_c_only || cursor > SDL_CUR_c_get)
+	if (cursor < SDL_CUR_c_only || cursor > SDL_CUR_c_get) {
 		return;
+	}
 	SDL_SetCursor(curs[cursor]);
 }
-
 
 struct prefetch {
 	int attick;
@@ -2866,8 +3115,9 @@ void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze,
 	long long start;
 
 	if ((pre_in + 1) % MAXPRE == pre_3) { // buffer is full
-		if (sdl_multi)
+		if (sdl_multi) {
 			SDL_SemPost(prework); // nudge background tasks
+		}
 		return;
 	}
 
@@ -2882,8 +3132,9 @@ void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze,
 	n = sdl_tx_load(sprite, sink, freeze, scale, cr, cg, cb, light, sat, c1, c2, c3, shine, ml, ll, rl, ul, dl, NULL, 0,
 	    0, NULL, 0, 1, attick);
 	sdl_time_alloc += SDL_GetTicks64() - start;
-	if (n == -1)
+	if (n == -1) {
 		return;
+	}
 
 	pre[pre_in].stx = n;
 	pre[pre_in].attick = attick;
@@ -2891,6 +3142,7 @@ void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze,
 }
 
 long long sdl_time_mutex = 0;
+
 void sdl_lock(void *a)
 {
 	long long start = SDL_GetTicks64();
@@ -2902,16 +3154,18 @@ void sdl_lock(void *a)
 
 int sdl_pre_1(void)
 {
-	if (pre_in == pre_1)
+	if (pre_in == pre_1) {
 		return 0; // prefetch buffer is empty
+	}
 
 	if (!(sdlt[pre[pre_1].stx].flags & SF_DIDALLOC)) {
 		sdl_ic_load(sdlt[pre[pre_1].stx].sprite);
 
 		sdl_make(sdlt + pre[pre_1].stx, sdli + sdlt[pre[pre_1].stx].sprite, 1);
 
-		if (sdl_multi)
+		if (sdl_multi) {
 			SDL_SemPost(prework);
+		}
 	}
 	pre_1 = (pre_1 + 1) % MAXPRE;
 
@@ -2922,12 +3176,14 @@ int sdl_pre_2(void)
 {
 	int i, work = 0;
 
-	if (pre_1 == pre_2)
+	if (pre_1 == pre_2) {
 		return 0; // prefetch buffer is empty
+	}
 
 	for (i = pre_2; i != pre_1; i = (i + 1) % MAXPRE) {
-		if (sdl_multi)
+		if (sdl_multi) {
 			SDL_LockMutex(premutex);
+		}
 
 		// printf("Preload2: Slot %d, STX %d, flags %X\n",i,pre[i].stx,pre[i].stx!=-1 ? sdlt[pre[i].stx].flags : 0);
 		if (pre[i].stx != STX_NONE && !(sdlt[pre[i].stx].flags & (SF_DIDMAKE | SF_BUSY)) &&
@@ -2936,45 +3192,53 @@ int sdl_pre_2(void)
 			// fflush(stdout);
 
 			sdlt[pre[i].stx].flags |= SF_BUSY;
-			if (sdl_multi)
+			if (sdl_multi) {
 				SDL_UnlockMutex(premutex);
+			}
 
 			sdl_make(sdlt + pre[i].stx, sdli + sdlt[pre[i].stx].sprite, 2);
 
-			if (sdl_multi)
+			if (sdl_multi) {
 				SDL_LockMutex(premutex);
+			}
 			sdlt[pre[i].stx].flags &= ~SF_BUSY;
 			sdlt[pre[i].stx].flags |= SF_DIDMAKE;
-			if (sdl_multi)
+			if (sdl_multi) {
 				SDL_UnlockMutex(premutex);
+			}
 			work = 1;
 			break;
 
 		} else {
-			if (sdl_multi)
+			if (sdl_multi) {
 				SDL_UnlockMutex(premutex);
+			}
 		}
 	}
 
-	if (sdl_multi)
+	if (sdl_multi) {
 		SDL_LockMutex(premutex);
+	}
 	while ((pre[pre_2].stx == STX_NONE || (sdlt[pre[pre_2].stx].flags & SF_DIDMAKE)) && pre_1 != pre_2) {
 		work = 1;
 		pre_2 = (pre_2 + 1) % MAXPRE;
 	}
-	if (sdl_multi)
+	if (sdl_multi) {
 		SDL_UnlockMutex(premutex);
+	}
 
 	return work;
 }
 
 int sdl_pre_3(void)
 {
-	if (pre_2 == pre_3)
+	if (pre_2 == pre_3) {
 		return 0; // prefetch buffer is empty
+	}
 
-	if (!(sdlt[pre[pre_3].stx].flags & SF_DIDTEX) && (sdlt[pre[pre_3].stx].flags & SF_DIDMAKE))
+	if (!(sdlt[pre[pre_3].stx].flags & SF_DIDTEX) && (sdlt[pre[pre_3].stx].flags & SF_DIDMAKE)) {
 		sdl_make(sdlt + pre[pre_3].stx, sdli + sdlt[pre[pre_3].stx].sprite, 3);
+	}
 	pre_3 = (pre_3 + 1) % MAXPRE;
 
 	return 1;
@@ -2990,28 +3254,32 @@ int sdl_pre_do(int curtick)
 	sdl_time_pre1 += SDL_GetTicks64() - start;
 
 	start = SDL_GetTicks64();
-	if (!sdl_multi)
+	if (!sdl_multi) {
 		sdl_pre_2();
+	}
 	sdl_time_pre2 += SDL_GetTicks64() - start;
 
 	start = SDL_GetTicks64();
 	sdl_pre_3();
 	sdl_time_pre3 += SDL_GetTicks64() - start;
 
-	if (pre_in >= pre_1)
+	if (pre_in >= pre_1) {
 		size = pre_in - pre_1;
-	else
+	} else {
 		size = MAXPRE + pre_in - pre_1;
+	}
 
-	if (pre_1 >= pre_2)
+	if (pre_1 >= pre_2) {
 		size += pre_1 - pre_2;
-	else
+	} else {
 		size += MAXPRE + pre_1 - pre_2;
+	}
 
-	if (pre_2 >= pre_3)
+	if (pre_2 >= pre_3) {
 		size += pre_2 - pre_3;
-	else
+	} else {
 		size += MAXPRE + pre_2 - pre_3;
+	}
 
 	return size;
 }
@@ -3046,10 +3314,11 @@ void sdl_bargraph(int sx, int sy, int dx, unsigned char *data, int x_offset, int
 	int n;
 
 	for (n = 0; n < dx; n++) {
-		if (data[n] > 40)
+		if (data[n] > 40) {
 			SDL_SetRenderDrawColor(sdlren, 255, 80, 80, 127);
-		else
+		} else {
 			SDL_SetRenderDrawColor(sdlren, 80, 255, 80, 127);
+		}
 
 		SDL_RenderDrawLine(sdlren, (sx + n + x_offset) * sdl_scale, (sy + y_offset) * sdl_scale,
 		    (sx + n + x_offset) * sdl_scale, (sy - data[n] + y_offset) * sdl_scale);
@@ -3062,10 +3331,12 @@ int sdl_is_shown(void)
 
 	flags = SDL_GetWindowFlags(sdlwnd);
 
-	if (flags & SDL_WINDOW_HIDDEN)
+	if (flags & SDL_WINDOW_HIDDEN) {
 		return 0;
-	if (flags & SDL_WINDOW_MINIMIZED)
+	}
+	if (flags & SDL_WINDOW_MINIMIZED) {
 		return 0;
+	}
 
 	return 1;
 }
@@ -3076,8 +3347,9 @@ int sdl_has_focus(void)
 
 	flags = SDL_GetWindowFlags(sdlwnd);
 
-	if (flags & SDL_WINDOW_MOUSE_FOCUS)
+	if (flags & SDL_WINDOW_MOUSE_FOCUS) {
 		return 1;
+	}
 
 	return 0;
 }
@@ -3174,8 +3446,9 @@ void sdl_flush_textinput(void)
 
 void sdl_tex_alpha(int stx, int alpha)
 {
-	if (sdlt[stx].tex)
+	if (sdlt[stx].tex) {
 		SDL_SetTextureAlphaMod(sdlt[stx].tex, alpha);
+	}
 }
 
 int sdl_check_mouse(void)
@@ -3187,19 +3460,23 @@ int sdl_check_mouse(void)
 	SDL_GetWindowSize(sdlwnd, &x3, &y3);
 	SDL_GetWindowBordersSize(sdlwnd, &top, NULL, NULL, NULL);
 
-	if (x < x2 || x > x2 + x3 || y > y2 + y3)
+	if (x < x2 || x > x2 + x3 || y > y2 + y3) {
 		return 1;
-
-	if (game_options & GO_TINYTOP) {
-		if (y2 - y > top)
-			return 1;
-	} else {
-		if (y2 - y > 100 * sdl_scale)
-			return 1;
 	}
 
-	if (y < y2)
+	if (game_options & GO_TINYTOP) {
+		if (y2 - y > top) {
+			return 1;
+		}
+	} else {
+		if (y2 - y > 100 * sdl_scale) {
+			return 1;
+		}
+	}
+
+	if (y < y2) {
 		return -1;
+	}
 
 	return 0;
 }

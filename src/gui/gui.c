@@ -24,7 +24,7 @@ uint64_t gui_time_misc = 0;
 
 DLL_EXPORT int game_slowdown = 0;
 
-#define MAXHELP 24
+#define MAXHELP   24
 #define MAXQUEST2 10
 
 void cmd_add_text(char *buf, int typ);
@@ -211,8 +211,9 @@ void mtos(int mapx, int mapy, int *scrx, int *scry)
 // screen to map
 int stom(int scrx, int scry, int *mapx, int *mapy)
 {
-	if (scrx < dotx(DOT_MTL) || scrx >= dotx(DOT_MBR) || scry < doty(DOT_MTL) || scry >= dotx(DOT_MBR))
+	if (scrx < dotx(DOT_MTL) || scrx >= dotx(DOT_MBR) || scry < doty(DOT_MTL) || scry >= dotx(DOT_MBR)) {
 		return 0;
+	}
 
 	scrx -= stom_off_x;
 	scry -= stom_off_y;
@@ -230,12 +231,15 @@ int gui_keymode(void)
 	int ret = 0;
 
 	km = SDL_GetModState();
-	if (km & KMOD_SHIFT)
+	if (km & KMOD_SHIFT) {
 		ret |= SDL_KEYM_SHIFT;
-	if (km & KMOD_CTRL)
+	}
+	if (km & KMOD_CTRL) {
 		ret |= SDL_KEYM_CTRL;
-	if (km & KMOD_ALT)
+	}
+	if (km & KMOD_ALT) {
 		ret |= SDL_KEYM_ALT;
+	}
 
 	return ret;
 }
@@ -258,8 +262,8 @@ void dx_copysprite_emerald(int scrx, int scry, int emx, int emy)
 	dd_copysprite_fx(&ddfx, scrx - ddfx.clipsx - 5, scry - ddfx.clipsy - 5);
 }
 
-
 int (*do_display_help)(int) = _do_display_help;
+
 DLL_EXPORT int _do_display_help(int nr)
 {
 	int x = dotx(DOT_HLP) + 10, y = doty(DOT_HLP) + 8, oldy;
@@ -738,13 +742,16 @@ DLL_EXPORT int _do_display_help(int nr)
 
 void display_helpandquest(void)
 {
-	if (display_help || display_quest)
+	if (display_help || display_quest) {
 		dd_copysprite(opt_sprite(995), dotx(DOT_HLP), doty(DOT_HLP), DDFX_NLIGHT, DD_NORMAL);
+	}
 
-	if (display_help)
+	if (display_help) {
 		do_display_help(display_help);
-	if (display_quest)
+	}
+	if (display_quest) {
 		do_display_questlog(display_quest);
+	}
 }
 
 char perf_text[256];
@@ -755,10 +762,11 @@ static void display_toplogic(void)
 	static int top_opening = 0, top_closing = 1, top_open = 0;
 	static int topframes = 0;
 
-	if (mousey < 10)
+	if (mousey < 10) {
 		topframes++;
-	else
+	} else {
 		topframes = 0;
+	}
 
 	if (topframes > frames_per_second / 2 && !top_opening && !top_open) {
 		top_opening = 1;
@@ -778,8 +786,9 @@ static void display_toplogic(void)
 		}
 	}
 
-	if (top_open)
+	if (top_open) {
 		gui_topoff = 0;
+	}
 
 	if (top_closing) {
 		gui_topoff = -top_closing;
@@ -861,20 +870,21 @@ static void display(void)
 	long long start = SDL_GetTicks64();
 
 #if 0
-    // Performance for stuff happening during the actual tick only.
-    // So zero them now after preload is done.
-    sdl_time_make=0;
-    sdl_time_tex=0;
-    sdl_time_text=0;
-    sdl_time_blit=0;
+	// Performance for stuff happening during the actual tick only.
+	// So zero them now after preload is done.
+	sdl_time_make=0;
+	sdl_time_tex=0;
+	sdl_time_text=0;
+	sdl_time_blit=0;
 #endif
 
 	if ((tmp = sdl_check_mouse())) {
 		mousex = -1;
-		if (tmp == -1)
+		if (tmp == -1) {
 			mousey = 0;
-		else
+		} else {
 			mousey = YRES / 2;
+		}
 	}
 
 	display_toplogic();
@@ -889,8 +899,9 @@ static void display(void)
 		dd_rect(0, 0, 800, 540, blackcolor);
 		display_screen();
 		display_text();
-		if ((now / 1000) & 1)
+		if ((now / 1000) & 1) {
 			dd_drawtext(800 / 2, 540 / 2 - 60, redcolor, DD_CENTER | DD_LARGE, "not connected");
+		}
 		dd_copysprite(60, 800 / 2, (540 - 240) / 2, DDFX_NLIGHT, DD_CENTER);
 		if (!kicked_out) {
 			dd_drawtext_fmt(800 / 2, 540 / 2 - 40, textcolor, DD_SMALL | DD_CENTER | DD_FRAME,
@@ -912,17 +923,20 @@ static void display(void)
 	display_screen();
 
 	display_keys();
-	if (game_options & GO_WHEEL)
+	if (game_options & GO_WHEEL) {
 		display_wheel();
-	if (show_look)
+	}
+	if (show_look) {
 		display_look();
+	}
 	display_wear();
 	display_inventory();
 	display_action();
-	if (con_cnt)
+	if (con_cnt) {
 		display_container();
-	else
+	} else {
 		display_skill();
+	}
 	display_scrollbars();
 	display_text();
 	display_gold();
@@ -967,21 +981,21 @@ display_graphs:
 		    get_memory_usage() / (1024.0 * 1024.0));
 
 #if 0
-        if (pre_in>=pre_3) size=pre_in-pre_3;
-        else size=16384+pre_in-pre_3;
+	    if (pre_in>=pre_3) size=pre_in-pre_3;
+	    else size=16384+pre_in-pre_3;
 
-        dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"PreC %d",size);
+	    dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"PreC %d",size);
 #endif
 #if 0
-        extern int pre_in,pre_1,pre_2,pre_3;
-        extern int texc_used;
-        py+=10;
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"PreI %d",pre_in);
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre1 %d",pre_1);
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre2 %d",pre_2);
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre3 %d",pre_3);
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Used %d",texc_used);
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Size %d",sdl_cache_size);
+	    extern int pre_in,pre_1,pre_2,pre_3;
+	    extern int texc_used;
+	    py+=10;
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"PreI %d",pre_in);
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre1 %d",pre_1);
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre2 %d",pre_2);
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Pre3 %d",pre_3);
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Used %d",texc_used);
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME|DD_NOCACHE,"Size %d",sdl_cache_size);
 #endif
 		// dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Miss %lld",texc_miss);
 		// dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Prel %lld",texc_pre);
@@ -994,13 +1008,13 @@ display_graphs:
 		sdl_bargraph(px, py += 40, sizeof(dur_graph), dur_graph, x_offset, y_offset);
 
 #if 0
-        if (gui_frametime<frame_min) frame_min=gui_frametime;
-        if (gui_frametime>frame_max) frame_max=gui_frametime;
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_NOCACHE|DD_LEFT|DD_FRAME,"FT %d %d",frame_min,frame_max);
+	    if (gui_frametime<frame_min) frame_min=gui_frametime;
+	    if (gui_frametime>frame_max) frame_max=gui_frametime;
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_NOCACHE|DD_LEFT|DD_FRAME,"FT %d %d",frame_min,frame_max);
 
-        if (gui_ticktime<tick_min) tick_min=gui_ticktime;
-        if (gui_ticktime>tick_max) tick_max=gui_ticktime;
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_NOCACHE|DD_LEFT|DD_FRAME,"TT %d %d",tick_min,tick_max);
+	    if (gui_ticktime<tick_min) tick_min=gui_ticktime;
+	    if (gui_ticktime>tick_max) tick_max=gui_ticktime;
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_NOCACHE|DD_LEFT|DD_FRAME,"TT %d %d",tick_min,tick_max);
 #endif
 		size = gui_frametime / 2;
 		dd_drawtext_fmt(
@@ -1014,15 +1028,15 @@ display_graphs:
 		sdl_bargraph_add(sizeof(pre3_graph), pre3_graph, size < 42 ? size : 42);
 		sdl_bargraph(px, py += 40, sizeof(pre3_graph), pre3_graph, x_offset, y_offset);
 #if 0
-        size=gui_time_network;
-        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Network");
-        sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,size<42?size:42);
-        sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
+	    size=gui_time_network;
+	    dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Network");
+	    sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,size<42?size:42);
+	    sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
 
-        size=sdl_time_pre1;
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Alloc");
-        sdl_bargraph_add(sizeof(size1_graph),size3_graph,size<42?size:42);
-        sdl_bargraph(px,py+=40,sizeof(size1_graph),size3_graph,x_offset,y_offset);
+	    size=sdl_time_pre1;
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Alloc");
+	    sdl_bargraph_add(sizeof(size1_graph),size3_graph,size<42?size:42);
+	    sdl_bargraph(px,py+=40,sizeof(size1_graph),size3_graph,x_offset,y_offset);
 #endif
 
 
@@ -1031,10 +1045,10 @@ display_graphs:
 		sdl_bargraph_add(sizeof(pre2_graph), size3_graph, size < 42 ? size : 42);
 		sdl_bargraph(px, py += 40, sizeof(pre2_graph), size3_graph, x_offset, y_offset);
 #if 0
-        size=sdl_time_alloc;
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Alloc");
-        sdl_bargraph_add(sizeof(size1_graph),load_graph,size<42?size:42);
-        sdl_bargraph(px,py+=40,sizeof(size1_graph),load_graph,x_offset,y_offset);
+	    size=sdl_time_alloc;
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_LEFT|DD_FRAME,"Alloc");
+	    sdl_bargraph_add(sizeof(size1_graph),load_graph,size<42?size:42);
+	    sdl_bargraph(px,py+=40,sizeof(size1_graph),load_graph,x_offset,y_offset);
 #endif
 
 		size = sdl_time_pre1 + sdl_time_pre3;
@@ -1054,50 +1068,50 @@ display_graphs:
 		sdl_bargraph_add(sizeof(pre1_graph), pre1_graph, size < 42 ? size : 42);
 		sdl_bargraph(px, py += 40, sizeof(pre1_graph), pre1_graph, x_offset, y_offset);
 #if 0
-            dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Mutex");
-            sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,sdl_time_mutex/sdl_multi<42?sdl_time_mutex/sdl_multi:42);
-            sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
+	        dd_drawtext_fmt(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Mutex");
+	        sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,sdl_time_mutex/sdl_multi<42?sdl_time_mutex/sdl_multi:42);
+	        sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
 #endif
 #if 0
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Pre-Queue Tot");
-        sdl_bargraph_add(sizeof(size_graph),size_graph,size/4<42?size/4:42);
-        sdl_bargraph(px,py+=40,sizeof(size_graph),size_graph,x_offset,y_offset);
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Pre-Queue Tot");
+	    sdl_bargraph_add(sizeof(size_graph),size_graph,size/4<42?size/4:42);
+	    sdl_bargraph(px,py+=40,sizeof(size_graph),size_graph,x_offset,y_offset);
 
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Pre2");
-        sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,sdl_time_pre2<42?sdl_time_pre2:42);
-        sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Pre2");
+	    sdl_bargraph_add(sizeof(pre2_graph),pre2_graph,sdl_time_pre2<42?sdl_time_pre2:42);
+	    sdl_bargraph(px,py+=40,sizeof(pre2_graph),pre2_graph,x_offset,y_offset);
 
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Texture");
-        sdl_bargraph_add(sizeof(pre3_graph),pre3_graph,sdl_time_pre3<42?sdl_time_pre3:42);
-        sdl_bargraph(px,py+=40,sizeof(pre3_graph),pre3_graph,x_offset,y_offset);
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Texture");
+	    sdl_bargraph_add(sizeof(pre3_graph),pre3_graph,sdl_time_pre3<42?sdl_time_pre3:42);
+	    sdl_bargraph(px,py+=40,sizeof(pre3_graph),pre3_graph,x_offset,y_offset);
 
 #endif
 #if 0
-        if (pre_2>=pre_3) size=pre_2-pre_3;
-        else size=16384+pre_2-pre_3;
+	    if (pre_2>=pre_3) size=pre_2-pre_3;
+	    else size=16384+pre_2-pre_3;
 
-        dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Size Tex");
-        sdl_bargraph_add(sizeof(size3_graph),size3_graph,size/4<42?size/4:42);
-        sdl_bargraph(px,py+=40,sizeof(size3_graph),size3_graph,x_offset,y_offset);
+	    dd_drawtext(px,py+=10,IRGB(8,31,8),DD_SMALL|DD_LEFT|DD_FRAME,"Size Tex");
+	    sdl_bargraph_add(sizeof(size3_graph),size3_graph,size/4<42?size/4:42);
+	    sdl_bargraph(px,py+=40,sizeof(size3_graph),size3_graph,x_offset,y_offset);
 
 
-        if (duration>10 && (!stay || duration>dur)) {
-            dur=duration;
-            make=sdl_time_make;
-            tex=sdl_time_tex;
-            text=sdl_time_text;
-            blit=sdl_time_blit;
-            stay=24*6;
-        }
+	    if (duration>10 && (!stay || duration>dur)) {
+	        dur=duration;
+	        make=sdl_time_make;
+	        tex=sdl_time_tex;
+	        text=sdl_time_text;
+	        blit=sdl_time_blit;
+	        stay=24*6;
+	    }
 
-        if (stay>0) {
-            stay--;
-            dd_drawtext_fmt(px,py+=20,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Dur %dms (%.0f%%)",dur,100.0*(make+tex+text+blit)/dur);
-            dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Make %dms (%.0f%%)",make,100.0*make/dur);
-            dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Tex %dms (%.0f%%)",tex,100.0*tex/dur);
-            dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Text %dms (%.0f%%)",text,100.0*text/dur);
-            dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Blit %dms (%.0f%%)",blit,100.0*blit/dur);
-        }
+	    if (stay>0) {
+	        stay--;
+	        dd_drawtext_fmt(px,py+=20,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Dur %dms (%.0f%%)",dur,100.0*(make+tex+text+blit)/dur);
+	        dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Make %dms (%.0f%%)",make,100.0*make/dur);
+	        dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Tex %dms (%.0f%%)",tex,100.0*tex/dur);
+	        dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Text %dms (%.0f%%)",text,100.0*text/dur);
+	        dd_drawtext_fmt(px,py+=10,0xffff,DD_SMALL|DD_LEFT|DD_FRAME|DD_NOCACHE,"Blit %dms (%.0f%%)",blit,100.0*blit/dur);
+	    }
 #endif
 		sdl_time_preload = 0;
 		sdl_time_make = 0;
@@ -1119,16 +1133,16 @@ display_graphs:
 		sdl_time_make_main = 0;
 		gui_time_network = 0;
 #if 0
-        if (SDL_GetTicks()-frame_step>1000) {
-            frame_step=SDL_GetTicks();
-            frame_min=99;
-            frame_max=0;
-        }
-        if (SDL_GetTicks()-tick_step>1000) {
-            tick_step=SDL_GetTicks();
-            tick_min=99;
-            tick_max=0;
-        }
+	    if (SDL_GetTicks()-frame_step>1000) {
+	        frame_step=SDL_GetTicks();
+	        frame_min=99;
+	        frame_max=0;
+	    }
+	    if (SDL_GetTicks()-tick_step>1000) {
+	        tick_step=SDL_GetTicks();
+	        tick_min=99;
+	        tick_max=0;
+	    }
 #endif
 	} // else dd_drawtext_fmt(650,15,0xffff,DD_SMALL|DD_FRAME,"Mirror %d",mirror);
 
@@ -1305,12 +1319,13 @@ static void set_cmd_cursor(int cmd)
 		break;
 
 	case CMD_HELP_MISC:
-		if (helpsel != -1)
+		if (helpsel != -1) {
 			cursor = SDL_CUR_c_use;
-		else if (questsel != -1)
+		} else if (questsel != -1) {
 			cursor = SDL_CUR_c_use;
-		else
+		} else {
 			cursor = SDL_CUR_c_only;
+		}
 		break;
 
 	case CMD_HELP:
@@ -1364,11 +1379,13 @@ DLL_EXPORT int get_near_ground(int x, int y)
 {
 	int mapx, mapy;
 
-	if (!stom(x, y, &mapx, &mapy))
+	if (!stom(x, y, &mapx, &mapy)) {
 		return -1;
+	}
 
-	if (mapx < 0 || mapy < 0 || mapx >= MAPDX || mapy >= MAPDY)
+	if (mapx < 0 || mapy < 0 || mapx >= MAPDX || mapy >= MAPDY) {
 		return -1;
+	}
 
 	return mapmn(mapx, mapy);
 }
@@ -1378,8 +1395,9 @@ DLL_EXPORT int get_near_item(int x, int y, int flag, int looksize)
 	int mapx, mapy, sx, sy, ex, ey, mn, scrx, scry, nearest = -1;
 	double dist, nearestdist = 100000000;
 
-	if (!stom(mousex, mousey, &mapx, &mapy))
+	if (!stom(mousex, mousey, &mapx, &mapy)) {
 		return -1;
+	}
 
 	sx = max(0, mapx - looksize);
 	sy = max(0, mapy - looksize);
@@ -1391,12 +1409,15 @@ DLL_EXPORT int get_near_item(int x, int y, int flag, int looksize)
 		for (mapx = sx; mapx <= ex; mapx++) {
 			mn = mapmn(mapx, mapy);
 
-			if (!(map[mn].rlight))
+			if (!(map[mn].rlight)) {
 				continue;
-			if (!(map[mn].flags & flag))
+			}
+			if (!(map[mn].flags & flag)) {
 				continue;
-			if (!(map[mn].isprite))
+			}
+			if (!(map[mn].isprite)) {
 				continue;
+			}
 
 			mtos(mapx, mapy, &scrx, &scry);
 
@@ -1417,12 +1438,14 @@ DLL_EXPORT int get_near_char(int x, int y, int looksize)
 	int mapx, mapy, sx, sy, ex, ey, mn, scrx, scry, nearest = -1;
 	double dist, nearestdist = 100000000;
 
-	if (!stom(mousex, mousey, &mapx, &mapy))
+	if (!stom(mousex, mousey, &mapx, &mapy)) {
 		return -1;
+	}
 
 	mn = mapmn(mapx, mapy);
-	if (mn == MAPDX * MAPDY / 2)
+	if (mn == MAPDX * MAPDY / 2) {
 		return mn; // return player character if clicked directly
+	}
 
 	sx = max(0, mapx - looksize);
 	sy = max(0, mapy - looksize);
@@ -1434,13 +1457,16 @@ DLL_EXPORT int get_near_char(int x, int y, int looksize)
 		for (mapx = sx; mapx <= ex; mapx++) {
 			mn = mapmn(mapx, mapy);
 
-			if (context_key_enabled() && mn == MAPDX * MAPDY / 2)
+			if (context_key_enabled() && mn == MAPDX * MAPDY / 2) {
 				continue; // ignore player character if NOT clicked directly
+			}
 
-			if (!(map[mn].rlight))
+			if (!(map[mn].rlight)) {
 				continue;
-			if (!(map[mn].csprite))
+			}
+			if (!(map[mn].csprite)) {
 				continue;
+			}
 
 			mtos(mapx, mapy, &scrx, &scry);
 
@@ -1461,19 +1487,23 @@ static int get_near_button(int x, int y)
 	int b;
 	int n = -1, ndist = 1000000, dist;
 
-	if (x < 0 || y < 0 || x >= XRES || y >= YRES)
+	if (x < 0 || y < 0 || x >= XRES || y >= YRES) {
 		return -1;
+	}
 
 	for (b = 0; b < MAX_BUT; b++) {
-		if (but[b].flags & BUTF_NOHIT)
+		if (but[b].flags & BUTF_NOHIT) {
 			continue;
+		}
 
 		dist = (butx(b) - x) * (butx(b) - x) + (buty(b) - y) * (buty(b) - y);
-		if (dist > but[b].sqhitrad)
+		if (dist > but[b].sqhitrad) {
 			continue;
+		}
 
-		if (dist > ndist)
+		if (dist > ndist) {
 			continue;
+		}
 
 		ndist = dist;
 		n = b;
@@ -1487,13 +1517,16 @@ static void set_invoff(int bymouse, int ny)
 	if (bymouse) {
 		invoff += mousedy / LINEHEIGHT;
 		mousedy = mousedy % LINEHEIGHT;
-	} else
+	} else {
 		invoff = ny;
+	}
 
-	if (invoff < 0)
+	if (invoff < 0) {
 		invoff = 0;
-	if (invoff > max_invoff)
+	}
+	if (invoff > max_invoff) {
 		invoff = max_invoff;
+	}
 
 	but[BUT_SCR_TR].y =
 	    but[BUT_SCR_UP].y + 10 + (but[BUT_SCR_DW].y - but[BUT_SCR_UP].y - 20) * invoff / max(1, max_invoff);
@@ -1504,17 +1537,21 @@ static void set_skloff(int bymouse, int ny)
 	if (bymouse) {
 		skloff += mousedy / LINEHEIGHT;
 		mousedy = mousedy % LINEHEIGHT;
-	} else
+	} else {
 		skloff = ny;
+	}
 
-	if (skloff < 0)
+	if (skloff < 0) {
 		skloff = 0;
-	if (skloff > max_skloff)
+	}
+	if (skloff > max_skloff) {
 		skloff = max_skloff;
+	}
 
-	if (!con_cnt)
+	if (!con_cnt) {
 		but[BUT_SCL_TR].y =
 		    but[BUT_SCL_UP].y + 10 + (but[BUT_SCL_DW].y - but[BUT_SCL_UP].y - 20) * skloff / max(1, max_skloff);
+	}
 }
 
 static void set_conoff(int bymouse, int ny)
@@ -1522,20 +1559,25 @@ static void set_conoff(int bymouse, int ny)
 	if (bymouse) {
 		conoff += mousedy / LINEHEIGHT;
 		mousedy = mousedy % LINEHEIGHT;
-	} else
+	} else {
 		conoff = ny;
+	}
 
-	if (conoff < 0)
+	if (conoff < 0) {
 		conoff = 0;
-	if (conoff > max_conoff)
+	}
+	if (conoff > max_conoff) {
 		conoff = max_conoff;
+	}
 
-	if (con_cnt)
+	if (con_cnt) {
 		but[BUT_SCL_TR].y =
 		    but[BUT_SCL_UP].y + 10 + (but[BUT_SCL_DW].y - but[BUT_SCL_UP].y - 20) * conoff / max(1, max_conoff);
+	}
 }
 
 int (*get_skltab_index)(int n) = _get_skltab_index;
+
 DLL_EXPORT int _get_skltab_index(int n)
 {
 	static int itab[V_MAX + 1] = {
@@ -1556,12 +1598,14 @@ DLL_EXPORT int _get_skltab_index(int n)
 }
 
 int (*get_skltab_sep)(int i) = _get_skltab_sep;
+
 DLL_EXPORT int _get_skltab_sep(int i)
 {
 	return (i == 0 || i == 3 || i == 7 || i == 12 || i == 17 || i == 25 || i == 28 || i == 42 || i == 43);
 }
 
 int (*get_skltab_show)(int i) = _get_skltab_show;
+
 DLL_EXPORT int _get_skltab_show(int i)
 {
 	return (i == V_WEAPON || i == V_ARMOR || i == V_SPEED || i == V_LIGHT);
@@ -1577,12 +1621,14 @@ static void set_skltab(void)
 
 	for (flag = use = 0, n = 0; n <= V_MAX; n++) {
 		i = get_skltab_index(n);
-		if (i == -2)
+		if (i == -2) {
 			break;
+		}
 
 		if (flag && get_skltab_sep(i)) {
-			if (use == skltab_max)
+			if (use == skltab_max) {
 				skltab = xrealloc(skltab, (skltab_max += 8) * sizeof(SKLTAB), MEM_GUI);
+			}
 
 			bzero(&skltab[use], sizeof(SKLTAB));
 			skltab[use].v = STV_EMPTYLINE;
@@ -1594,11 +1640,13 @@ static void set_skltab(void)
 		if (i == -1) {
 			// negative exp
 
-			if (experience_left >= 0)
+			if (experience_left >= 0) {
 				continue;
+			}
 
-			if (use == skltab_max)
+			if (use == skltab_max) {
 				skltab = xrealloc(skltab, (skltab_max += 8) * sizeof(SKLTAB), MEM_GUI);
+			}
 
 			strcpy(skltab[use].name, "Negative experience");
 			skltab[use].v = STV_JUSTAVALUE;
@@ -1609,13 +1657,15 @@ static void set_skltab(void)
 			flag = 1;
 
 		} else if (value[0][i] || value[1][i] || get_skltab_show(i)) {
-			if (use == skltab_max)
+			if (use == skltab_max) {
 				skltab = xrealloc(skltab, (skltab_max += 8) * sizeof(SKLTAB), MEM_GUI);
+			}
 
-			if (value[1][i] && i != V_DEMON && i != V_COLD && i < V_PROFBASE)
+			if (value[1][i] && i != V_DEMON && i != V_COLD && i < V_PROFBASE) {
 				skltab[use].button = 1;
-			else
+			} else {
 				skltab[use].button = 0;
+			}
 
 			skltab[use].v = i;
 
@@ -1625,14 +1675,16 @@ static void set_skltab(void)
 			skltab[use].raisecost = raisecost = raise_cost(i, value[1][i]);
 
 			if (experience_left >= 0) {
-				if (raisecost > 0 && experience_left >= raisecost)
+				if (raisecost > 0 && experience_left >= raisecost) {
 					skltab[use].barsize = max(1, raisecost * (SKLWIDTH - 10) / experience_left);
-				else if (experience_left >= 0 && raisecost > 0)
+				} else if (experience_left >= 0 && raisecost > 0) {
 					skltab[use].barsize = -experience_left * (SKLWIDTH - 10) / raisecost;
-				else
+				} else {
 					skltab[use].barsize = 0;
-			} else
+				}
+			} else {
 				skltab[use].barsize = 0;
+			}
 
 			use++;
 			flag = 1;
@@ -1650,19 +1702,23 @@ static void set_button_flags(void)
 	int b, i;
 
 	if (con_cnt) {
-		for (b = BUT_CON_BEG; b <= BUT_CON_END; b++)
+		for (b = BUT_CON_BEG; b <= BUT_CON_END; b++) {
 			but[b].flags &= ~BUTF_NOHIT;
-		for (b = BUT_SKL_BEG; b <= BUT_SKL_END; b++)
+		}
+		for (b = BUT_SKL_BEG; b <= BUT_SKL_END; b++) {
 			but[b].flags |= BUTF_NOHIT;
+		}
 	} else {
-		for (b = BUT_CON_BEG; b <= BUT_CON_END; b++)
+		for (b = BUT_CON_BEG; b <= BUT_CON_END; b++) {
 			but[b].flags |= BUTF_NOHIT;
+		}
 		for (b = BUT_SKL_BEG; b <= BUT_SKL_END; b++) {
 			i = skloff + b - BUT_SKL_BEG;
-			if (i >= skltab_cnt || !skltab[i].button || skltab[i].barsize <= 0)
+			if (i >= skltab_cnt || !skltab[i].button || skltab[i].barsize <= 0) {
 				but[b].flags |= BUTF_NOHIT;
-			else
+			} else {
 				but[b].flags &= ~BUTF_NOHIT;
+			}
 		}
 	}
 }
@@ -1694,10 +1750,12 @@ static int get_skl_look(int x, int y)
 	int b, i;
 	for (b = BUT_SKL_BEG; b <= BUT_SKL_END; b++) {
 		i = skloff + b - BUT_SKL_BEG;
-		if (i >= skltab_cnt)
+		if (i >= skltab_cnt) {
 			continue;
-		if (x > but[b].x - 5 && x < but[b].x + 70 && y > but[b].y - 5 && y < but[b].y + 5)
+		}
+		if (x > but[b].x - 5 && x < but[b].x + 70 && y > but[b].y - 5 && y < but[b].y + 5) {
 			return skltab[i].v;
+		}
 	}
 	return -1;
 }
@@ -1706,145 +1764,187 @@ static void cmd_look_skill(int nr)
 {
 	if (nr >= 0 && nr <= (*game_v_max)) {
 		addline("%s: %s", game_skill[nr].name, game_skilldesc[nr]);
-	} else
+	} else {
 		addline("Unknown.");
+	}
 }
 
 // con_type: 1=grave or depot, 2=merchant
 static void set_cmd_invsel(void)
 {
 	if (context_key_enabled() && con_type == 2 && con_cnt && csprite && invsel != -1) {
-		if (item[invsel])
-			lcmd = CMD_INV_SWAP;
-		else
-			lcmd = CMD_INV_DROP;
-	} else if (context_key_enabled() && !con_cnt) {
-		if (invsel == -1)
-			return;
 		if (item[invsel]) {
-			if (csprite)
-				lcmd = CMD_INV_SWAP;
-			else
-				lcmd = CMD_INV_TAKE;
+			lcmd = CMD_INV_SWAP;
 		} else {
-			if (csprite)
+			lcmd = CMD_INV_DROP;
+		}
+	} else if (context_key_enabled() && !con_cnt) {
+		if (invsel == -1) {
+			return;
+		}
+		if (item[invsel]) {
+			if (csprite) {
+				lcmd = CMD_INV_SWAP;
+			} else {
+				lcmd = CMD_INV_TAKE;
+			}
+		} else {
+			if (csprite) {
 				lcmd = CMD_INV_DROP;
-			else
+			} else {
 				lcmd = CMD_INV_TAKE; // show anyway for people who want to click faster than the server responds
+			}
 		}
 	} else {
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && (!con_type || !con_cnt))
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && (!con_type || !con_cnt)) {
 			lcmd = CMD_INV_USE;
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && (!con_type || !con_cnt))
+		}
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && (!con_type || !con_cnt)) {
 			lcmd = CMD_INV_USE; // fake
-		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && (!con_type || !con_cnt))
+		}
+		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && (!con_type || !con_cnt)) {
 			lcmd = CMD_INV_USE_WITH;
+		}
 
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && con_type == 2 && con_cnt)
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_FASTSELL;
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && con_type == 2 && con_cnt)
+		}
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_FASTSELL; // fake
-		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && con_type == 2 && con_cnt)
+		}
+		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_FASTSELL;
+		}
 
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && con_type == 1 && con_cnt)
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && item[invsel] && con_type == 1 && con_cnt) {
 			lcmd = CMD_CON_FASTDROP;
-		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && con_type == 1 && con_cnt)
+		}
+		if (invsel != -1 && !vk_item && !vk_char && !csprite && !item[invsel] && con_type == 1 && con_cnt) {
 			lcmd = CMD_CON_FASTDROP; // fake
-		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && con_type == 1 && con_cnt)
+		}
+		if (invsel != -1 && !vk_item && !vk_char && csprite && item[invsel] && con_type == 1 && con_cnt) {
 			lcmd = CMD_CON_FASTDROP;
+		}
 
-		if (invsel != -1 && !vk_item && !vk_char && csprite && !item[invsel])
+		if (invsel != -1 && !vk_item && !vk_char && csprite && !item[invsel]) {
 			lcmd = CMD_INV_USE_WITH; // fake
-		if (invsel != -1 && vk_item && !vk_char && !csprite && item[invsel])
+		}
+		if (invsel != -1 && vk_item && !vk_char && !csprite && item[invsel]) {
 			lcmd = CMD_INV_TAKE;
-		if (invsel != -1 && vk_item && !vk_char && !csprite && !item[invsel])
+		}
+		if (invsel != -1 && vk_item && !vk_char && !csprite && !item[invsel]) {
 			lcmd = CMD_INV_TAKE; // fake - slot is empty so i can't take
-		if (invsel != -1 && vk_item && !vk_char && csprite && item[invsel])
+		}
+		if (invsel != -1 && vk_item && !vk_char && csprite && item[invsel]) {
 			lcmd = CMD_INV_SWAP;
-		if (invsel != -1 && vk_item && !vk_char && csprite && !item[invsel])
+		}
+		if (invsel != -1 && vk_item && !vk_char && csprite && !item[invsel]) {
 			lcmd = CMD_INV_DROP;
+		}
 	}
 }
 
 void set_cmd_weasel(void)
 {
 	if (context_key_enabled()) {
-		if (weasel == -1)
+		if (weasel == -1) {
 			return;
+		}
 		if (item[weatab[weasel]]) {
-			if (csprite)
+			if (csprite) {
 				lcmd = CMD_WEA_SWAP;
-			else
+			} else {
 				lcmd = CMD_WEA_TAKE;
+			}
 		} else {
-			if (csprite)
+			if (csprite) {
 				lcmd = CMD_WEA_DROP;
-			else
+			} else {
 				lcmd = CMD_WEA_TAKE; // show anyway for people who want to click faster than the server responds
+			}
 		}
 	} else {
-		if (weasel != -1 && !vk_item && !vk_char && !csprite && item[weatab[weasel]])
+		if (weasel != -1 && !vk_item && !vk_char && !csprite && item[weatab[weasel]]) {
 			lcmd = CMD_WEA_USE;
-		if (weasel != -1 && !vk_item && !vk_char && !csprite && !item[weatab[weasel]])
+		}
+		if (weasel != -1 && !vk_item && !vk_char && !csprite && !item[weatab[weasel]]) {
 			lcmd = CMD_WEA_USE; // fake
-		if (weasel != -1 && !vk_item && !vk_char && csprite && item[weatab[weasel]])
+		}
+		if (weasel != -1 && !vk_item && !vk_char && csprite && item[weatab[weasel]]) {
 			lcmd = CMD_WEA_USE_WITH;
-		if (weasel != -1 && !vk_item && !vk_char && csprite && !item[weatab[weasel]])
+		}
+		if (weasel != -1 && !vk_item && !vk_char && csprite && !item[weatab[weasel]]) {
 			lcmd = CMD_WEA_USE_WITH; // fake
-		if (weasel != -1 && vk_item && !vk_char && !csprite && item[weatab[weasel]])
+		}
+		if (weasel != -1 && vk_item && !vk_char && !csprite && item[weatab[weasel]]) {
 			lcmd = CMD_WEA_TAKE;
-		if (weasel != -1 && vk_item && !vk_char && !csprite && !item[weatab[weasel]])
+		}
+		if (weasel != -1 && vk_item && !vk_char && !csprite && !item[weatab[weasel]]) {
 			lcmd = CMD_WEA_TAKE; // fake - slot is empty so i can't take
-		if (weasel != -1 && vk_item && !vk_char && csprite && item[weatab[weasel]])
+		}
+		if (weasel != -1 && vk_item && !vk_char && csprite && item[weatab[weasel]]) {
 			lcmd = CMD_WEA_SWAP;
-		if (weasel != -1 && vk_item && !vk_char && csprite && !item[weatab[weasel]])
+		}
+		if (weasel != -1 && vk_item && !vk_char && csprite && !item[weatab[weasel]]) {
 			lcmd = CMD_WEA_DROP;
+		}
 	}
 }
 
 void set_cmd_consel(void)
 {
 	if (context_key_enabled()) {
-		if (consel == -1 || !con_cnt)
+		if (consel == -1 || !con_cnt) {
 			return;
+		}
 		if (con_type == 1) { // grave
-			if (!csprite)
+			if (!csprite) {
 				lcmd = CMD_CON_FASTTAKE;
-			else {
-				if (container[consel])
+			} else {
+				if (container[consel]) {
 					lcmd = CMD_CON_SWAP;
-				else
+				} else {
 					lcmd = CMD_CON_DROP;
+				}
 			}
 		} else { // shop
-			if (!csprite)
+			if (!csprite) {
 				lcmd = CMD_CON_FASTBUY;
-			else
+			} else {
 				lcmd = CMD_CON_SELL;
+			}
 		}
 	} else {
-		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && container[consel])
+		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && container[consel]) {
 			lcmd = CMD_CON_TAKE;
-		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && !container[consel])
+		}
+		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && !container[consel]) {
 			lcmd = CMD_CON_TAKE; // fake - slot is empty so i can't take (buy is also not possible)
+		}
 
-		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && container[consel])
+		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && container[consel]) {
 			lcmd = CMD_CON_FASTTAKE;
-		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && !container[consel])
+		}
+		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 1 && con_cnt && !container[consel]) {
 			lcmd = CMD_CON_FASTTAKE; // fake
+		}
 
-		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 2 && con_cnt)
+		if (consel != -1 && vk_item && !vk_char && !csprite && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_BUY;
-		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 2 && con_cnt)
+		}
+		if (consel != -1 && !vk_item && !vk_char && !csprite && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_FASTBUY;
+		}
 
-		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 1 && con_cnt && container[consel])
+		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 1 && con_cnt && container[consel]) {
 			lcmd = CMD_CON_SWAP;
-		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 1 && con_cnt && !container[consel])
+		}
+		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 1 && con_cnt && !container[consel]) {
 			lcmd = CMD_CON_DROP;
-		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 2 && con_cnt)
+		}
+		if (consel != -1 && vk_item && !vk_char && csprite && con_type == 2 && con_cnt) {
 			lcmd = CMD_CON_SELL;
+		}
 	}
 }
 
@@ -1888,8 +1988,9 @@ static void set_cmd_states(void)
 	fkeyitem[0] = fkeyitem[1] = fkeyitem[2] = fkeyitem[3] = 0;
 	for (i = 30; i < INVENTORYSIZE; i++) {
 		c = (i - 2) % 4;
-		if (fkeyitem[c] == 0 && (is_fkey_use_item(i)))
+		if (fkeyitem[c] == 0 && (is_fkey_use_item(i))) {
 			fkeyitem[c] = i;
+		}
 	}
 
 	// a button captured - we leave all as is was (i know it's hard to update before, but i have to for the scrollbars)
@@ -1898,10 +1999,12 @@ static void set_cmd_states(void)
 		if (capbut == BUT_GLD) {
 			takegold += (mousedy / 2) * (mousedy / 2) * (mousedy <= 0 ? 1 : -1);
 
-			if (takegold < 0)
+			if (takegold < 0) {
 				takegold = 0;
-			if (takegold > gold)
+			}
+			if (takegold > gold) {
 				takegold = gold;
+			}
 
 			mousedy = 0;
 		}
@@ -1913,8 +2016,9 @@ static void set_cmd_states(void)
 	    skl_look_sel = questsel = actsel = -1;
 
 	if ((display_help || display_quest) && mousex >= dotx(DOT_HLP) && mousex <= dotx(DOT_HL2) - 40 &&
-	    mousey >= doty(DOT_HLP) && mousey <= doty(DOT_HLP) + 12)
+	    mousey >= doty(DOT_HLP) && mousey <= doty(DOT_HLP) + 12) {
 		butsel = BUT_HELP_DRAG;
+	}
 
 	if ((display_help || display_quest) && butsel == -1) {
 		if (mousex >= dotx(DOT_HLP) && mousex <= dotx(DOT_HL2) && mousey >= doty(DOT_HLP) && mousey <= doty(DOT_HL2)) {
@@ -1923,11 +2027,13 @@ static void set_cmd_states(void)
 			if (display_help == 1 && mousex >= dotx(DOT_HLP) + 7 && mousex <= dotx(DOT_HLP) + 136 &&
 			    mousey >= 198 + doty(DOT_HLP) && mousey <= 198 + doty(DOT_HLP) + 12 * 10) {
 				helpsel = (mousey - (198 + doty(DOT_HLP))) / 10 + 2;
-				if (mousex > dotx(DOT_HLP) + 110)
+				if (mousex > dotx(DOT_HLP) + 110) {
 					helpsel += 12;
+				}
 
-				if (helpsel < 2 || helpsel > MAXHELP)
+				if (helpsel < 2 || helpsel > MAXHELP) {
 					helpsel = -1;
+				}
 			}
 
 			if (display_quest && mousex >= dotx(DOT_HLP) + 165 && mousex <= dotx(DOT_HLP) + 199) {
@@ -1938,8 +2044,9 @@ static void set_cmd_states(void)
 				if (tmp >= 0 && tmp <= 8 && mousey >= y && mousey <= y + 10) {
 					int qos = questonscreen[tmp];
 					if ((qos != -1) && (game_questlog[qos].flags & QLF_REPEATABLE) && (quest[qos].flags & QF_DONE) &&
-					    quest[qos].done < 10)
+					    quest[qos].done < 10) {
 						questsel = tmp;
+					}
 				}
 			}
 		}
@@ -1958,23 +2065,28 @@ static void set_cmd_states(void)
 	}
 
 	if (mousex >= dotx(DOT_TOP) + 704 && mousex <= dotx(DOT_TOP) + 739 && mousey >= doty(DOT_TOP) + 22 &&
-	    mousey <= doty(DOT_TOP) + 30)
+	    mousey <= doty(DOT_TOP) + 30) {
 		butsel = BUT_HELP;
+	}
 	if (mousex >= dotx(DOT_TOP) + 741 && mousex <= dotx(DOT_TOP) + 775 && mousey >= doty(DOT_TOP) + 22 &&
-	    mousey <= doty(DOT_TOP) + 30)
+	    mousey <= doty(DOT_TOP) + 30) {
 		butsel = BUT_QUEST;
+	}
 	if (mousex >= dotx(DOT_TOP) + 704 && mousex <= dotx(DOT_TOP) + 723 && mousey >= doty(DOT_TOP) + 7 &&
-	    mousey <= doty(DOT_TOP) + 18)
+	    mousey <= doty(DOT_TOP) + 18) {
 		butsel = BUT_EXIT;
+	}
 
 	// hit teleport?
 	telsel = get_teleport(mousex, mousey);
-	if (telsel != -1)
+	if (telsel != -1) {
 		butsel = BUT_TEL;
+	}
 
 	colsel = get_color(mousex, mousey);
-	if (colsel != -1)
+	if (colsel != -1) {
 		butsel = BUT_COLOR;
+	}
 
 	if (teleporter && butsel == -1) {
 		if (mousex >= dotx(DOT_TEL) && mousex <= dotx(DOT_TEL) + 520 && mousey >= doty(DOT_TEL) &&
@@ -1984,23 +2096,27 @@ static void set_cmd_states(void)
 	}
 
 	if (show_look && mousex >= dotx(DOT_LOK) + 493 && mousex <= dotx(DOT_LOK) + 500 && mousey >= doty(DOT_LOK) + 3 &&
-	    mousey <= doty(DOT_LOK) + 10)
+	    mousey <= doty(DOT_LOK) + 10) {
 		butsel = BUT_NOLOOK;
+	}
 
 	if (butsel == -1 && context_key_enabled()) {
 		butsel = get_near_button(mousex, mousey);
 		if (context_action_enabled()) {
-			if (butsel >= BUT_ACT_BEG && butsel <= BUT_ACT_END && has_action_skill(butsel - BUT_ACT_BEG))
+			if (butsel >= BUT_ACT_BEG && butsel <= BUT_ACT_END && has_action_skill(butsel - BUT_ACT_BEG)) {
 				actsel = butsel - BUT_ACT_BEG;
+			}
 			if (butsel == BUT_ACT_LCK || butsel == BUT_ACT_OPN)
 				;
-			else
+			else {
 				butsel = -1;
+			}
 		} else {
 			if (butsel == BUT_ACT_OPN && mousey > buty(BUT_ACT_OPN))
 				;
-			else
+			else {
 				butsel = -1;
+			}
 		}
 	}
 
@@ -2009,20 +2125,26 @@ static void set_cmd_states(void)
 	    mousey < doty(DOT_MBR)) {
 		if (action_ovr == 13) {
 			itmsel = get_near_item(mousex, mousey, CMF_USE | CMF_TAKE, 3);
-			if (itmsel == -1)
+			if (itmsel == -1) {
 				chrsel = get_near_char(mousex, mousey, 3);
-			if (itmsel == -1 && chrsel == -1)
+			}
+			if (itmsel == -1 && chrsel == -1) {
 				mapsel = get_near_ground(mousex, mousey);
+			}
 		} else {
-			if (vk_char || (action_ovr != -1 && (action_ovr != 11 || csprite) && action_ovr != 2))
+			if (vk_char || (action_ovr != -1 && (action_ovr != 11 || csprite) && action_ovr != 2)) {
 				chrsel = get_near_char(mousex, mousey, vk_char ? MAPDX : 3);
-			if (chrsel == -1 && (vk_item || action_ovr == 11))
+			}
+			if (chrsel == -1 && (vk_item || action_ovr == 11)) {
 				itmsel = get_near_item(mousex, mousey, CMF_USE | CMF_TAKE, csprite ? 0 : MAPDX);
-			if (chrsel == -1 && itmsel == -1 && !vk_char && (!vk_item || csprite))
+			}
+			if (chrsel == -1 && itmsel == -1 && !vk_char && (!vk_item || csprite)) {
 				mapsel = get_near_ground(mousex, mousey);
+			}
 
-			if (mapsel != -1 || itmsel != -1 || chrsel != -1)
+			if (mapsel != -1 || itmsel != -1 || chrsel != -1) {
 				butsel = BUT_MAP;
+			}
 		}
 	}
 
@@ -2043,14 +2165,15 @@ static void set_cmd_states(void)
 		butsel = get_near_button(mousex, mousey);
 
 		// translate button
-		if (butsel >= BUT_INV_BEG && butsel <= BUT_INV_END)
+		if (butsel >= BUT_INV_BEG && butsel <= BUT_INV_END) {
 			invsel = 30 + invoff * INVDX + butsel - BUT_INV_BEG;
-		else if (butsel >= BUT_WEA_BEG && butsel <= BUT_WEA_END)
+		} else if (butsel >= BUT_WEA_BEG && butsel <= BUT_WEA_END) {
 			weasel = butsel - BUT_WEA_BEG;
-		else if (butsel >= BUT_CON_BEG && butsel <= BUT_CON_END)
+		} else if (butsel >= BUT_CON_BEG && butsel <= BUT_CON_END) {
 			consel = conoff * CONDX + butsel - BUT_CON_BEG;
-		else if (butsel >= BUT_SKL_BEG && butsel <= BUT_SKL_END)
+		} else if (butsel >= BUT_SKL_BEG && butsel <= BUT_SKL_END) {
 			sklsel = skloff + butsel - BUT_SKL_BEG;
+		}
 	}
 
 	// set lcmd
@@ -2059,94 +2182,119 @@ static void set_cmd_states(void)
 	if (context_key_set_cmd())
 		;
 	else if (action_ovr != -1) {
-		if (action_ovr == 0 && chrsel != -1)
+		if (action_ovr == 0 && chrsel != -1) {
 			lcmd = CMD_CHR_ATTACK;
-		else if (action_ovr == 1 && chrsel != -1)
+		} else if (action_ovr == 1 && chrsel != -1) {
 			lcmd = CMD_CHR_CAST_L;
-		else if (action_ovr == 2)
+		} else if (action_ovr == 2) {
 			lcmd = CMD_MAP_CAST_R;
-		else if (action_ovr == 11) {
+		} else if (action_ovr == 11) {
 			if (itmsel != -1) {
 				if (map[itmsel].flags & CMF_TAKE) { // take needs to come first as dropped items can be usable
 					lcmd = CMD_ITM_TAKE;
 				} else if (map[itmsel].flags & CMF_USE) {
-					if (csprite)
+					if (csprite) {
 						lcmd = CMD_ITM_USE_WITH;
-					else
+					} else {
 						lcmd = CMD_ITM_USE;
+					}
 				}
-			} else if (chrsel != -1 && csprite)
+			} else if (chrsel != -1 && csprite) {
 				lcmd = CMD_CHR_GIVE;
-			else if (mapsel != -1 && csprite)
+			} else if (mapsel != -1 && csprite) {
 				lcmd = CMD_MAP_DROP;
+			}
 		} else if (action_ovr == 13) {
-			if (itmsel != -1)
+			if (itmsel != -1) {
 				lcmd = CMD_ITM_LOOK;
-			else if (chrsel != -1)
+			} else if (chrsel != -1) {
 				lcmd = CMD_CHR_LOOK;
-			else if (mapsel != -1)
+			} else if (mapsel != -1) {
 				lcmd = CMD_MAP_LOOK;
+			}
 		}
 	} else {
-		if (mapsel != -1 && !vk_item && !vk_char)
+		if (mapsel != -1 && !vk_item && !vk_char) {
 			lcmd = CMD_MAP_MOVE;
-		if (mapsel != -1 && vk_item && !vk_char && csprite)
+		}
+		if (mapsel != -1 && vk_item && !vk_char && csprite) {
 			lcmd = CMD_MAP_DROP;
+		}
 
-		if (itmsel != -1 && vk_item && !vk_char && !csprite && map[itmsel].flags & CMF_USE)
+		if (itmsel != -1 && vk_item && !vk_char && !csprite && map[itmsel].flags & CMF_USE) {
 			lcmd = CMD_ITM_USE;
-		if (itmsel != -1 && vk_item && !vk_char && !csprite && map[itmsel].flags & CMF_TAKE)
+		}
+		if (itmsel != -1 && vk_item && !vk_char && !csprite && map[itmsel].flags & CMF_TAKE) {
 			lcmd = CMD_ITM_TAKE;
-		if (itmsel != -1 && vk_item && !vk_char && csprite && map[itmsel].flags & CMF_USE)
+		}
+		if (itmsel != -1 && vk_item && !vk_char && csprite && map[itmsel].flags & CMF_USE) {
 			lcmd = CMD_ITM_USE_WITH;
+		}
 
-		if (chrsel != -1 && !vk_item && vk_char && !csprite)
+		if (chrsel != -1 && !vk_item && vk_char && !csprite) {
 			lcmd = CMD_CHR_ATTACK;
-		if (chrsel != -1 && !vk_item && vk_char && csprite)
+		}
+		if (chrsel != -1 && !vk_item && vk_char && csprite) {
 			lcmd = CMD_CHR_GIVE;
+		}
 	}
 
 	set_cmd_invsel();
 	set_cmd_weasel();
 	set_cmd_consel();
 
-	if (telsel != -1)
+	if (telsel != -1) {
 		lcmd = CMD_TELEPORT;
-	if (colsel != -1)
+	}
+	if (colsel != -1) {
 		lcmd = CMD_COLOR;
-	if (actsel != -1)
+	}
+	if (actsel != -1) {
 		lcmd = CMD_ACTION;
+	}
 
 	if (lcmd == CMD_NONE) {
-		if (butsel == BUT_SCR_UP)
+		if (butsel == BUT_SCR_UP) {
 			lcmd = CMD_INV_OFF_UP;
-		if (butsel == BUT_SCR_DW)
+		}
+		if (butsel == BUT_SCR_DW) {
 			lcmd = CMD_INV_OFF_DW;
-		if (butsel == BUT_SCR_TR && !vk_lbut)
+		}
+		if (butsel == BUT_SCR_TR && !vk_lbut) {
 			lcmd = CMD_INV_OFF_TR;
+		}
 
-		if (butsel == BUT_SCL_UP && !con_cnt)
+		if (butsel == BUT_SCL_UP && !con_cnt) {
 			lcmd = CMD_SKL_OFF_UP;
-		if (butsel == BUT_SCL_DW && !con_cnt)
+		}
+		if (butsel == BUT_SCL_DW && !con_cnt) {
 			lcmd = CMD_SKL_OFF_DW;
-		if (butsel == BUT_SCL_TR && !con_cnt && !vk_lbut)
+		}
+		if (butsel == BUT_SCL_TR && !con_cnt && !vk_lbut) {
 			lcmd = CMD_SKL_OFF_TR;
+		}
 
-		if (butsel == BUT_SCL_UP && con_cnt)
+		if (butsel == BUT_SCL_UP && con_cnt) {
 			lcmd = CMD_CON_OFF_UP;
-		if (butsel == BUT_SCL_DW && con_cnt)
+		}
+		if (butsel == BUT_SCL_DW && con_cnt) {
 			lcmd = CMD_CON_OFF_DW;
-		if (butsel == BUT_SCL_TR && con_cnt && !vk_lbut)
+		}
+		if (butsel == BUT_SCL_TR && con_cnt && !vk_lbut) {
 			lcmd = CMD_CON_OFF_TR;
+		}
 
-		if (sklsel != -1)
+		if (sklsel != -1) {
 			lcmd = CMD_SKL_RAISE;
+		}
 
-		if (hitsel[0])
+		if (hitsel[0]) {
 			lcmd = CMD_SAY_HITSEL;
+		}
 
-		if (vk_item && butsel == BUT_GLD && csprite >= SPR_GOLD_BEG && csprite <= SPR_GOLD_END)
+		if (vk_item && butsel == BUT_GLD && csprite >= SPR_GOLD_BEG && csprite <= SPR_GOLD_END) {
 			lcmd = CMD_DROP_GOLD;
+		}
 		if (!vk_item && butsel == BUT_GLD && csprite >= SPR_GOLD_BEG && csprite <= SPR_GOLD_END) {
 			takegold = cprice;
 			lcmd = CMD_TAKE_GOLD;
@@ -2155,101 +2303,134 @@ static void set_cmd_states(void)
 			takegold = 0;
 			lcmd = CMD_TAKE_GOLD;
 		}
-		if ((vk_item || csprite) && butsel == BUT_JNK)
+		if ((vk_item || csprite) && butsel == BUT_JNK) {
 			lcmd = CMD_JUNK_ITEM;
+		}
 
-		if (butsel >= BUT_MOD_WALK0 && butsel <= BUT_MOD_WALK2)
+		if (butsel >= BUT_MOD_WALK0 && butsel <= BUT_MOD_WALK2) {
 			lcmd = CMD_SPEED0 + butsel - BUT_MOD_WALK0;
+		}
 
-		if (butsel == BUT_HELP_MISC)
+		if (butsel == BUT_HELP_MISC) {
 			lcmd = CMD_HELP_MISC;
-		if (butsel == BUT_HELP_PREV)
+		}
+		if (butsel == BUT_HELP_PREV) {
 			lcmd = CMD_HELP_PREV;
-		if (butsel == BUT_HELP_NEXT)
+		}
+		if (butsel == BUT_HELP_NEXT) {
 			lcmd = CMD_HELP_NEXT;
-		if (butsel == BUT_HELP_CLOSE)
+		}
+		if (butsel == BUT_HELP_CLOSE) {
 			lcmd = CMD_HELP_CLOSE;
-		if (butsel == BUT_HELP_DRAG)
+		}
+		if (butsel == BUT_HELP_DRAG) {
 			lcmd = CMD_HELP_DRAG;
-		if (butsel == BUT_EXIT)
+		}
+		if (butsel == BUT_EXIT) {
 			lcmd = CMD_EXIT;
-		if (butsel == BUT_HELP)
+		}
+		if (butsel == BUT_HELP) {
 			lcmd = CMD_HELP;
-		if (butsel == BUT_QUEST)
+		}
+		if (butsel == BUT_QUEST) {
 			lcmd = CMD_QUEST;
-		if (butsel == BUT_NOLOOK)
+		}
+		if (butsel == BUT_NOLOOK) {
 			lcmd = CMD_NOLOOK;
+		}
 
-		if (butsel == BUT_ACT_LCK)
+		if (butsel == BUT_ACT_LCK) {
 			lcmd = CMD_ACTION_LOCK;
-		if (butsel == BUT_ACT_OPN)
+		}
+		if (butsel == BUT_ACT_OPN) {
 			lcmd = CMD_ACTION_OPEN;
-		if (butsel == BUT_WEA_LCK)
+		}
+		if (butsel == BUT_WEA_LCK) {
 			lcmd = CMD_WEAR_LOCK;
+		}
 	}
 
 	// set rcmd
 	rcmd = CMD_NONE;
 	if (action_ovr == -1) {
 		skl_look_sel = get_skl_look(mousex, mousey);
-		if (con_cnt == 0 && skl_look_sel != -1)
+		if (con_cnt == 0 && skl_look_sel != -1) {
 			rcmd = CMD_SKL_LOOK;
-		else if (!vk_spell) {
-			if (mapsel != -1)
+		} else if (!vk_spell) {
+			if (mapsel != -1) {
 				rcmd = CMD_MAP_LOOK;
-			if (itmsel != -1)
+			}
+			if (itmsel != -1) {
 				rcmd = CMD_ITM_LOOK;
-			if (chrsel != -1)
+			}
+			if (chrsel != -1) {
 				rcmd = CMD_CHR_LOOK;
+			}
 			if (context_key_enabled()) {
-				if (invsel != -1)
+				if (invsel != -1) {
 					rcmd = CMD_INV_USE;
-				if (weasel != -1)
+				}
+				if (weasel != -1) {
 					rcmd = CMD_WEA_USE;
+				}
 			} else {
-				if (invsel != -1)
+				if (invsel != -1) {
 					rcmd = CMD_INV_LOOK;
-				if (weasel != -1)
+				}
+				if (weasel != -1) {
 					rcmd = CMD_WEA_LOOK;
-				if (consel != -1)
+				}
+				if (consel != -1) {
 					rcmd = CMD_CON_LOOK;
+				}
 			}
 		} else {
-			if (mapsel != -1)
+			if (mapsel != -1) {
 				rcmd = CMD_MAP_CAST_R;
-			if (itmsel != -1)
+			}
+			if (itmsel != -1) {
 				rcmd = CMD_ITM_CAST_R;
-			if (chrsel != -1)
+			}
+			if (chrsel != -1) {
 				rcmd = CMD_CHR_CAST_R;
+			}
 		}
-	} else
+	} else {
 		rcmd = CMD_ACTION_CANCEL;
+	}
 
 	if (gear_lock) { // gear lock resets cmds to none if on
 		// no fast-equip from inventory
-		if (invsel != -1 && lcmd == CMD_INV_USE && !(item_flags[invsel] & IF_USE))
+		if (invsel != -1 && lcmd == CMD_INV_USE && !(item_flags[invsel] & IF_USE)) {
 			lcmd = CMD_NONE;
-		if (invsel != -1 && rcmd == CMD_INV_USE && !(item_flags[invsel] & IF_USE))
+		}
+		if (invsel != -1 && rcmd == CMD_INV_USE && !(item_flags[invsel] & IF_USE)) {
 			rcmd = CMD_NONE;
+		}
 
 		// no fast-unequip from equipment
-		if (weasel != -1 && lcmd == CMD_WEA_USE && !(item_flags[weatab[weasel]] & IF_USE))
+		if (weasel != -1 && lcmd == CMD_WEA_USE && !(item_flags[weatab[weasel]] & IF_USE)) {
 			lcmd = CMD_NONE;
-		if (weasel != -1 && rcmd == CMD_WEA_USE && !(item_flags[weatab[weasel]] & IF_USE))
+		}
+		if (weasel != -1 && rcmd == CMD_WEA_USE && !(item_flags[weatab[weasel]] & IF_USE)) {
 			rcmd = CMD_NONE;
+		}
 
 		// no take/swap/drop from equipment unless it is the left-hand-slot (for torches)
-		if (weasel != 2 && (lcmd == CMD_WEA_TAKE || lcmd == CMD_WEA_DROP || lcmd == CMD_WEA_SWAP))
+		if (weasel != 2 && (lcmd == CMD_WEA_TAKE || lcmd == CMD_WEA_DROP || lcmd == CMD_WEA_SWAP)) {
 			lcmd = CMD_NONE;
-		if (weasel != 2 && (rcmd == CMD_WEA_TAKE || rcmd == CMD_WEA_DROP || rcmd == CMD_WEA_SWAP))
+		}
+		if (weasel != 2 && (rcmd == CMD_WEA_TAKE || rcmd == CMD_WEA_DROP || rcmd == CMD_WEA_SWAP)) {
 			rcmd = CMD_NONE;
+		}
 	}
 
 	// set cursor
-	if (vk_rbut)
+	if (vk_rbut) {
 		set_cmd_cursor(rcmd);
-	else
+	} else {
 		set_cmd_cursor(lcmd);
+	}
 }
 
 void help_drag(void)
@@ -2259,15 +2440,19 @@ void help_drag(void)
 	x = dot[DOT_HLP].x + mousedx;
 	y = dot[DOT_HLP].y + mousedy;
 
-	if (x < dotx(DOT_TL))
+	if (x < dotx(DOT_TL)) {
 		mousedx += dotx(DOT_TL) - x;
-	if (y < doty(DOT_TL))
+	}
+	if (y < doty(DOT_TL)) {
 		mousedy += doty(DOT_TL) - y;
+	}
 
-	if (x > dotx(DOT_BR) + dotx(DOT_HLP) - dotx(DOT_HL2))
+	if (x > dotx(DOT_BR) + dotx(DOT_HLP) - dotx(DOT_HL2)) {
 		mousedx += dotx(DOT_BR) + dotx(DOT_HLP) - dotx(DOT_HL2) - x;
-	if (y > doty(DOT_BR) - 20)
+	}
+	if (y > doty(DOT_BR) - 20) {
 		mousedy += doty(DOT_BR) - 20 - y;
+	}
 
 	dot[DOT_HLP].x += mousedx;
 	dot[DOT_HLP].y += mousedy;
@@ -2282,8 +2467,9 @@ void help_drag(void)
 static void cmd_action(void)
 {
 	// nag the player to click the lock again
-	if (!act_lck)
+	if (!act_lck) {
 		addline("Please disable key-binding mode (the padlock to the left)!");
+	}
 
 	switch (actsel) {
 	case 0:
@@ -2513,26 +2699,30 @@ static void exec_cmd(int cmd, int a)
 		return;
 
 	case CMD_SPEED0:
-		if (pspeed != 0)
+		if (pspeed != 0) {
 			cmd_speed(0);
+		}
 		return;
 	case CMD_SPEED1:
-		if (pspeed != 1)
+		if (pspeed != 1) {
 			cmd_speed(1);
+		}
 		return;
 	case CMD_SPEED2:
-		if (pspeed != 2)
+		if (pspeed != 2) {
 			cmd_speed(2);
+		}
 		return;
 
 	case CMD_TELEPORT:
-		if (telsel == 1042)
+		if (telsel == 1042) {
 			clan_offset = 16 - clan_offset;
-		else {
-			if (telsel >= 64 && telsel <= 100)
+		} else {
+			if (telsel >= 64 && telsel <= 100) {
 				cmd_teleport(telsel + clan_offset);
-			else
+			} else {
 				cmd_teleport(telsel);
+			}
 		}
 		return;
 	case CMD_COLOR:
@@ -2545,25 +2735,29 @@ static void exec_cmd(int cmd, int a)
 	case CMD_HELP_NEXT:
 		if (display_help) {
 			display_help++;
-			if (display_help > MAXHELP)
+			if (display_help > MAXHELP) {
 				display_help = 1;
+			}
 		}
 		if (display_quest) {
 			display_quest++;
-			if (display_quest > MAXQUEST2)
+			if (display_quest > MAXQUEST2) {
 				display_quest = 1;
+			}
 		}
 		return;
 	case CMD_HELP_PREV:
 		if (display_help) {
 			display_help--;
-			if (display_help < 1)
+			if (display_help < 1) {
 				display_help = MAXHELP;
+			}
 		}
 		if (display_quest) {
 			display_quest--;
-			if (display_quest < 1)
+			if (display_quest < 1) {
 				display_quest = MAXQUEST2;
+			}
 		}
 		return;
 	case CMD_HELP_CLOSE:
@@ -2571,26 +2765,28 @@ static void exec_cmd(int cmd, int a)
 		display_quest = 0;
 		return;
 	case CMD_HELP_MISC:
-		if (helpsel > 0 && helpsel <= MAXHELP && display_help)
+		if (helpsel > 0 && helpsel <= MAXHELP && display_help) {
 			display_help = helpsel;
-		if (questsel != -1)
+		}
+		if (questsel != -1) {
 			quest_select(questsel);
+		}
 		return;
 	case CMD_HELP_DRAG:
 		help_drag();
 		return;
 	case CMD_HELP:
-		if (display_help)
+		if (display_help) {
 			display_help = 0;
-		else {
+		} else {
 			display_help = 1;
 			display_quest = 0;
 		}
 		return;
 	case CMD_QUEST:
-		if (display_quest)
+		if (display_quest) {
 			display_quest = 0;
-		else {
+		} else {
 			display_quest = 1;
 			display_help = 0;
 		}
@@ -2636,8 +2832,9 @@ void gui_sdl_keyproc(int wparam)
 {
 	int i;
 
-	if (wparam != SDLK_ESCAPE && wparam != SDLK_F12 && amod_keydown(wparam))
+	if (wparam != SDLK_ESCAPE && wparam != SDLK_F12 && amod_keydown(wparam)) {
 		return;
+	}
 
 	switch (wparam) {
 	case SDLK_ESCAPE:
@@ -2653,25 +2850,30 @@ void gui_sdl_keyproc(int wparam)
 		context_key_reset();
 		action_ovr = -1;
 		minimap_hide();
-		if (context_key_enabled())
+		if (context_key_enabled()) {
 			cmd_reset();
+		}
 		context_key_set(0);
 		return;
 	case SDLK_F1:
-		if (fkeyitem[0])
+		if (fkeyitem[0]) {
 			exec_cmd(CMD_USE_FKEYITEM, 0);
+		}
 		return;
 	case SDLK_F2:
-		if (fkeyitem[1])
+		if (fkeyitem[1]) {
 			exec_cmd(CMD_USE_FKEYITEM, 1);
+		}
 		return;
 	case SDLK_F3:
-		if (fkeyitem[2])
+		if (fkeyitem[2]) {
 			exec_cmd(CMD_USE_FKEYITEM, 2);
+		}
 		return;
 	case SDLK_F4:
-		if (fkeyitem[3])
+		if (fkeyitem[3]) {
 			exec_cmd(CMD_USE_FKEYITEM, 3);
+		}
 		return;
 
 	case SDLK_F5:
@@ -2689,9 +2891,9 @@ void gui_sdl_keyproc(int wparam)
 		return;
 
 	case SDLK_F9:
-		if (display_quest)
+		if (display_quest) {
 			display_quest = 0;
-		else {
+		} else {
 			display_help = 0;
 			display_quest = 1;
 		}
@@ -2704,9 +2906,9 @@ void gui_sdl_keyproc(int wparam)
 		return;
 
 	case SDLK_F11:
-		if (display_help)
+		if (display_help) {
 			display_help = 0;
-		else {
+		} else {
 			display_quest = 0;
 			display_help = 1;
 		}
@@ -2779,10 +2981,11 @@ void gui_sdl_keyproc(int wparam)
 		goto spellbindkey;
 
 	case 'm':
-		if (vk_shift && vk_control && !context_key_enabled())
+		if (vk_shift && vk_control && !context_key_enabled()) {
 			minimap_toggle();
-		else
+		} else {
 			goto spellbindkey;
+		}
 		return;
 
 	case '0':
@@ -2829,25 +3032,30 @@ void gui_sdl_keyproc(int wparam)
 		wparam = toupper(wparam);
 
 		for (i = 0; i < max_keytab; i++) {
-			if (keytab[i].keycode != wparam && keytab[i].userdef != wparam)
+			if (keytab[i].keycode != wparam && keytab[i].userdef != wparam) {
 				continue;
+			}
 
-			if ((keytab[i].vk_item && !vk_item) || (!keytab[i].vk_item && vk_item))
+			if ((keytab[i].vk_item && !vk_item) || (!keytab[i].vk_item && vk_item)) {
 				continue;
-			if ((keytab[i].vk_char && !vk_char) || (!keytab[i].vk_char && vk_char))
+			}
+			if ((keytab[i].vk_char && !vk_char) || (!keytab[i].vk_char && vk_char)) {
 				continue;
-			if ((keytab[i].vk_spell && !vk_spell) || (!keytab[i].vk_spell && vk_spell))
+			}
+			if ((keytab[i].vk_spell && !vk_spell) || (!keytab[i].vk_spell && vk_spell)) {
 				continue;
+			}
 
 			if (keytab[i].cl_spell) {
-				if (keytab[i].tgt == TGT_MAP)
+				if (keytab[i].tgt == TGT_MAP) {
 					exec_cmd(CMD_MAP_CAST_K, keytab[i].cl_spell);
-				else if (keytab[i].tgt == TGT_CHR)
+				} else if (keytab[i].tgt == TGT_CHR) {
 					exec_cmd(CMD_CHR_CAST_K, keytab[i].cl_spell);
-				else if (keytab[i].tgt == TGT_SLF)
+				} else if (keytab[i].tgt == TGT_SLF) {
 					exec_cmd(CMD_SLF_CAST_K, keytab[i].cl_spell);
-				else
+				} else {
 					return; // hu ?
+				}
 				keytab[i].usetime = now;
 				return;
 			}
@@ -2864,19 +3072,22 @@ void gui_sdl_keyproc(int wparam)
 
 	case '+':
 	case '=':
-		if (!context_key_isset())
+		if (!context_key_isset()) {
 			context_action_enable(1);
+		}
 		break;
 	case '-':
-		if (!context_key_isset())
+		if (!context_key_isset()) {
 			context_action_enable(0);
+		}
 		break;
 
 		// case '<':               dd_sceweup(); break;
 
 	case SDLK_INSERT:
-		if (vk_shift && !vk_control && !vk_alt)
+		if (vk_shift && !vk_control && !vk_alt) {
 			gui_insert();
+		}
 		break;
 	}
 }
@@ -2904,8 +3115,9 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 		mousex -= dd_offset_x();
 		mousey -= dd_offset_y();
 
-		if (butsel != -1 && vk_lbut && (but[butsel].flags & BUTF_MOVEEXEC))
+		if (butsel != -1 && vk_lbut && (but[butsel].flags & BUTF_MOVEEXEC)) {
 			exec_cmd(lcmd, 0);
+		}
 
 		amod_mouse_move(mousex, mousey);
 		break;
@@ -2913,8 +3125,9 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 	case SDL_MOUM_LDOWN:
 		vk_lbut = 1;
 
-		if (amod_mouse_click(mousex, mousey, what))
+		if (amod_mouse_click(mousex, mousey, what)) {
 			break;
+		}
 
 		if (butsel != -1 && capbut == -1 && (but[butsel].flags & BUTF_CAPTURE)) {
 			amod_mouse_capture(1);
@@ -2933,22 +3146,25 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 		control_override = 0;
 		mdown = 0;
 		if ((game_options & GO_WHEEL) && special_tab[vk_special].spell) {
-			if (special_tab[vk_special].target == TGT_MAP)
+			if (special_tab[vk_special].target == TGT_MAP) {
 				exec_cmd(CMD_MAP_CAST_K, special_tab[vk_special].spell);
-			else if (special_tab[vk_special].target == TGT_CHR)
+			} else if (special_tab[vk_special].target == TGT_CHR) {
 				exec_cmd(CMD_CHR_CAST_K, special_tab[vk_special].spell);
-			else if (special_tab[vk_special].target == TGT_SLF)
+			} else if (special_tab[vk_special].target == TGT_SLF) {
 				exec_cmd(CMD_SLF_CAST_K, special_tab[vk_special].spell);
+			}
 			break;
 		}
 		// fall through intended
 	case SDL_MOUM_LUP:
 		vk_lbut = 0;
 
-		if (amod_mouse_click(mousex, mousey, what))
+		if (amod_mouse_click(mousex, mousey, what)) {
 			break;
-		if (context_click(mousex, mousey))
+		}
+		if (context_click(mousex, mousey)) {
 			break;
+		}
 
 		if (capbut != -1) {
 			sdl_set_cursor_pos(
@@ -2956,30 +3172,35 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 			sdl_capture_mouse(0);
 			sdl_show_cursor(1);
 			amod_mouse_capture(0);
-			if (!(but[capbut].flags & BUTF_MOVEEXEC))
+			if (!(but[capbut].flags & BUTF_MOVEEXEC)) {
 				exec_cmd(lcmd, 0);
+			}
 			capbut = -1;
 		} else {
-			if ((tmp = context_key_click()) != CMD_NONE)
+			if ((tmp = context_key_click()) != CMD_NONE) {
 				exec_cmd(tmp, 0);
-			else
+			} else {
 				exec_cmd(lcmd, 0);
+			}
 		}
 		break;
 
 	case SDL_MOUM_RDOWN:
 		vk_rbut = 1;
-		if (amod_mouse_click(mousex, mousey, what))
+		if (amod_mouse_click(mousex, mousey, what)) {
 			break;
+		}
 		context_stop();
 		break;
 
 	case SDL_MOUM_RUP:
 		vk_rbut = 0;
-		if (amod_mouse_click(mousex, mousey, what))
+		if (amod_mouse_click(mousex, mousey, what)) {
 			break;
-		if (rcmd == CMD_MAP_LOOK && context_open(mousex, mousey))
+		}
+		if (rcmd == CMD_MAP_LOOK && context_open(mousex, mousey)) {
 			break;
+		}
 		context_stop();
 		exec_cmd(rcmd, 0);
 		break;
@@ -2987,23 +3208,26 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 	case SDL_MOUM_WHEEL:
 		delta = y;
 
-		if (amod_mouse_click(0, delta, what))
+		if (amod_mouse_click(0, delta, what)) {
 			break;
+		}
 
 		if (mousex >= dotx(DOT_SKL) && mousex < dotx(DOT_SK2) && mousey >= doty(DOT_SKL) &&
 		    mousey < doty(DOT_SK2)) { // skill / depot / merchant
 			while (delta > 0) {
-				if (!con_cnt)
+				if (!con_cnt) {
 					set_skloff(0, skloff - 1);
-				else
+				} else {
 					set_conoff(0, conoff - 1);
+				}
 				delta--;
 			}
 			while (delta < 0) {
-				if (!con_cnt)
+				if (!con_cnt) {
 					set_skloff(0, skloff + 1);
-				else
+				} else {
 					set_conoff(0, conoff + 1);
+				}
 				delta++;
 			}
 			break;
@@ -3061,8 +3285,9 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 		if (game_options & GO_WHEEL) {
 			shift_override = special_tab[vk_special].shift_over;
 			control_override = special_tab[vk_special].control_over;
-		} else
+		} else {
 			shift_override = 1;
+		}
 		mdown = 1;
 		break;
 	}
@@ -3137,13 +3362,15 @@ void flip_at(unsigned int t)
 
 	do {
 		sdl_loop();
-		if (!sdl_is_shown() || !sdl_pre_do(tick))
+		if (!sdl_is_shown() || !sdl_pre_do(tick)) {
 			SDL_Delay(1);
+		}
 		tnow = SDL_GetTicks();
 	} while (t > tnow);
 
-	if (sdl_is_shown())
+	if (sdl_is_shown()) {
 		sdl_render();
+	}
 }
 
 int nextframe, nexttick;
@@ -3263,16 +3490,19 @@ int main_loop(void)
 		poll_network();
 
 		// synchronise frames and ticks if at the same speed
-		if (sockstate == 4 && MPF == MPT)
+		if (sockstate == 4 && MPF == MPT) {
 			nextframe = nexttick;
+		}
 
 		// check if we can go on
 		if (sockstate > 2) {
 			// decode as many ticks as we can
 			// and add their contents to the prefetch queue
-			while ((attick = next_tick()))
-				if (!(attick & 3) || !game_slowdown)
+			while ((attick = next_tick())) {
+				if (!(attick & 3) || !game_slowdown) {
 					prefetch_game(attick);
+				}
+			}
 
 			// get one tick to display?
 			timediff = nexttick - SDL_GetTicks();
@@ -3294,10 +3524,11 @@ int main_loop(void)
 			}
 		}
 
-		if (sockstate == 4)
+		if (sockstate == 4) {
 			timediff = nextframe - SDL_GetTicks();
-		else
+		} else {
 			timediff = 1;
+		}
 		gui_time_network += SDL_GetTicks64() - start;
 
 		if (timediff > -MPF / 2) {
@@ -3316,10 +3547,11 @@ int main_loop(void)
 			}
 
 			timediff = nextframe - SDL_GetTicks();
-			if (timediff > 0)
+			if (timediff > 0) {
 				idle += timediff;
-			else
+			} else {
 				skip -= timediff;
+			}
 
 			frames++;
 
@@ -3334,10 +3566,11 @@ int main_loop(void)
 		}
 
 		if (do_one_tick) {
-			if (game_options & GO_SHORT)
+			if (game_options & GO_SHORT) {
 				tmp = calc_tick_delay_short(lasttick + q_size);
-			else
+			} else {
 				tmp = calc_tick_delay_normal(lasttick + q_size);
+			}
 			nexttick += tmp;
 			tota += tmp;
 			if (tick % 24 == 0) {

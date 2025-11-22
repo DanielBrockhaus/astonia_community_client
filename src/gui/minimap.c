@@ -17,8 +17,8 @@
 #include "../../src/game.h"
 #include "../../src/sdl.h"
 
-#define MINIMAP 40
-#define MAXMAP 256
+#define MINIMAP           40
+#define MAXMAP            256
 #define IRGBA(r, g, b, a) (((uint32_t)(a) << 24) | ((uint32_t)(r) << 16) | ((uint32_t)(g) << 8) | ((uint32_t)(b) << 0))
 
 static int sx, sy, visible, mx, my, update1, update2, update3, orx, ory, rewrite_cnt;
@@ -35,8 +35,9 @@ SDL_Texture *maptex1 = NULL, *maptex2 = NULL;
 
 void minimap_init(void)
 {
-	if (game_options & GO_NOMAP)
+	if (game_options & GO_NOMAP) {
 		return;
+	}
 
 	sx = dotx(DOT_MBR) - MAXMAP - 6;
 	sy = doty(DOT_MTL) + 6;
@@ -78,18 +79,21 @@ void minimap_update(void)
 {
 	int x, y, xs, xe, ox, oy;
 
-	if (game_options & GO_NOMAP)
+	if (game_options & GO_NOMAP) {
 		return;
+	}
 
 	ox = originx - DIST;
 	oy = originy - DIST;
 
 	rewrite_cnt = 0;
 	for (y = 1; y < DIST * 2; y++) {
-		if (y + oy < 0)
+		if (y + oy < 0) {
 			continue;
-		if (y + oy >= MAXMAP)
+		}
+		if (y + oy >= MAXMAP) {
 			continue;
+		}
 
 		if (y < DIST) {
 			xs = DIST - y;
@@ -100,25 +104,30 @@ void minimap_update(void)
 		}
 
 		for (x = xs + 1; x < xe; x++) {
-			if (x + ox < 0)
+			if (x + ox < 0) {
 				continue;
-			if (x + ox >= MAXMAP)
+			}
+			if (x + ox >= MAXMAP) {
 				continue;
-			if (!(map[x + y * MAPDX].flags & CMF_VISIBLE))
+			}
+			if (!(map[x + y * MAPDX].flags & CMF_VISIBLE)) {
 				continue;
+			}
 
 
 			if (map[x + y * MAPDX].mmf & MMF_SIGHTBLOCK) {
-				if (map[x + y * MAPDX].flags & CMF_USE)
+				if (map[x + y * MAPDX].flags & CMF_USE) {
 					set_pix(ox + x, oy + y, 5);
-				else
+				} else {
 					set_pix(ox + x, oy + y, 1);
-			} else if (map[x + y * MAPDX].fsprite)
+				}
+			} else if (map[x + y * MAPDX].fsprite) {
 				set_pix(ox + x, oy + y, 2);
-			else if (map[x + y * MAPDX].csprite && x + y * MAPDX != plrmn)
+			} else if (map[x + y * MAPDX].csprite && x + y * MAPDX != plrmn) {
 				set_pix(ox + x, oy + y, 3);
-			else
+			} else {
 				set_pix(ox + x, oy + y, 4);
+			}
 		}
 	}
 	if (rewrite_cnt > 4) {
@@ -128,8 +137,9 @@ void minimap_update(void)
 	}
 	if (mapnr == -1 && update3) {
 		update3 = 0;
-		if (game_options & GO_MAPSAVE)
+		if (game_options & GO_MAPSAVE) {
 			mapnr = map_load();
+		}
 	}
 }
 
@@ -181,8 +191,9 @@ void display_minimap(void)
 	float dist;
 	SDL_Rect dr, sr;
 
-	if (game_options & GO_NOMAP)
+	if (game_options & GO_NOMAP) {
 		return;
+	}
 
 	if (visible & 2) { // display big map
 		if (update1) {
@@ -210,14 +221,18 @@ void display_minimap(void)
 		} else {
 			x = originx - MAXMAP / 6;
 			y = originy - MAXMAP / 6;
-			if (x < 0)
+			if (x < 0) {
 				x = 0;
-			if (x > MAXMAP - MAXMAP / 3)
+			}
+			if (x > MAXMAP - MAXMAP / 3) {
 				x = MAXMAP - MAXMAP / 3;
-			if (y < 0)
+			}
+			if (y < 0) {
 				y = 0;
-			if (y > MAXMAP - MAXMAP / 3)
+			}
+			if (y > MAXMAP - MAXMAP / 3) {
 				y = MAXMAP - MAXMAP / 3;
+			}
 
 			sr.x = x;
 			sr.w = MAXMAP / 3;
@@ -248,16 +263,18 @@ void display_minimap(void)
 			for (iy = -MINIMAP; iy < MINIMAP; iy++) {
 				for (ix = -MINIMAP; ix < MINIMAP; ix++) {
 					dist = sqrtf(ix * ix + iy * iy);
-					if (dist > MINIMAP)
+					if (dist > MINIMAP) {
 						continue;
+					}
 
 					x = originx + ix;
 					y = originy + iy;
 
-					if (x < 0 || x >= MAXMAP || y < 0 || y >= MAXMAP)
+					if (x < 0 || x >= MAXMAP || y < 0 || y >= MAXMAP) {
 						mapix2[MINIMAP + ix + iy * MINIMAP * 2 + MINIMAP * MINIMAP * 2] = IRGBA(25, 25, 25, 255);
-					else
+					} else {
 						mapix2[MINIMAP + ix + iy * MINIMAP * 2 + MINIMAP * MINIMAP * 2] = pix_col(x, y);
+					}
 				}
 			}
 			SDL_UpdateTexture(maptex2, NULL, mapix2, MINIMAP * 2 * sizeof(uint32_t));
@@ -287,8 +304,9 @@ void display_minimap(void)
 
 void minimap_clear(void)
 {
-	if (game_options & GO_MAPSAVE)
+	if (game_options & GO_MAPSAVE) {
 		map_save();
+	}
 	mapnr = -1;
 	memset(_mmap, 0, sizeof(_mmap));
 	update1 = update2 = update3 = 1;
@@ -301,18 +319,20 @@ void minimap_toggle(void)
 
 void minimap_hide(void)
 {
-	if (visible)
+	if (visible) {
 		visible = 1;
+	}
 }
 
 static char *mapname(int i)
 {
 	static char filename[MAX_PATH];
 
-	if (localdata)
+	if (localdata) {
 		sprintf(filename, "%smap%03d.dat", localdata, i);
-	else
+	} else {
 		sprintf(filename, "bin/data/map%03d.dat", i);
+	}
 
 	return filename;
 }
@@ -324,11 +344,13 @@ static void map_save(void)
 	char *filename;
 
 	for (i = cnt = 0; i < MAXMAP * MAXMAP; i++) {
-		if (_mmap[i])
+		if (_mmap[i]) {
 			cnt++;
+		}
 	}
-	if (cnt < 250)
+	if (cnt < 250) {
 		return;
+	}
 
 	// check if another client wrote the same map
 	// in the meantime
@@ -339,8 +361,9 @@ static void map_save(void)
 		for (i = 0; i < MAXSAVEMAP; i++) {
 			filename = mapname(i);
 			fp = fopen(filename, "rb");
-			if (!fp)
+			if (!fp) {
 				break;
+			}
 			fclose(fp);
 		}
 		if (i == MAXSAVEMAP) {
@@ -366,23 +389,27 @@ static int map_compare(const char *tmap, const char *xmap)
 	for (i = hit = miss = 0; i < MAXMAP * MAXMAP; i++) {
 		// sightblock, fsprite or usable sightblock
 		if (tmap[i] == 1 || tmap[i] == 2 || tmap[i] == 5) {
-			if (xmap[i] == 1 || xmap[i] == 2 || xmap[i] == 5)
+			if (xmap[i] == 1 || xmap[i] == 2 || xmap[i] == 5) {
 				hit++;
-			else if (xmap[i] != 0)
+			} else if (xmap[i] != 0) {
 				miss++;
+			}
 		}
 		// empty or csprite
 		if (tmap[i] == 3 || tmap[i] == 4) {
-			if (xmap[i] == 3 || xmap[i] == 4)
+			if (xmap[i] == 3 || xmap[i] == 4) {
 				hit++;
-			else if (xmap[i] != 0)
+			} else if (xmap[i] != 0) {
 				miss++;
+			}
 		}
 	}
-	if (hit < 200)
+	if (hit < 200) {
 		return 0;
-	if (miss > hit / 100)
+	}
+	if (miss > hit / 100) {
 		return 0;
+	}
 
 	return hit;
 }
@@ -394,10 +421,11 @@ static void map_merge(char *xmap, const char *tmap)
 	// only overwrite empty parts of the map with loaded data.
 	for (i = 0; i < MAXMAP * MAXMAP; i++) {
 		if (!xmap[i]) {
-			if (tmap[i] == 3)
+			if (tmap[i] == 3) {
 				xmap[i] = 4; // do not load csprites, they move too much
-			else
+			} else {
 				xmap[i] = tmap[i];
+			}
 		}
 	}
 }
@@ -412,13 +440,15 @@ static int map_load(void)
 	for (i = 0; i < MAXSAVEMAP; i++) {
 		filename = mapname(i);
 		fp = fopen(filename, "rb");
-		if (!fp)
+		if (!fp) {
 			continue;
+		}
 		fread(tmap, sizeof(tmap), 1, fp);
 		fclose(fp);
 
-		if (!(hit = map_compare(tmap, _mmap)))
+		if (!(hit = map_compare(tmap, _mmap))) {
 			continue;
+		}
 
 		if (hit > besthit) {
 			besti = i;
@@ -429,8 +459,9 @@ static int map_load(void)
 		filename = mapname(besti);
 		// note("loading area map from %s (%d hits)",filename,besthit);
 		fp = fopen(filename, "rb");
-		if (!fp)
+		if (!fp) {
 			return -1;
+		}
 		fread(tmap, sizeof(tmap), 1, fp);
 		fclose(fp);
 
@@ -442,29 +473,31 @@ static int map_load(void)
 	return -1;
 }
 
-
 void minimap_compact(void)
 {
 	FILE *fp;
 	int i, j;
 	char *filename, tmap[MAXMAP * MAXMAP], xmap[MAXMAP * MAXMAP];
 
-	if (game_options & GO_NOMAP)
+	if (game_options & GO_NOMAP) {
 		return;
+	}
 
 	for (i = 0; i < MAXSAVEMAP; i++) {
 		filename = mapname(i);
 		fp = fopen(filename, "rb");
-		if (!fp)
+		if (!fp) {
 			continue;
+		}
 		fread(tmap, sizeof(tmap), 1, fp);
 		fclose(fp);
 
 		for (j = i + 1; j < MAXSAVEMAP; j++) {
 			filename = mapname(j);
 			fp = fopen(filename, "rb");
-			if (!fp)
+			if (!fp) {
 				continue;
+			}
 			fread(xmap, sizeof(xmap), 1, fp);
 			fclose(fp);
 
@@ -472,8 +505,9 @@ void minimap_compact(void)
 				map_merge(tmap, xmap);
 				filename = mapname(i);
 				fp = fopen(filename, "rb");
-				if (!fp)
+				if (!fp) {
 					continue;
+				}
 				fwrite(tmap, sizeof(tmap), 1, fp);
 				fclose(fp);
 

@@ -51,8 +51,9 @@ void dd_dump(FILE *fp)
 
 DLL_EXPORT void dd_push_clip(void)
 {
-	if (clippos >= 32)
+	if (clippos >= 32) {
 		return;
+	}
 
 	clipstore[clippos][0] = clipsx;
 	clipstore[clippos][1] = clipsy;
@@ -63,8 +64,9 @@ DLL_EXPORT void dd_push_clip(void)
 
 DLL_EXPORT void dd_pop_clip(void)
 {
-	if (clippos == 0)
+	if (clippos == 0) {
 		return;
+	}
 
 	clippos--;
 	clipsx = clipstore[clippos][0];
@@ -75,14 +77,18 @@ DLL_EXPORT void dd_pop_clip(void)
 
 DLL_EXPORT void dd_more_clip(int sx, int sy, int ex, int ey)
 {
-	if (sx > clipsx)
+	if (sx > clipsx) {
 		clipsx = sx;
-	if (sy > clipsy)
+	}
+	if (sy > clipsy) {
 		clipsy = sy;
-	if (ex < clipex)
+	}
+	if (ex < clipex) {
 		clipex = ex;
-	if (ey < clipey)
+	}
+	if (ey < clipey) {
 		clipey = ey;
+	}
 }
 
 void dd_set_clip(int sx, int sy, int ex, int ey)
@@ -129,8 +135,9 @@ DLL_EXPORT int dd_copysprite_fx(DDFX *ddfx, int scrx, int scry)
 	    ddfx->sat, ddfx->c1, ddfx->c2, ddfx->c3, ddfx->shine, ddfx->ml, ddfx->ll, ddfx->rl, ddfx->ul, ddfx->dl, NULL, 0,
 	    0, NULL, 0, 0, 0);
 
-	if (stx == -1)
+	if (stx == -1) {
 		return 0;
+	}
 
 	// shift position according to align
 	if (ddfx->align == DD_OFFSET) {
@@ -144,22 +151,27 @@ DLL_EXPORT int dd_copysprite_fx(DDFX *ddfx, int scrx, int scry)
 	// add the additional cliprect
 	if (ddfx->clipsx != ddfx->clipex || ddfx->clipsy != ddfx->clipey) {
 		dd_push_clip();
-		if (ddfx->clipsx != ddfx->clipex)
+		if (ddfx->clipsx != ddfx->clipex) {
 			dd_more_clip(scrx - sdlt_xoff(stx) + ddfx->clipsx, clipsy, scrx - sdlt_xoff(stx) + ddfx->clipex, clipey);
-		if (ddfx->clipsy != ddfx->clipey)
+		}
+		if (ddfx->clipsy != ddfx->clipey) {
 			dd_more_clip(clipsx, scry - sdlt_yoff(stx) + ddfx->clipsy, clipex, scry - sdlt_yoff(stx) + ddfx->clipey);
+		}
 	}
 
 	// blit it
-	if (ddfx->alpha)
+	if (ddfx->alpha) {
 		sdl_tex_alpha(stx, ddfx->alpha);
+	}
 	sdl_blit(stx, scrx, scry, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
-	if (ddfx->alpha)
+	if (ddfx->alpha) {
 		sdl_tex_alpha(stx, 255);
+	}
 
 	// remove additional cliprect
-	if (ddfx->clipsx != ddfx->clipex || ddfx->clipsy != ddfx->clipey)
+	if (ddfx->clipsx != ddfx->clipex || ddfx->clipsy != ddfx->clipey) {
 		dd_pop_clip();
+	}
 
 	return 1;
 }
@@ -171,8 +183,9 @@ void dd_copysprite_callfx(int sprite, int scrx, int scry, int light, int ml, int
 	bzero(&ddfx, sizeof(DDFX));
 
 	ddfx.sprite = sprite;
-	if (light < 1000)
+	if (light < 1000) {
 		ddfx.light = DDFX_NLIGHT;
+	}
 	ddfx.align = align;
 
 	ddfx.ml = ddfx.ll = ddfx.rl = ddfx.ul = ddfx.dl = ml;
@@ -252,14 +265,18 @@ void dd_draw_curve(int cx, int cy, int nr, int size, unsigned short col)
 		x = sin(n / 360.0 * M_PI * 2) * size + cx;
 		y = cos(n / 360.0 * M_PI * 2) * size * 2 / 3 + cy;
 
-		if (x < clipsx)
+		if (x < clipsx) {
 			continue;
-		if (y < clipsy)
+		}
+		if (y < clipsy) {
 			continue;
-		if (x >= clipex)
+		}
+		if (x >= clipex) {
 			continue;
-		if (y + 10 >= clipey)
+		}
+		if (y + 10 >= clipey) {
 			continue;
+		}
 
 		sdl_pixel(x, y, col, x_offset, y_offset);
 		sdl_pixel(x, y + 5, col, x_offset, y_offset);
@@ -312,8 +329,9 @@ DLL_EXPORT int dd_textlength(int flags, const char *text)
 		font = fonta;
 	}
 
-	for (x = 0, c = text; *c && *c != DDT; c++)
+	for (x = 0, c = text; *c && *c != DDT; c++) {
 		x += font[*c].dim;
+	}
 
 	return x;
 }
@@ -324,8 +342,9 @@ int dd_textlen(int flags, const char *text, int n)
 	int x;
 	const char *c;
 
-	if (n < 0)
+	if (n < 0) {
 		return dd_textlength(flags, text);
+	}
 
 	if (flags & DD_SMALL) {
 		font = fontb;
@@ -335,8 +354,9 @@ int dd_textlen(int flags, const char *text, int n)
 		font = fonta;
 	}
 
-	for (x = 0, c = text; *c && *c != DDT && n; c++, n--)
+	for (x = 0, c = text; *c && *c != DDT && n; c++, n--) {
 		x += font[*c].dim;
+	}
 
 	return x;
 }
@@ -346,40 +366,45 @@ DLL_EXPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, 
 	DDFONT *font;
 
 	if (flags & DD__SHADEFONT) {
-		if (flags & DD_SMALL)
+		if (flags & DD_SMALL) {
 			font = fontb_shaded;
-		else if (flags & DD_BIG)
+		} else if (flags & DD_BIG) {
 			font = fontc_shaded;
-		else
+		} else {
 			font = fonta_shaded;
+		}
 	} else if (flags & DD__FRAMEFONT) {
-		if (flags & DD_SMALL)
+		if (flags & DD_SMALL) {
 			font = fontb_framed;
-		else if (flags & DD_BIG)
+		} else if (flags & DD_BIG) {
 			font = fontc_framed;
-		else
+		} else {
 			font = fonta_framed;
+		}
 	} else {
-		if (flags & DD_SMALL)
+		if (flags & DD_SMALL) {
 			font = fontb;
-		else if (flags & DD_BIG)
+		} else if (flags & DD_BIG) {
 			font = fontc;
-		else
+		} else {
 			font = fonta;
+		}
 	}
-	if (!font)
+	if (!font) {
 		return 42;
+	}
 
-	if (flags & DD_SHADE)
+	if (flags & DD_SHADE) {
 		dd_drawtext(sx - 1, sy - 1, IRGB(0, 0, 0),
 		    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__SHADEFONT, text);
-	else if (flags & DD_FRAME) {
-		if (flags & 512)
+	} else if (flags & DD_FRAME) {
+		if (flags & 512) {
 			dd_drawtext(sx - 1, sy - 1, IRGB(31, 31, 31),
 			    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__FRAMEFONT, text);
-		else
+		} else {
 			dd_drawtext(sx - 1, sy - 1, IRGB(0, 0, 0),
 			    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__FRAMEFONT, text);
+		}
 	}
 
 	sx = sdl_drawtext(sx, sy, color, flags, text, font, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
@@ -396,8 +421,9 @@ DLL_EXPORT int dd_drawtext_break(int x, int y, int breakx, unsigned short color,
 	xp = x;
 
 	while (*ptr) {
-		while (*ptr == ' ')
+		while (*ptr == ' ') {
 			ptr++;
+		}
 
 		for (n = 0; n < 256 && *ptr && *ptr != ' '; buf[n++] = *ptr++)
 			;
@@ -420,17 +446,19 @@ DLL_EXPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags,
 	int n;
 
 	while (*ptr) {
-		while (*ptr == '\n')
+		while (*ptr == '\n') {
 			ptr++;
+		}
 
 		for (n = 0; n < 256 && *ptr && *ptr != '\n'; buf[n++] = *ptr++)
 			;
 		buf[n] = 0;
 		dd_drawtext(x, y, color, flags, buf);
-		if (flags & DD_BIG)
+		if (flags & DD_BIG) {
 			y += 12;
-		else
+		} else {
 			y += 10;
+		}
 	}
 	return y + 10;
 }
@@ -444,8 +472,9 @@ DLL_EXPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short
 	xp = x;
 
 	while (*ptr) {
-		while (*ptr == ' ')
+		while (*ptr == ' ') {
 			ptr++;
+		}
 
 		for (n = 0; n < 256 && *ptr && *ptr != ' '; buf[n++] = *ptr++)
 			;
@@ -491,7 +520,6 @@ DLL_EXPORT int dd_drawtext_break_fmt(
 	return dd_drawtext_break(sx, sy, breakx, color, flags, buf);
 }
 
-
 static int bless_init = 0;
 static int bless_sin[36];
 static int bless_cos[36];
@@ -502,16 +530,19 @@ void dd_draw_bless_pix(int x, int y, int nr, int color, int front)
 	int sy;
 
 	sy = bless_sin[nr % 36];
-	if (front && sy < 0)
+	if (front && sy < 0) {
 		return;
-	if (!front && sy >= 0)
+	}
+	if (!front && sy >= 0) {
 		return;
+	}
 
 	x += bless_cos[nr % 36];
 	y = y + sy + bless_hight[nr % 200];
 
-	if (x < clipsx || x >= clipex || y < clipsy || y >= clipey)
+	if (x < clipsx || x >= clipex || y < clipsy || y >= clipey) {
 		return;
+	}
 
 	sdl_pixel(x, y, color, x_offset, y_offset);
 }
@@ -522,15 +553,18 @@ void dd_draw_rain_pix(int x, int y, int nr, int color, int front)
 
 	x += ((nr / 30) % 30) + 15;
 	sy = ((nr / 330) % 20) + 10;
-	if (front && sy < 0)
+	if (front && sy < 0) {
 		return;
-	if (!front && sy >= 0)
+	}
+	if (!front && sy >= 0) {
 		return;
+	}
 
 	y = y + sy - ((nr * 2) % 60) - 60;
 
-	if (x < clipsx || x >= clipex || y < clipsy || y >= clipey)
+	if (x < clipsx || x >= clipex || y < clipsy || y >= clipey) {
 		return;
+	}
 
 	sdl_pixel(x, y, color, x_offset, y_offset);
 }
@@ -551,22 +585,22 @@ void dd_draw_bless(int x, int y, int ticker, int strength, int front)
 		bless_init = 1;
 	}
 
-	if (ticker > 62)
+	if (ticker > 62) {
 		light = 1.0;
-	else
+	} else {
 		light = (ticker) / 62.0;
+	}
 
 	for (step = 0; step < strength * 10; step += 17) {
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 0, IRGB(((int)(24 * light)), ((int)(24 * light)), ((int)(31 * light))), front);
+		    x, y, ticker + step + 0, IRGB((int)(24 * light), (int)(24 * light), (int)(31 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 1, IRGB(((int)(20 * light)), ((int)(20 * light)), ((int)(28 * light))), front);
+		    x, y, ticker + step + 1, IRGB((int)(20 * light), (int)(20 * light), (int)(28 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 2, IRGB(((int)(16 * light)), ((int)(16 * light)), ((int)(24 * light))), front);
+		    x, y, ticker + step + 2, IRGB((int)(16 * light), (int)(16 * light), (int)(24 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 3, IRGB(((int)(12 * light)), ((int)(12 * light)), ((int)(20 * light))), front);
-		dd_draw_bless_pix(
-		    x, y, ticker + step + 4, IRGB(((int)(8 * light)), ((int)(8 * light)), ((int)(16 * light))), front);
+		    x, y, ticker + step + 3, IRGB((int)(12 * light), (int)(12 * light), (int)(20 * light)), front);
+		dd_draw_bless_pix(x, y, ticker + step + 4, IRGB((int)(8 * light), (int)(8 * light), (int)(16 * light)), front);
 	}
 }
 
@@ -587,22 +621,22 @@ void dd_draw_potion(int x, int y, int ticker, int strength, int front)
 	}
 
 
-	if (ticker > 62)
+	if (ticker > 62) {
 		light = 1.0;
-	else
+	} else {
 		light = (ticker) / 62.0;
+	}
 
 	for (step = 0; step < strength * 10; step += 17) {
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 0, IRGB(((int)(31 * light)), ((int)(24 * light)), ((int)(24 * light))), front);
+		    x, y, ticker + step + 0, IRGB((int)(31 * light), (int)(24 * light), (int)(24 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 1, IRGB(((int)(28 * light)), ((int)(20 * light)), ((int)(20 * light))), front);
+		    x, y, ticker + step + 1, IRGB((int)(28 * light), (int)(20 * light), (int)(20 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 2, IRGB(((int)(24 * light)), ((int)(16 * light)), ((int)(16 * light))), front);
+		    x, y, ticker + step + 2, IRGB((int)(24 * light), (int)(16 * light), (int)(16 * light)), front);
 		dd_draw_bless_pix(
-		    x, y, ticker + step + 3, IRGB(((int)(20 * light)), ((int)(12 * light)), ((int)(12 * light))), front);
-		dd_draw_bless_pix(
-		    x, y, ticker + step + 4, IRGB(((int)(16 * light)), ((int)(8 * light)), ((int)(8 * light))), front);
+		    x, y, ticker + step + 3, IRGB((int)(20 * light), (int)(12 * light), (int)(12 * light)), front);
+		dd_draw_bless_pix(x, y, ticker + step + 4, IRGB((int)(16 * light), (int)(8 * light), (int)(8 * light)), front);
 	}
 }
 
@@ -649,8 +683,9 @@ char *dd_create_rawrun(char letter[64][64])
 				*ptr++ = step;
 				last = ptr;
 				step = 1;
-			} else
+			} else {
 				step++;
+			}
 		}
 		*ptr++ = 254;
 	}
@@ -726,22 +761,24 @@ void dd_create_font(void)
 	uint32_t *pixel;
 	int dx, dy;
 
-	if (fonta_shaded)
+	if (fonta_shaded) {
 		return;
+	}
 
 	if (sdl_scale > 1) {
-		if (sdl_scale == 2)
+		if (sdl_scale == 2) {
 			pixel = sdl_load_png("res/font2x.png", &dx, &dy);
-		else if (sdl_scale == 3)
+		} else if (sdl_scale == 3) {
 			pixel = sdl_load_png("res/font3x.png", &dx, &dy);
-		else if (sdl_scale == 4)
+		} else if (sdl_scale == 4) {
 			pixel = sdl_load_png("res/font4x.png", &dx, &dy);
-		else {
+		} else {
 			fail("Scale not supported in dd_create_font!");
 			pixel = NULL;
 		}
-		if (!pixel)
+		if (!pixel) {
 			return;
+		}
 
 		dd_create_font_png(fonta, pixel, dx, dy, 40 * sdl_scale, sdl_scale);
 		dd_create_font_png(fontb, pixel, dx, dy, 0, sdl_scale);
@@ -773,8 +810,9 @@ int textdisplay_dy = 10;
 
 int dd_drawtext_char(int sx, int sy, int c, unsigned short int color)
 {
-	if (c > 127 || c < 0)
+	if (c > 127 || c < 0) {
 		return 0;
+	}
 
 	return sdl_drawtext(sx, sy, color, 0, (char *)&c, textfont, clipsx, clipsy, clipex, clipey, x_offset, y_offset) -
 	       sx;
@@ -785,8 +823,9 @@ int dd_text_len(const char *text)
 	int x;
 	const char *c;
 
-	for (x = 0, c = text; *c; c++)
+	for (x = 0, c = text; *c; c++) {
 		x += textfont[*c].dim;
+	}
 
 	return (int)(x + 0.5f);
 }
@@ -796,9 +835,8 @@ int dd_char_len(char c)
 	return textfont[c].dim;
 }
 
-
 // ---------------------> Chat Window <-----------------------------
-#define MAXTEXTLINES 256
+#define MAXTEXTLINES   256
 #define MAXTEXTLETTERS 256
 
 #define TEXTDISPLAY_DY (textdisplay_dy)
@@ -876,16 +914,18 @@ void dd_display_text(void)
 
 		bp = buf;
 		for (m = 0; m < MAXTEXTLETTERS; m++, pos++) {
-			if (text[pos].c == 0)
+			if (text[pos].c == 0) {
 				break;
+			}
 
 			if (lastcolor != text[pos].color || text[pos].c < 32) {
 				if (bp != buf) {
 					*bp = 0;
-					if (game_options & GO_LARGE)
+					if (game_options & GO_LARGE) {
 						x = dd_drawtext(x, y, palette[lastcolor], DD_BIG, buf);
-					else
+					} else {
 						x = dd_drawtext(x, y, palette[lastcolor], 0, buf);
+					}
 				}
 				bp = buf;
 				lastcolor = text[pos].color;
@@ -908,10 +948,11 @@ void dd_display_text(void)
 
 		if (bp != buf) {
 			*bp = 0;
-			if (game_options & GO_LARGE)
+			if (game_options & GO_LARGE) {
 				dd_drawtext(x, y, palette[lastcolor], DD_BIG, buf);
-			else
+			} else {
 				dd_drawtext(x, y, palette[lastcolor], 0, buf);
+			}
 		}
 	}
 }
@@ -926,43 +967,49 @@ void dd_add_text(char *ptr)
 	bzero(text + pos, sizeof(struct letter) * MAXTEXTLETTERS);
 
 	while (*ptr) {
-		while (*ptr == ' ')
+		while (*ptr == ' ') {
 			ptr++;
+		}
 		while (*ptr == DDT) {
 			ptr++;
 			switch (*ptr) {
 			case 'c':
 				tmp = atoi(ptr + 1);
-				if (tmp == 18)
+				if (tmp == 18) {
 					link = 0;
-				else if (tmp != 17) {
+				} else if (tmp != 17) {
 					color = tmp;
 					link = 0;
 				}
-				if (tmp == 4)
+				if (tmp == 4) {
 					link = 1;
-				else if (tmp == 17)
+				} else if (tmp == 17) {
 					link = 2;
+				}
 				ptr++;
-				while (isdigit(*ptr))
+				while (isdigit(*ptr)) {
 					ptr++;
+				}
 				break;
 			default:
 				ptr++;
 				break;
 			}
 		}
-		while (*ptr == ' ')
+		while (*ptr == ' ') {
 			ptr++;
+		}
 
 		n = 0;
-		while (*ptr && *ptr != ' ' && *ptr != DDT && n < 49)
+		while (*ptr && *ptr != ' ' && *ptr != DDT && n < 49) {
 			buf[n++] = *ptr++;
+		}
 		buf[n] = 0;
 
 		if (x + (tmp = dd_text_len(buf)) >= TEXTDISPLAY_SX) {
-			if (textdisplayline == (textnextline + (MAXTEXTLINES - TEXTDISPLAYLINES)) % MAXTEXTLINES)
+			if (textdisplayline == (textnextline + (MAXTEXTLINES - TEXTDISPLAYLINES)) % MAXTEXTLINES) {
 				textdisplayline = (textdisplayline + 1) % MAXTEXTLINES;
+			}
 			textnextline = (textnextline + 1) % MAXTEXTLINES;
 			pos = textnextline * MAXTEXTLETTERS;
 			bzero(text + pos, sizeof(struct letter) * MAXTEXTLETTERS);
@@ -976,8 +1023,9 @@ void dd_add_text(char *ptr)
 				pos++;
 			}
 
-		} else
+		} else {
 			x += tmp;
+		}
 
 		for (m = 0; m < n; m++, pos++) {
 			text[pos].c = buf[m];
@@ -998,12 +1046,14 @@ void dd_add_text(char *ptr)
 		text[pos].link = 0;
 	}
 
-	if (textdisplayline == (textnextline + (MAXTEXTLINES - TEXTDISPLAYLINES)) % MAXTEXTLINES)
+	if (textdisplayline == (textnextline + (MAXTEXTLINES - TEXTDISPLAYLINES)) % MAXTEXTLINES) {
 		textdisplayline = (textdisplayline + 1) % MAXTEXTLINES;
+	}
 
 	textnextline = (textnextline + 1) % MAXTEXTLINES;
-	if (textnextline == textdisplayline)
+	if (textnextline == textdisplayline) {
 		textdisplayline = (textdisplayline + 1) % MAXTEXTLINES;
+	}
 	textlines++;
 }
 
@@ -1017,12 +1067,15 @@ int dd_scantext(int x, int y, char *hit)
 	int n, m, pos, panic = 0, tmp = 0;
 	int dx, link;
 
-	if (x < dotx(DOT_TXT) || y < doty(DOT_TXT))
+	if (x < dotx(DOT_TXT) || y < doty(DOT_TXT)) {
 		return 0;
-	if (x > dotx(DOT_TXT) + TEXTDISPLAY_SX)
+	}
+	if (x > dotx(DOT_TXT) + TEXTDISPLAY_SX) {
 		return 0;
-	if (y > doty(DOT_TXT) + TEXTDISPLAY_SY)
+	}
+	if (y > doty(DOT_TXT) + TEXTDISPLAY_SY) {
 		return 0;
+	}
 
 	n = (y - doty(DOT_TXT)) / TEXTDISPLAY_DY;
 	n = (n + textdisplayline) % MAXTEXTLINES;
@@ -1042,26 +1095,31 @@ int dd_scantext(int x, int y, char *hit)
 			if ((link = text[pos].link)) { // link palette color
 				while ((text[pos].link || text[pos].c == 0) && panic++ < 5000) {
 					pos--;
-					if (pos < 0)
+					if (pos < 0) {
 						pos = MAXTEXTLETTERS * MAXTEXTLINES - 1;
+					}
 				}
 
 				pos++;
-				if (pos == MAXTEXTLETTERS * MAXTEXTLINES)
+				if (pos == MAXTEXTLETTERS * MAXTEXTLINES) {
 					pos = 0;
+				}
 				while ((text[pos].link || text[pos].c == 0) && panic++ < 5000 && tmp < 80) {
 					if (tmp > 0 && text[pos].c == ' ' && hit[tmp - 1] == ' ')
 						;
-					else if (text[pos].c)
+					else if (text[pos].c) {
 						hit[tmp++] = text[pos].c;
+					}
 					pos++;
-					if (pos == MAXTEXTLETTERS * MAXTEXTLINES)
+					if (pos == MAXTEXTLETTERS * MAXTEXTLINES) {
 						pos = 0;
+					}
 				}
-				if (tmp > 0 && hit[tmp - 1] == ' ')
+				if (tmp > 0 && hit[tmp - 1] == ' ') {
 					hit[tmp - 1] = 0;
-				else
+				} else {
 					hit[tmp] = 0;
+				}
 				return link;
 			}
 			return 0;
@@ -1086,15 +1144,17 @@ void dd_text_lineup(void)
 
 	// printf("up: textlines=%d,displaylines=%d\n",textlines,textdisplayline); fflush(stdout);
 
-	if (textlines <= TEXTDISPLAYLINES)
+	if (textlines <= TEXTDISPLAYLINES) {
 		return;
+	}
 
 	tmp = (textdisplayline + MAXTEXTLINES - 1) % MAXTEXTLINES;
 	// printf("up: tmp=%d\n",tmp); fflush(stdout);
 	// if (textlines<MAXTEXTLINES-1 && tmp>textlines) return; // TODO: test if this line causes the "chat will not
 	// scroll" bug
-	if (tmp != textnextline)
+	if (tmp != textnextline) {
 		textdisplayline = tmp;
+	}
 }
 
 void dd_text_linedown(void)
@@ -1104,12 +1164,14 @@ void dd_text_linedown(void)
 	// printf("down: textlines=%d,displaylines=%d, textnextline=%d\n",textlines,textdisplayline,textnextline);
 	// fflush(stdout);
 
-	if (textlines <= TEXTDISPLAYLINES)
+	if (textlines <= TEXTDISPLAYLINES) {
 		return;
+	}
 
 	tmp = (textdisplayline + 1) % MAXTEXTLINES;
-	if (tmp != (textnextline + MAXTEXTLINES - TEXTDISPLAYLINES + 1) % MAXTEXTLINES)
+	if (tmp != (textnextline + MAXTEXTLINES - TEXTDISPLAYLINES + 1) % MAXTEXTLINES) {
 		textdisplayline = tmp;
+	}
 	// printf("down: tmp=%d (%d)\n",tmp,(textnextline+MAXTEXTLINES-TEXTDISPLAYLINES+1)%MAXTEXTLINES); fflush(stdout);
 }
 
@@ -1117,16 +1179,18 @@ void dd_text_pageup(void)
 {
 	int n;
 
-	for (n = 0; n < TEXTDISPLAYLINES; n++)
+	for (n = 0; n < TEXTDISPLAYLINES; n++) {
 		dd_text_lineup();
+	}
 }
 
 void dd_text_pagedown(void)
 {
 	int n;
 
-	for (n = 0; n < TEXTDISPLAYLINES; n++)
+	for (n = 0; n < TEXTDISPLAYLINES; n++) {
 		dd_text_linedown();
+	}
 }
 
 void dd_set_offset(int x, int y)
@@ -1139,6 +1203,7 @@ int dd_offset_x(void)
 {
 	return x_offset;
 }
+
 int dd_offset_y(void)
 {
 	return y_offset;
