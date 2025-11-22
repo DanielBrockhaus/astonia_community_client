@@ -30,7 +30,8 @@ jobs:
           libsdl2-mixer-dev \
           libpng-dev \
           libzip-dev \
-          zlib1g-dev
+          zlib1g-dev \
+          patchelf
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -47,8 +48,20 @@ jobs:
         strip bin/moac
         strip bin/libastonia_net.so
 
-    - name: Create distribution package
+    - name: Bundle libraries
       run: make distrib
+
+    - name: Fix library RPATHs
+      run: |
+        echo "Fixing RPATHs for bundled libraries..."
+        for lib in bin/*.so*; do
+          [ -f "$lib" ] || continue
+          echo "Fixing: $lib"
+          patchelf --set-rpath '$ORIGIN' "$lib" 2>/dev/null || true
+        done
+
+    - name: Create distribution package
+      run: tar czf linux_client.tar.gz bin res
 
     - name: Upload distribution
       uses: actions/upload-artifact@v4
@@ -153,8 +166,34 @@ jobs:
         strip bin/moac
         strip -x bin/libastonia_net.dylib
 
-    - name: Create distribution package
+    - name: Bundle libraries
       run: make distrib
+
+    - name: Fix library paths
+      run: |
+        echo "Fixing library paths with install_name_tool..."
+        for lib in bin/*.dylib; do
+          [ -f "$lib" ] || continue
+          libname=$(basename "$lib")
+          install_name_tool -id "@loader_path/$libname" "$lib" 2>/dev/null || true
+          otool -L "$lib" | grep -E "($(brew --prefix)|/usr/local|/opt/homebrew)" | awk '{print $1}' | while read oldpath; do
+            depname=$(basename "$oldpath")
+            if [ -f "bin/$depname" ]; then
+              install_name_tool -change "$oldpath" "@loader_path/$depname" "$lib" 2>/dev/null || true
+            fi
+          done
+        done
+        for binary in bin/moac; do
+          otool -L "$binary" | grep -E "($(brew --prefix)|/usr/local|/opt/homebrew)" | awk '{print $1}' | while read oldpath; do
+            depname=$(basename "$oldpath")
+            if [ -f "bin/$depname" ]; then
+              install_name_tool -change "$oldpath" "@loader_path/$depname" "$binary" 2>/dev/null || true
+            fi
+          done
+        done
+
+    - name: Create distribution package
+      run: tar czf macos_client.tar.gz --exclude='bin/*.dSYM' bin res
 
     - name: Upload distribution
       uses: actions/upload-artifact@v4

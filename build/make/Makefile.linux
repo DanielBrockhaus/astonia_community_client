@@ -80,37 +80,26 @@ clean:
 		-rm -rf astonia_net/target
 
 distrib:
-	@echo "Bundling all required libraries for distribution..."
-	@bash -c ' \
-		for binary in bin/moac bin/libastonia_net.so; do \
-			ldd $$binary | grep "=> /" | awk "{print \$$3}" | while read lib; do \
-				case $$lib in \
-					/lib/*libc.*|/lib/*libm.*|/lib/*libpthread.*|/lib/*libdl.*|/lib/*librt.*|/lib/*ld-linux*) continue ;; \
-					/usr/lib/*libc.*|/usr/lib/*libm.*|/usr/lib/*libpthread.*|/usr/lib/*libdl.*|/usr/lib/*librt.*) continue ;; \
-				esac; \
-				libname=$$(basename $$lib); \
-				if [ ! -f "bin/$$libname" ]; then \
-					echo "Bundling: $$lib"; \
-					cp "$$lib" bin/ || true; \
-				fi; \
-			done; \
+	@echo "Bundling libraries for distribution..."
+	@ldd bin/moac bin/libastonia_net.so | grep "=> /" | awk '{print $$3}' | sort -u | while read lib; do \
+		case "$$lib" in \
+			/lib/x86_64-linux-gnu/libc.so*|/lib/x86_64-linux-gnu/libm.so*|/lib/x86_64-linux-gnu/libpthread.so*|\
+			/lib/x86_64-linux-gnu/libdl.so*|/lib/x86_64-linux-gnu/librt.so*|/lib64/ld-linux-x86-64.so*|\
+			/lib/x86_64-linux-gnu/libgcc_s.so*|/lib/x86_64-linux-gnu/libresolv.so*) ;; \
+			*) [ ! -f "bin/$$(basename "$$lib")" ] && cp "$$lib" bin/ 2>/dev/null || true ;; \
+		esac; \
+	done
+	@for lib in bin/*.so*; do \
+		[ -f "$$lib" ] || continue; \
+		ldd "$$lib" 2>/dev/null | grep "=> /" | awk '{print $$3}' | while read dep; do \
+			case "$$dep" in \
+				/lib/x86_64-linux-gnu/libc.so*|/lib/x86_64-linux-gnu/libm.so*|/lib/x86_64-linux-gnu/libpthread.so*|\
+				/lib/x86_64-linux-gnu/libdl.so*|/lib/x86_64-linux-gnu/librt.so*|/lib64/ld-linux-x86-64.so*|\
+				/lib/x86_64-linux-gnu/libgcc_s.so*|/lib/x86_64-linux-gnu/libresolv.so*) ;; \
+				*) [ ! -f "bin/$$(basename "$$dep")" ] && cp "$$dep" bin/ 2>/dev/null || true ;; \
+			esac; \
 		done; \
-		for lib in bin/*.so*; do \
-			[ -f "$$lib" ] || continue; \
-			ldd "$$lib" 2>/dev/null | grep "=> /" | awk "{print \$$3}" | while read deplib; do \
-				case $$deplib in \
-					/lib/*libc.*|/lib/*libm.*|/lib/*libpthread.*|/lib/*libdl.*|/lib/*librt.*|/lib/*ld-linux*) continue ;; \
-					/usr/lib/*libc.*|/usr/lib/*libm.*|/usr/lib/*libpthread.*|/usr/lib/*libdl.*|/usr/lib/*librt.*) continue ;; \
-				esac; \
-				libname=$$(basename $$deplib); \
-				if [ ! -f "bin/$$libname" ]; then \
-					echo "Bundling dependency: $$deplib"; \
-					cp "$$deplib" bin/ || true; \
-				fi; \
-			done; \
-		done \
-	'
-	tar czf linux_client.tar.gz bin res
+	done
 
 amod:		bin/amod.so bin/moac
 convert:	bin/convert
