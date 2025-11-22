@@ -501,10 +501,13 @@ void display_usage(void) {
     free(txt);
 }
 
+
 DLL_EXPORT char server_url[256];
 DLL_EXPORT int server_port=0;
 DLL_EXPORT int want_width=0;
 DLL_EXPORT int want_height=0;
+// Monitor number for multi-monitor support (0=default)
+DLL_EXPORT int want_monitor=0;
 
 int parse_cmd(char *s) {
     int n;
@@ -563,9 +566,15 @@ int parse_cmd(char *s) {
                 frames_per_second=strtol(s,&end,10);
                 s=end;
             } else if (tolower(*s)=='t') { // -t server port
-                s++;
+                s++;
+
                 while (isspace(*s)) s++;
                 server_port=strtol(s,&end,10);
+                s=end;
+            } else if (tolower(*s)=='n') { // -n monitor number
+                s++;
+                while (isspace(*s)) s++;
+                want_monitor=strtol(s,&end,10);
                 s=end;
             } else { display_usage(); return -1; }
         } else { display_usage(); return -2; }
@@ -691,7 +700,7 @@ int main(int argc,char *args[]) {
     }
 
     sprintf(buf,"Astonia 3 v%d.%d.%d",(VERSION>>16)&255,(VERSION>>8)&255,(VERSION)&255);
-    if (!sdl_init(want_width,want_height,buf)) {
+    if (!sdl_init(want_width,want_height,buf,want_monitor)) {
         dd_exit();
         return -1;
     }
