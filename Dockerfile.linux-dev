@@ -1,0 +1,84 @@
+FROM archlinux:latest
+
+# Linux development environment with clang-tidy and analysis tools
+# Use this for development, debugging, and code analysis
+
+# Install basic dependencies and development tools
+RUN pacman -Syu --noconfirm \
+    curl \
+    wget \
+    git \
+    base-devel \
+    sdl3 \
+    sdl2-compat \
+    sdl2_mixer \
+    libpng \
+    libzip \
+    zlib \
+    zig \
+    && pacman -Scc --noconfirm
+
+# Install Clang tooling for analysis
+RUN pacman -S --noconfirm \
+    clang \
+    clang-tools-extra \
+    llvm \
+    bear \
+    gdb \
+    valgrind \
+    ccache \
+    python-pip \
+    vim \
+    nano \
+    tree \
+    htop \
+    && pacman -Scc --noconfirm
+
+# Install additional code quality tools
+RUN pip install --no-cache-dir gcovr && \
+    pacman -S --noconfirm lcov && \
+    pacman -Scc --noconfirm
+
+# Install Rust
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup default stable
+RUN rustup component add clippy rustfmt
+
+# Set Zig cache directory
+ENV ZIG_GLOBAL_CACHE_DIR="/root/.cache/zig"
+ENV ZIG_LOCAL_CACHE_DIR="/tmp/zig-local-cache"
+
+# Configure ccache
+ENV PATH="/usr/lib/ccache/bin:${PATH}"
+ENV CCACHE_DIR="/root/.ccache"
+ENV CCACHE_MAXSIZE="2G"
+
+# Create interactive dev script
+RUN printf '#!/bin/bash\n\
+echo "=== Astonia Linux Development Environment ==="\n\
+echo ""\n\
+echo "Available tools:"\n\
+echo "  - clang, gcc (compilers with ccache)"\n\
+echo "  - clang-tidy (static analysis)"\n\
+echo "  - clang-format (code formatting)"\n\
+echo "  - bear (compilation database generator)"\n\
+echo "  - gdb, valgrind (debugging)"\n\
+echo "  - AddressSanitizer/UBSan (sanitizers)"\n\
+echo "  - gcovr, lcov (code coverage)"\n\
+echo "  - zig (build system)"\n\
+echo ""\n\
+echo "Quick commands:"\n\
+echo "  make linux              - Build for Linux"\n\
+echo "  make sanitizer          - Build with AddressSanitizer"\n\
+echo "  make coverage           - Build with coverage"\n\
+echo "  ./run-valgrind.sh       - Run with Valgrind checks"\n\
+echo "  ./run-sanitizer.sh      - Run with AddressSanitizer"\n\
+echo "  ./run-coverage.sh       - Generate coverage report"\n\
+echo "  ./run-clang-tidy.sh fix - Run clang-tidy with fixes"\n\
+echo ""\n\
+exec /bin/bash "$@"\n' > /usr/local/bin/dev-shell.sh && \
+    chmod +x /usr/local/bin/dev-shell.sh
+
+WORKDIR /app
+ENTRYPOINT ["/bin/bash", "/usr/local/bin/dev-shell.sh"]

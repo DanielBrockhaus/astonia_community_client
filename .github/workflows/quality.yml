@@ -133,6 +133,44 @@ jobs:
         run: cargo clippy -- -D warnings
         working-directory: astonia_net
 
+  sanitizer:
+    name: AddressSanitizer/UBSan Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          clang \
+          libsdl2-dev \
+          libsdl2-mixer-dev \
+          libpng-dev \
+          libzip-dev \
+          zlib1g-dev
+
+    - name: Setup Rust
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable
+        cache: true
+        cache-workspaces: astonia_net
+
+    - name: Build with sanitizers
+      run: make sanitizer
+      env:
+        CC: clang
+
+    - name: Check sanitizer binary
+      run: |
+        echo "Sanitizer build successful!"
+        ls -lh bin/moac-sanitizer
+        file bin/moac-sanitizer
+
   file-consistency:
     name: File Consistency Checks
     runs-on: ubuntu-latest

@@ -27,11 +27,11 @@ OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/g
 			src/sdl/sound.o src/sdl/sdl.o src/helper/helper.o\
 			src/gui/dots.o src/gui/display.o src/gui/teleport.o src/gui/color.o src/gui/cmd.o\
 			src/gui/questlog.o src/gui/context.o src/gui/hover.o src/gui/minimap.o\
-			src/game/memory_linux.o
+			src/game/memory_linux.o src/game/version.o
 
 bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
 		cp $(ASTONIA_NET_LIB) bin/
-		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) src/game/version.c $(LIBS) -Lbin -lastonia_net
+		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) $(LIBS) -Lbin -lastonia_net
 
 $(ASTONIA_NET_LIB):
 		rustup target add $(ASTONIA_NET_TGT)
@@ -83,7 +83,12 @@ src/game/memory_linux.o: src/game/memory_linux.c
 		$(CC) $(CFLAGS_PIC) -c -o $@ $<
 
 clean:
-		-rm -f src/*/*.o bin/moac bin/*.so bin/convert bin/anicopy
+		-rm -f src/*/*.o src/*/*-sanitizer.o src/*/*-coverage.o
+		-rm -f bin/moac bin/moac-sanitizer bin/moac-coverage
+		-rm -f bin/*.so bin/convert bin/anicopy
+		-rm -f *.gcda *.gcno *.gcov *.gcov.json.gz coverage.info coverage-filtered.info
+	-rm -f bin/*.gcda bin/*.gcno
+		-rm -rf coverage-html
 		-rm -rf astonia_net/target
 
 distrib:
@@ -92,3 +97,28 @@ distrib:
 amod:		bin/amod.so bin/moac
 convert:	bin/convert
 anicopy:	bin/anicopy
+
+# Code quality builds
+SANITIZER_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer -g
+COVERAGE_FLAGS=--coverage -fprofile-arcs -ftest-coverage
+
+OBJS_SANITIZER=$(OBJS:.o=-sanitizer.o)
+OBJS_COVERAGE=$(OBJS:.o=-coverage.o)
+
+sanitizer: bin/moac-sanitizer
+
+bin/moac-sanitizer: $(OBJS_SANITIZER) $(ASTONIA_NET_LIB)
+	cp $(ASTONIA_NET_LIB) bin/
+	$(CC) $(LDFLAGS) $(SANITIZER_FLAGS) -o bin/moac-sanitizer $(OBJS_SANITIZER) $(LIBS) -Lbin -lastonia_net
+
+%-sanitizer.o: %.c
+	$(CC) $(CFLAGS) $(SANITIZER_FLAGS) -c -o $@ $<
+
+coverage: bin/moac-coverage
+
+bin/moac-coverage: $(OBJS_COVERAGE) $(ASTONIA_NET_LIB)
+	cp $(ASTONIA_NET_LIB) bin/
+	$(CC) $(LDFLAGS) $(COVERAGE_FLAGS) -o bin/moac-coverage $(OBJS_COVERAGE) $(LIBS) -Lbin -lastonia_net
+
+%-coverage.o: %.c
+	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c -o $@ $<

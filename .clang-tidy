@@ -32,6 +32,9 @@ HeaderFilterRegex: '.*'
 # - signed-char-misuse: Platform-specific, not critical
 # - insecureAPI warnings: Game client, not security-critical infrastructure
 # - no-int-to-ptr: Used for specific low-level operations
+# - identifier-naming: NOT ENABLED - would break _ prefix functions
+# - function-cognitive-complexity: Too aggressive for existing code
+# - magic-numbers: Common in game code
 
 CheckOptions:
   - key: readability-braces-around-statements.ShortStatementLines
