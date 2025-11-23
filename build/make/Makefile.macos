@@ -114,9 +114,29 @@ src/game/memory_macos.o: src/game/memory_macos.c
 		$(CC) $(CFLAGS_PIC) -c -o $@ $<
 
 clean:
-		-rm -f src/*/*.o bin/moac bin/*.dylib bin/convert bin/anicopy
-		-rm -rf bin/*.dSYM
-		-rm -rf astonia_net/target
+	@echo "Cleaning build artifacts..."
+	-rm -f src/*/*.o src/*/*-sanitizer.o src/*/*-coverage.o
+	-rm -f bin/moac bin/moac-sanitizer bin/moac-coverage
+	-rm -f bin/*.dylib bin/convert bin/anicopy
+	-rm -rf bin/*.dSYM
+	@echo "Cleaning coverage files..."
+	-find . -type f -name '*.gcda' -delete
+	-find . -type f -name '*.gcno' -delete
+	-find . -type f -name '*.gcov' -delete
+	-find . -type f -name '*.gcov.json.gz' -delete
+	-rm -f coverage.info coverage-filtered.info
+	-rm -rf coverage-html
+	@echo "Cleaning profiling data..."
+	-find . -type f -name '*.profraw' -delete
+	-find . -type f -name '*.profdata' -delete
+	@echo "Cleaning analysis reports..."
+	-rm -f compile_commands.json
+	-rm -f valgrind-report.txt
+	-rm -f asan-report.txt.*
+	-rm -f ubsan-report.txt.*
+	-rm -f .clang-tidy-*
+	@echo "Cleaning Rust artifacts..."
+	-rm -rf astonia_net/target
 
 distrib:
 	tar czf macos_client.tar.gz --exclude='bin/*.dSYM' bin res

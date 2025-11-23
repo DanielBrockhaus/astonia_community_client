@@ -119,8 +119,28 @@ src/game/resource.o:	src/game/resource.rc src/game/resource.h res/moa3.ico
 			$(WINDRES) -F pe-x86-64 src/game/resource.rc src/game/resource.o
 
 clean:
-		-rm -f src/*/*.o bin/*.exe bin/*.dll
-		-rm -rf astonia_net/target
+	@echo "Cleaning build artifacts..."
+	-rm -f src/*/*.o src/*/*-sanitizer.o src/*/*-coverage.o
+	-rm -f bin/*.exe bin/*.dll lib/*.a
+	-rm -f bin/convert.exe bin/anicopy.exe
+	@echo "Cleaning coverage files..."
+	-find . -type f -name '*.gcda' -delete 2>/dev/null || true
+	-find . -type f -name '*.gcno' -delete 2>/dev/null || true
+	-find . -type f -name '*.gcov' -delete 2>/dev/null || true
+	-find . -type f -name '*.gcov.json.gz' -delete 2>/dev/null || true
+	-rm -f coverage.info coverage-filtered.info
+	-rm -rf coverage-html
+	@echo "Cleaning profiling data..."
+	-find . -type f -name '*.profraw' -delete 2>/dev/null || true
+	-find . -type f -name '*.profdata' -delete 2>/dev/null || true
+	@echo "Cleaning analysis reports..."
+	-rm -f compile_commands.json
+	-rm -f valgrind-report.txt
+	-rm -f asan-report.txt.*
+	-rm -f ubsan-report.txt.*
+	-rm -f .clang-tidy-*
+	@echo "Cleaning Rust artifacts..."
+	-rm -rf astonia_net/target
 
 distrib:
 	$(LDD) bin/moac.exe | grep clang | awk 'NF == 4 { system("cp " $$3 " bin") }'
