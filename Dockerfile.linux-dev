@@ -19,7 +19,8 @@ RUN pacman -Syu --noconfirm \
     && pacman -Scc --noconfirm
 
 # Install Clang tooling for analysis
-RUN pacman -S --noconfirm \
+RUN pacman -Syy --noconfirm && \
+    pacman -S --noconfirm \
     clang \
     clang-tools-extra \
     llvm \
@@ -35,7 +36,8 @@ RUN pacman -S --noconfirm \
     && pacman -Scc --noconfirm
 
 # Install additional code quality tools
-RUN pip install --no-cache-dir gcovr && \
+RUN pip install --break-system-packages --no-cache-dir gcovr && \
+    pacman -Syy --noconfirm && \
     pacman -S --noconfirm lcov && \
     pacman -Scc --noconfirm
 
