@@ -74,10 +74,19 @@ echo "Quick commands:"\n\
 echo "  make linux                    - Build for Linux"\n\
 echo "  make sanitizer                - Build with AddressSanitizer"\n\
 echo "  make coverage                 - Build with coverage"\n\
-echo "  scripts/run-valgrind.sh       - Run with Valgrind checks"\n\
-echo "  scripts/run-sanitizer.sh      - Run with AddressSanitizer"\n\
-echo "  scripts/run-coverage.sh       - Generate coverage report"\n\
-echo "  scripts/run-clang-tidy.sh fix - Run clang-tidy with fixes"\n\
+echo ""\n\
+echo "Analysis:"\n\
+echo "  scripts/run-valgrind.sh       - Memory leak detection"\n\
+echo "  scripts/run-sanitizer.sh      - Runtime error detection"\n\
+echo "  scripts/run-coverage.sh       - Code coverage report"\n\
+echo "  scripts/run-clang-tidy.sh fix - Static analysis & fixes"\n\
+echo ""\n\
+echo "Profiling:"\n\
+echo "  scripts/run-perf.sh           - CPU profiling (fast)"\n\
+echo "  scripts/run-callgrind.sh      - CPU profiling (detailed)"\n\
+echo "  scripts/run-massif.sh         - Memory profiling"\n\
+echo "  scripts/run-cachegrind.sh     - Cache profiling"\n\
+echo "  See docs/PROFILING.md for detailed guide"\n\
 echo ""\n\
 exec /bin/bash "$@"\n' > /usr/local/bin/dev-shell.sh && \
     chmod +x /usr/local/bin/dev-shell.sh
