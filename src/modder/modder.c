@@ -33,7 +33,7 @@ struct mod {
 	int (*_amod_keydown)(int);
 	int (*_amod_keyup)(int);
 	void (*_amod_update_hover_texts)(void);
-	int (*_amod_client_cmd)(char *buf);
+	int (*_amod_client_cmd)(const char *buf);
 	char *(*_amod_version)(void);
 	int loaded;
 };
@@ -42,8 +42,8 @@ struct mod mod[MAXMOD] = {{NULL}};
 
 int (*_amod_is_playersprite)(int sprite) = NULL;
 int (*_amod_display_skill_line)(int v, int base, int curr, int cn, char *buf) = NULL;
-int (*_amod_process)(char *buf) = NULL;
-int (*_amod_prefetch)(char *buf) = NULL;
+int (*_amod_process)(const char *buf) = NULL;
+int (*_amod_prefetch)(const char *buf) = NULL;
 
 char *game_email_main = "<no one>";
 char *game_email_cash = "<no one>";

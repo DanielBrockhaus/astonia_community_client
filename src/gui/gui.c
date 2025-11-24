@@ -868,6 +868,7 @@ static void display(void)
 	extern long long sdl_time_make, sdl_time_tex, sdl_time_tex_main, sdl_time_text, sdl_time_blit;
 	int t, tmp;
 	long long start = SDL_GetTicks64();
+    int duration;
 
 #if 0
 	// Performance for stuff happening during the actual tick only.
@@ -957,7 +958,7 @@ static void display(void)
 
 display_graphs:
 
-	int duration = SDL_GetTicks64() - start;
+	duration = SDL_GetTicks64() - start;
 
 	if (display_vc) {
 		extern long long texc_miss, texc_pre; // mem_tex,

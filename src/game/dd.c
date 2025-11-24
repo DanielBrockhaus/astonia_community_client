@@ -671,7 +671,7 @@ void dd_create_letter(unsigned char *rawrun, int sx, int sy, int val, char lette
 
 char *dd_create_rawrun(char letter[64][64])
 {
-	char *ptr, *fon, *last;
+	unsigned char *ptr, *fon, *last;
 	int x, y, step;
 
 	last = fon = ptr = xmalloc(8192, MEM_TEMP);

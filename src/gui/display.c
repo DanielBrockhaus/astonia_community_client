@@ -920,7 +920,10 @@ void display_military(void)
 
 			sprintf(hover_rank_text, "Rank: '%s' to '%s'", game_rankname[rank], game_rankname[rank + 1]);
 		} else {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
 			sprintf(hover_rank_text, game_rankname[*game_rankcount - 1]);
+#pragma clang diagnostic pop
 		}
 	}
 }
