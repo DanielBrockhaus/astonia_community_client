@@ -2506,6 +2506,19 @@ void sdl_exit(void)
 #ifdef DEVELOPER
 	sdl_dump_spritecache();
 #endif
+
+	// Clean up SDL resources before SDL_Quit()
+	if (sdlren) {
+		SDL_DestroyRenderer(sdlren);
+		sdlren = NULL;
+	}
+	if (sdlwnd) {
+		SDL_DestroyWindow(sdlwnd);
+		sdlwnd = NULL;
+	}
+
+	// Explicitly quit SDL - this will free all SDL-allocated memory using mi_free
+	SDL_Quit();
 }
 
 int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct ddfont *font, int clipsx,

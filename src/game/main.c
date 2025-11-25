@@ -807,6 +807,10 @@ void register_crash_handler(void);
 // main
 int main(int argc, char *args[])
 {
+	// Configure SDL to use mimalloc for all its internal allocations
+	// This MUST be called before any SDL function, including SDL_GetPrefPath()
+	SDL_SetMemoryFunctions(mi_malloc, mi_calloc, mi_realloc, mi_free);
+
 	int ret;
 	char buf[80], buffer[1024];
 	char filename[MAX_PATH];
