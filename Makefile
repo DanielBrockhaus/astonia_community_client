@@ -127,4 +127,4 @@ zen4-appimage:
 # Include quality checks makefile (see build/make/Makefile.quality)
 include build/make/Makefile.quality
 
-.PHONY: all windows linux macos clean distrib amod convert anicopy zig-build docker-linux docker-windows docker-windows-dev docker-linux-dev linux-appimage sanitizer coverage
+.PHONY: all windows linux macos clean distrib amod convert anicopy zig-build docker-linux docker-windows docker-windows-dev docker-linux-dev appimage zen4-appimage sanitizer coverage
