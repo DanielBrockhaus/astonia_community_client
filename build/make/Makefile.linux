@@ -22,7 +22,7 @@ ASTONIA_NET_DIR=astonia_net
 ASTONIA_NET_TGT=x86_64-unknown-linux-gnu
 ASTONIA_NET_LIB=$(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/libastonia_net.so
 
-OBJS	=		src/gui/gui.o src/client/client.o src/client/skill.o src/game/dd.o src/game/font.o\
+OBJS	=		src/gui/gui.o src/client/client.o src/client/protocol.o src/client/skill.o src/game/dd.o src/game/font.o\
 			src/game/main.o src/game/sprite.o src/game/game.o src/modder/modder.o\
 			src/sdl/sound.o src/sdl/sdl.o src/helper/helper.o\
 			src/gui/dots.o src/gui/display.o src/gui/teleport.o src/gui/color.o src/gui/cmd.o\
@@ -137,3 +137,5 @@ bin/moac-coverage: $(OBJS_COVERAGE) $(ASTONIA_NET_LIB)
 
 %-coverage.o: %.c
 	$(CC) $(CFLAGS) $(COVERAGE_FLAGS) -c -o $@ $<
+
+src/client/protocol.o: src/client/protocol.c src/astonia.h src/client.h src/client/_client.h src/gui.h src/modder.h src/client/protocol.h

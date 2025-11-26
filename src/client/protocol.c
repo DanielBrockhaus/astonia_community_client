@@ -1,0 +1,1787 @@
+/*
+ * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
+ *
+ * Protocol handling
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdint.h>
+#include <ctype.h>
+#include <SDL2/SDL.h>
+
+#include "astonia.h"
+#include "client.h"
+#include "client/_client.h"
+#include "gui.h"
+#include "modder.h"
+#include "protocol.h"
+#include "sdl.h"
+#include "sdl/_sdl.h"
+int sv_map01(unsigned char *buf, int *last, struct map *cmap)
+{
+	int p, c;
+
+	if ((buf[0] & (16 + 32)) == SV_MAPTHIS) {
+		p = 1;
+		c = *last;
+	} else if ((buf[0] & (16 + 32)) == SV_MAPNEXT) {
+		p = 1;
+		c = *last + 1;
+
+	} else if ((buf[0] & (16 + 32)) == SV_MAPOFF) {
+		p = 2;
+		c = *last + *(unsigned char *)(buf + 1);
+	} else {
+		p = 3;
+		c = load_u16(buf + 1);
+	}
+
+	if (c > MAPDX * MAPDY || c < 0) {
+		fail("sv_map01 illegal call with c=%d\n", c);
+		exit(-1);
+	}
+
+	if (buf[0] & 1) {
+		cmap[c].ef[0] = load_u32(buf + p);
+		p += 4;
+	}
+	if (buf[0] & 2) {
+		cmap[c].ef[1] = load_u32(buf + p);
+		p += 4;
+	}
+	if (buf[0] & 4) {
+		cmap[c].ef[2] = load_u32(buf + p);
+		p += 4;
+	}
+	if (buf[0] & 8) {
+		cmap[c].ef[3] = load_u32(buf + p);
+		p += 4;
+	}
+
+	*last = c;
+
+	return p;
+}
+
+int sv_map10(unsigned char *buf, int *last, struct map *cmap)
+{
+	int p, c;
+
+	if ((buf[0] & (16 + 32)) == SV_MAPTHIS) {
+		p = 1;
+		c = *last;
+	} else if ((buf[0] & (16 + 32)) == SV_MAPNEXT) {
+		p = 1;
+		c = *last + 1;
+	} else if ((buf[0] & (16 + 32)) == SV_MAPOFF) {
+		p = 2;
+		c = *last + *(unsigned char *)(buf + 1);
+	} else {
+		p = 3;
+		c = load_u16(buf + 1);
+	}
+
+	if (c > MAPDX * MAPDY || c < 0) {
+		fail("sv_map10 illegal call with c=%d\n", c);
+		exit(-1);
+	}
+
+	if (buf[0] & 1) {
+		cmap[c].csprite = load_u32(buf + p);
+		p += 4;
+		cmap[c].cn = load_u16(buf + p);
+		p += 2;
+	}
+	if (buf[0] & 2) {
+		cmap[c].action = *(unsigned char *)(buf + p);
+		p++;
+		cmap[c].duration = *(unsigned char *)(buf + p);
+		p++;
+		cmap[c].step = *(unsigned char *)(buf + p);
+		p++;
+	}
+	if (buf[0] & 4) {
+		cmap[c].dir = *(unsigned char *)(buf + p);
+		p++;
+		cmap[c].health = *(unsigned char *)(buf + p);
+		p++;
+		cmap[c].mana = *(unsigned char *)(buf + p);
+		p++;
+		cmap[c].shield = *(unsigned char *)(buf + p);
+		p++;
+	}
+	if (buf[0] & 8) {
+		cmap[c].csprite = 0;
+		cmap[c].cn = 0;
+		cmap[c].action = 0;
+		cmap[c].duration = 0;
+		cmap[c].step = 0;
+		cmap[c].dir = 0;
+		cmap[c].health = 0;
+	}
+
+	*last = c;
+
+	return p;
+}
+
+int sv_map11(unsigned char *buf, int *last, struct map *cmap)
+{
+	int p, c;
+	int tmp32;
+
+	if ((buf[0] & (16 + 32)) == SV_MAPTHIS) {
+		p = 1;
+		c = *last;
+	} else if ((buf[0] & (16 + 32)) == SV_MAPNEXT) {
+		p = 1;
+		c = *last + 1;
+	} else if ((buf[0] & (16 + 32)) == SV_MAPOFF) {
+		p = 2;
+		c = *last + *(unsigned char *)(buf + 1);
+	} else {
+		p = 3;
+		c = load_u16(buf + 1);
+	}
+
+	if (c > MAPDX * MAPDY || c < 0) {
+		fail("sv_map11 illegal call with c=%d\n", c);
+		exit(-1);
+	}
+
+	if (buf[0] & 1) {
+		tmp32 = load_u32(buf + p);
+		p += 4;
+		cmap[c].gsprite = (unsigned short int)(tmp32 & 0x0000FFFF);
+		cmap[c].gsprite2 = (unsigned short int)(tmp32 >> 16);
+	}
+	if (buf[0] & 2) {
+		tmp32 = load_u32(buf + p);
+		p += 4;
+		cmap[c].fsprite = (unsigned short int)(tmp32 & 0x0000FFFF);
+		cmap[c].fsprite2 = (unsigned short int)(tmp32 >> 16);
+	}
+	if (buf[0] & 4) {
+		cmap[c].isprite = load_u32(buf + p);
+		p += 4;
+		if (cmap[c].isprite & 0x80000000) {
+			cmap[c].isprite &= ~0x80000000;
+			cmap[c].ic1 = load_u16(buf + p);
+			p += 2;
+			cmap[c].ic2 = load_u16(buf + p);
+			p += 2;
+			cmap[c].ic3 = load_u16(buf + p);
+			p += 2;
+		} else {
+			cmap[c].ic1 = 0;
+			cmap[c].ic2 = 0;
+			cmap[c].ic3 = 0;
+		}
+	}
+	if (buf[0] & 8) {
+		if (*(unsigned char *)(buf + p)) {
+			cmap[c].flags = load_u16(buf + p);
+			p += 2;
+		} else {
+			cmap[c].flags = *(unsigned char *)(buf + p);
+			p++;
+		}
+	}
+
+	*last = c;
+
+	return p;
+}
+
+int svl_ping(char *buf)
+{
+	int t, diff;
+
+	t = load_u32(buf + 1);
+	diff = SDL_GetTicks() - t;
+	addline("RTT1: %.2fms", diff / 1000.0);
+
+	return 5;
+}
+
+int sv_ping(char *buf)
+{
+	int t, diff;
+
+	t = load_u32(buf + 1);
+	diff = SDL_GetTicks() - t;
+	addline("RTT2: %.2fms", diff / 1000.0);
+
+	return 5;
+}
+
+void sv_scroll_right(struct map *cmap)
+{
+	memmove(cmap, cmap + 1, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - 1));
+}
+
+void sv_scroll_left(struct map *cmap)
+{
+	memmove(cmap + 1, cmap, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - 1));
+}
+
+void sv_scroll_down(struct map *cmap)
+{
+	memmove(cmap, cmap + (DIST * 2 + 1), sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1)));
+}
+
+void sv_scroll_up(struct map *cmap)
+{
+	memmove(cmap + (DIST * 2 + 1), cmap, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1)));
+}
+
+void sv_scroll_leftup(struct map *cmap)
+{
+	memmove(
+	    cmap + (DIST * 2 + 1) + 1, cmap, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1) - 1));
+}
+
+void sv_scroll_leftdown(struct map *cmap)
+{
+	memmove(
+	    cmap, cmap + (DIST * 2 + 1) - 1, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1) + 1));
+}
+
+void sv_scroll_rightup(struct map *cmap)
+{
+	memmove(
+	    cmap + (DIST * 2 + 1) - 1, cmap, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1) + 1));
+}
+
+void sv_scroll_rightdown(struct map *cmap)
+{
+	memmove(
+	    cmap, cmap + (DIST * 2 + 1) + 1, sizeof(struct map) * ((DIST * 2 + 1) * (DIST * 2 + 1) - (DIST * 2 + 1) - 1));
+}
+
+void sv_setval(unsigned char *buf, int nr)
+{
+	int n;
+
+	n = buf[1];
+	if (n < 0 || n >= (*game_v_max)) {
+		return;
+	}
+
+	if (nr != 0 || n != V_PROFESSION) {
+		value[nr][n] = load_i16(buf + 2);
+	}
+
+	update_skltab = 1;
+}
+
+void sv_sethp(unsigned char *buf)
+{
+	hp = load_i16(buf + 1);
+}
+
+void sv_endurance(unsigned char *buf)
+{
+	endurance = load_i16(buf + 1);
+}
+
+void sv_lifeshield(unsigned char *buf)
+{
+	lifeshield = load_i16(buf + 1);
+}
+
+void sv_setmana(unsigned char *buf)
+{
+	mana = load_i16(buf + 1);
+}
+
+void sv_setrage(unsigned char *buf)
+{
+	rage = load_i16(buf + 1);
+}
+
+void sv_setitem(unsigned char *buf)
+{
+	int n;
+
+	n = buf[1];
+	if (n < 0 || n >= INVENTORYSIZE) {
+		return;
+	}
+
+	item[n] = load_u32(buf + 2);
+	item_flags[n] = load_u32(buf + 6);
+
+	hover_invalidate_inv(n);
+}
+
+void sv_setorigin(unsigned char *buf)
+{
+	originx = load_u16(buf + 1);
+	originy = load_u16(buf + 3);
+}
+
+void sv_settick(unsigned char *buf)
+{
+	tick = load_u32(buf + 1);
+}
+
+void sv_mirror(unsigned char *buf)
+{
+	mirror = newmirror = load_u32(buf + 1);
+}
+
+void sv_realtime(unsigned char *buf)
+{
+	realtime = load_u32(buf + 1);
+}
+
+void sv_speedmode(unsigned char *buf)
+{
+	pspeed = buf[1];
+}
+
+// unused in vanilla server
+void sv_fightmode(unsigned char *buf) {}
+
+void sv_setcitem(unsigned char *buf)
+{
+	csprite = load_u32(buf + 1);
+	cflags = load_u32(buf + 5);
+}
+
+void sv_act(unsigned char *buf)
+{
+	act = load_u16(buf + 1);
+	actx = load_u16(buf + 3);
+	acty = load_u16(buf + 5);
+
+	if (act) {
+		teleporter = 0;
+	}
+}
+
+int sv_text(unsigned char *buf)
+{
+	int len;
+	char line[1024];
+
+	len = load_u16(buf + 1);
+	if (len < 1000) {
+		memcpy(line, buf + 3, len);
+		line[len] = 0;
+		if (line[0] == '#') {
+			if (!isdigit(line[1])) {
+				strcpy(tutor_text, line + 1);
+				show_tutor = 1;
+			} else if (line[1] == '1') {
+				strcpy(look_name, line + 2);
+			} else if (line[1] == '2') {
+				strcpy(look_desc, line + 2);
+			} else if (line[1] == '3') {
+				strcpy(pent_str[0], line + 2);
+				pent_str[1][0] = pent_str[2][0] = pent_str[3][0] = pent_str[4][0] = pent_str[5][0] = pent_str[6][0] = 0;
+			} else if (line[1] == '4') {
+				strcpy(pent_str[1], line + 2);
+			} else if (line[1] == '5') {
+				strcpy(pent_str[2], line + 2);
+			} else if (line[1] == '6') {
+				strcpy(pent_str[3], line + 2);
+			} else if (line[1] == '7') {
+				strcpy(pent_str[4], line + 2);
+			} else if (line[1] == '8') {
+				strcpy(pent_str[5], line + 2);
+			} else if (line[1] == '9') {
+				strcpy(pent_str[6], line + 2);
+			}
+		} else {
+			if (!hover_capture_text(line)) {
+				addline("%s", line);
+			}
+		}
+	}
+
+	return len + 3;
+}
+
+int svl_text(unsigned char *buf)
+{
+	int len;
+
+	len = load_u16(buf + 1);
+	return len + 3;
+}
+
+int sv_conname(unsigned char *buf)
+{
+	int len;
+
+	len = *(unsigned char *)(buf + 1);
+	if (len < 80) {
+		memcpy(con_name, buf + 2, len);
+		con_name[len] = 0;
+	}
+
+	return len + 2;
+}
+
+int svl_conname(unsigned char *buf)
+{
+	int len;
+
+	len = *(unsigned char *)(buf + 1);
+
+	return len + 2;
+}
+
+int sv_exit(unsigned char *buf)
+{
+	int len;
+	char line[1024];
+
+	len = *(unsigned char *)(buf + 1);
+	if (len <= 200) {
+		memcpy(line, buf + 2, len);
+		line[len] = 0;
+		addline("Server demands exit: %s", line);
+	}
+	kicked_out = 1;
+
+	return len + 2;
+}
+
+int svl_exit(unsigned char *buf)
+{
+	int len;
+
+	len = *(unsigned char *)(buf + 1);
+	return len + 2;
+}
+
+int sv_name(unsigned char *buf)
+{
+	int len, cn;
+
+	len = buf[12];
+	cn = load_u16(buf + 1);
+
+	if (cn < 1 || cn >= MAXCHARS) {
+		addline("illegal cn %d in sv_name", cn);
+	} else {
+		memcpy(player[cn].name, buf + 13, len);
+		player[cn].name[len] = 0;
+
+		player[cn].level = *(unsigned char *)(buf + 3);
+		player[cn].c1 = load_u16(buf + 4);
+		player[cn].c2 = load_u16(buf + 6);
+		player[cn].c3 = load_u16(buf + 8);
+		player[cn].clan = *(unsigned char *)(buf + 10);
+		player[cn].pk_status = *(unsigned char *)(buf + 11);
+	}
+
+	return len + 13;
+}
+
+int svl_name(unsigned char *buf)
+{
+	int len;
+
+	len = buf[12];
+
+	return len + 13;
+}
+
+int find_ceffect(int fn)
+{
+	int n;
+
+	for (n = 0; n < MAXEF; n++) {
+		if (ueffect[n] && ceffect[n].generic.nr == fn) {
+			return n;
+		}
+	}
+	return -1;
+}
+
+int is_char_ceffect(int type)
+{
+	switch (type) {
+	case 1:
+		return 1;
+	case 2:
+		return 0;
+	case 3:
+		return 1;
+	case 4:
+		return 0;
+	case 5:
+		return 1;
+	case 6:
+		return 0;
+	case 7:
+		return 0;
+	case 8:
+		return 1;
+	case 9:
+		return 1;
+	case 10:
+		return 1;
+	case 11:
+		return 1;
+	case 12:
+		return 1;
+	case 13:
+		return 0;
+	case 14:
+		return 1;
+	case 15:
+		return 0;
+	case 16:
+		return 0;
+	case 17:
+		return 0;
+	case 22:
+		return 1;
+	case 23:
+		return 1;
+	}
+	return 0;
+}
+
+int find_cn_ceffect(int cn, int skip)
+{
+	int n;
+
+	for (n = 0; n < MAXEF; n++) {
+		if (ueffect[n] && is_char_ceffect(ceffect[n].generic.type) && ceffect[n].flash.cn == cn) {
+			if (skip) {
+				skip--;
+				continue;
+			}
+			return n;
+		}
+	}
+	return -1;
+}
+
+int sv_ceffect(unsigned char *buf)
+{
+	int nr, type, len = 0; //,fn,arg;
+
+	nr = buf[1];
+
+	struct cef_generic tmp;
+	memcpy(&tmp, buf + 2, sizeof tmp);
+	type = tmp.type;
+
+	switch (type) {
+	case 1:
+		len = sizeof(struct cef_shield);
+		break;
+	case 2:
+		len = sizeof(struct cef_ball);
+		break;
+	case 3:
+		len = sizeof(struct cef_strike);
+		break;
+	case 4:
+		len = sizeof(struct cef_fireball);
+		break;
+	case 5:
+		len = sizeof(struct cef_flash);
+		break;
+
+	case 7:
+		len = sizeof(struct cef_explode);
+		break;
+	case 8:
+		len = sizeof(struct cef_warcry);
+		break;
+	case 9:
+		len = sizeof(struct cef_bless);
+		break;
+	case 10:
+		len = sizeof(struct cef_heal);
+		break;
+	case 11:
+		len = sizeof(struct cef_freeze);
+		break;
+	case 12:
+		len = sizeof(struct cef_burn);
+		break;
+	case 13:
+		len = sizeof(struct cef_mist);
+		break;
+	case 14:
+		len = sizeof(struct cef_potion);
+		break;
+	case 15:
+		len = sizeof(struct cef_earthrain);
+		break;
+	case 16:
+		len = sizeof(struct cef_earthmud);
+		break;
+	case 17:
+		len = sizeof(struct cef_edemonball);
+		break;
+	case 18:
+		len = sizeof(struct cef_curse);
+		break;
+	case 19:
+		len = sizeof(struct cef_cap);
+		break;
+	case 20:
+		len = sizeof(struct cef_lag);
+		break;
+	case 21:
+		len = sizeof(struct cef_pulse);
+		break;
+	case 22:
+		len = sizeof(struct cef_pulseback);
+		break;
+	case 23:
+		len = sizeof(struct cef_firering);
+		break;
+	case 24:
+		len = sizeof(struct cef_bubble);
+		break;
+
+
+	default:
+		note("unknown effect %d", type);
+		break;
+	}
+
+	if (nr < 0 || nr >= MAXEF) {
+		fail("sv_ceffect: invalid nr %d\n", nr);
+		exit(-1);
+	}
+
+	memcpy(ceffect + nr, buf + 2, len);
+
+	return len + 2;
+}
+
+void sv_ueffect(unsigned char *buf)
+{
+	int n, i, b;
+
+	for (n = 0; n < MAXEF; n++) {
+		i = n / 8;
+		b = 1 << (n & 7);
+		if (buf[i + 1] & b) {
+			ueffect[n] = 1;
+		} else {
+			ueffect[n] = 0;
+		}
+	}
+}
+
+int svl_ceffect(unsigned char *buf)
+{
+	int nr, type, len = 0;
+
+	nr = buf[1];
+
+	struct cef_generic tmp;
+	memcpy(&tmp, buf + 2, sizeof tmp);
+	type = tmp.type;
+
+	switch (type) {
+	case 1:
+		len = sizeof(struct cef_shield);
+		break;
+	case 2:
+		len = sizeof(struct cef_ball);
+		break;
+	case 3:
+		len = sizeof(struct cef_strike);
+		break;
+	case 4:
+		len = sizeof(struct cef_fireball);
+		break;
+	case 5:
+		len = sizeof(struct cef_flash);
+		break;
+
+	case 7:
+		len = sizeof(struct cef_explode);
+		break;
+	case 8:
+		len = sizeof(struct cef_warcry);
+		break;
+	case 9:
+		len = sizeof(struct cef_bless);
+		break;
+	case 10:
+		len = sizeof(struct cef_heal);
+		break;
+	case 11:
+		len = sizeof(struct cef_freeze);
+		break;
+	case 12:
+		len = sizeof(struct cef_burn);
+		break;
+	case 13:
+		len = sizeof(struct cef_mist);
+		break;
+	case 14:
+		len = sizeof(struct cef_potion);
+		break;
+	case 15:
+		len = sizeof(struct cef_earthrain);
+		break;
+	case 16:
+		len = sizeof(struct cef_earthmud);
+		break;
+	case 17:
+		len = sizeof(struct cef_edemonball);
+		break;
+	case 18:
+		len = sizeof(struct cef_curse);
+		break;
+	case 19:
+		len = sizeof(struct cef_cap);
+		break;
+	case 20:
+		len = sizeof(struct cef_lag);
+		break;
+	case 21:
+		len = sizeof(struct cef_pulse);
+		break;
+	case 22:
+		len = sizeof(struct cef_pulseback);
+		break;
+	case 23:
+		len = sizeof(struct cef_firering);
+		break;
+	case 24:
+		len = sizeof(struct cef_bubble);
+		break;
+
+
+	default:
+		note("unknown effect %d", type);
+		break;
+	}
+
+	if (nr < 0 || nr >= MAXEF) {
+		fail("svl_ceffect: invalid nr %d\n", nr);
+		exit(-1);
+	}
+
+	return len + 2;
+}
+
+void sv_container(unsigned char *buf)
+{
+	int nr;
+
+	nr = buf[1];
+	if (nr < 0 || nr >= CONTAINERSIZE) {
+		fail("illegal nr %d in sv_container!", nr);
+		exit(-1);
+	}
+
+	container[nr] = load_u32(buf + 2);
+	hover_invalidate_con(nr);
+}
+
+void sv_price(unsigned char *buf)
+{
+	int nr;
+
+	nr = buf[1];
+	if (nr < 0 || nr >= CONTAINERSIZE) {
+		fail("illegal nr %d in sv_price!", nr);
+		exit(-1);
+	}
+
+	price[nr] = load_u32(buf + 2);
+}
+
+void sv_itemprice(unsigned char *buf)
+{
+	int nr;
+
+	nr = buf[1];
+	if (nr < 0 || nr >= CONTAINERSIZE) {
+		fail("illegal nr %d in sv_itemprice!", nr);
+		exit(-1);
+	}
+
+	itemprice[nr] = load_u32(buf + 2);
+}
+
+void sv_cprice(unsigned char *buf)
+{
+	cprice = load_u32(buf + 1);
+}
+
+void sv_gold(unsigned char *buf)
+{
+	gold = load_u32(buf + 1);
+}
+
+void sv_concnt(unsigned char *buf)
+{
+	int nr;
+
+	nr = buf[1];
+	if (nr < 0 || nr > CONTAINERSIZE) {
+		fail("illegal nr %d in sv_contcnt!", nr);
+		exit(-1);
+	}
+
+	con_cnt = nr;
+}
+
+void sv_contype(unsigned char *buf)
+{
+	con_type = buf[1];
+}
+
+void sv_exp(unsigned char *buf)
+{
+	experience = load_ulong(buf + 1);
+	update_skltab = 1;
+}
+
+void sv_exp_used(unsigned char *buf)
+{
+	experience_used = load_ulong(buf + 1);
+	update_skltab = 1;
+}
+
+void sv_mil_exp(unsigned char *buf)
+{
+	mil_exp = load_ulong(buf + 1);
+}
+
+void sv_cycles(unsigned char *buf)
+{
+	int c;
+
+	c = load_ulong(buf + 1);
+
+	server_cycles = server_cycles * 0.99 + c * 0.01;
+}
+
+void sv_lookinv(unsigned char *buf)
+{
+	int n;
+
+	looksprite = load_u32(buf + 1);
+	lookc1 = load_u32(buf + 5);
+	lookc2 = load_u32(buf + 9);
+	lookc3 = load_u32(buf + 13);
+	for (n = 0; n < 12; n++) {
+		lookinv[n] = load_u32(buf + 17 + n * 4);
+	}
+	show_look = 1;
+}
+
+void sv_server(unsigned char *buf)
+{
+	change_area = 1;
+	// TODO: The following line is needed if the area servers are not all on the same IP
+	// address. BUT the vanilla server has a wrong IP hardcoded and this breaks the clients
+	// for the most common case of a single host running all areas. So. Commented out:
+
+	// target_server=load_u32(buf+1);
+
+	target_port = load_u16(buf + 5);
+}
+
+void sv_logindone(void)
+{
+	login_done = 1;
+	bzero_client(1);
+}
+
+void sv_special(unsigned char *buf)
+{
+	unsigned int type, opt1, opt2;
+
+	type = load_u32(buf + 1);
+	opt1 = load_u32(buf + 5);
+	opt2 = load_u32(buf + 9);
+
+	switch (type) {
+	case 0:
+		display_gfx = opt1;
+		display_time = tick;
+		break;
+	default:
+		if (type > 0 && type < 1000) {
+			play_sound(type, opt1, opt2);
+		}
+		break;
+	}
+}
+
+void sv_teleport(unsigned char *buf)
+{
+	int n, i, b;
+
+	for (n = 0; n < 64 + 32; n++) {
+		i = n / 8;
+		b = 1 << (n & 7);
+		if (buf[i + 1] & b) {
+			may_teleport[n] = 1;
+		} else {
+			may_teleport[n] = 0;
+		}
+	}
+	teleporter = 1;
+	newmirror = mirror;
+}
+
+void sv_prof(unsigned char *buf)
+{
+	int n, cnt = 0;
+
+	for (n = 0; n < P_MAX; n++) {
+		cnt += (value[1][n + V_PROFBASE] = buf[n + 1]);
+	}
+	value[0][V_PROFESSION] = cnt;
+
+	update_skltab = 1;
+}
+
+DLL_EXPORT struct quest quest[MAXQUEST];
+DLL_EXPORT struct shrine_ppd shrine;
+
+void sv_questlog(unsigned char *buf)
+{
+	int size;
+
+	size = sizeof(struct quest) * MAXQUEST;
+
+	memcpy(quest, buf + 1, size);
+	memcpy(&shrine, buf + 1 + size, sizeof(struct shrine_ppd));
+}
+
+void save_unique(void);
+void load_unique(void);
+
+void sv_unique(unsigned char *buf)
+{
+	if (unique != load_u32(buf + 1)) {
+		unique = load_u32(buf + 1);
+#ifdef STORE_UNIQUE
+		save_unique();
+#endif
+	}
+}
+
+void sv_protocol(unsigned char *buf)
+{
+	protocol_version = buf[1];
+	// note("Astonia Protocol Version %d established!",protocol_version);
+}
+
+void process(unsigned char *buf, int size)
+{
+	int len = 0, panic = 0, last = -1;
+
+	while (size > 0 && panic++ < 20000) {
+		if ((buf[0] & (64 + 128)) == SV_MAP01) {
+			len = sv_map01(buf, &last, map);
+		} else if ((buf[0] & (64 + 128)) == SV_MAP10) {
+			len = sv_map10(buf, &last, map);
+		} else if ((buf[0] & (64 + 128)) == SV_MAP11) {
+			len = sv_map11(buf, &last, map);
+		} else {
+			switch (buf[0]) {
+			case SV_SCROLL_UP:
+				sv_scroll_up(map);
+				len = 1;
+				break;
+			case SV_SCROLL_DOWN:
+				sv_scroll_down(map);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFT:
+				sv_scroll_left(map);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHT:
+				sv_scroll_right(map);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFTUP:
+				sv_scroll_leftup(map);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFTDOWN:
+				sv_scroll_leftdown(map);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHTUP:
+				sv_scroll_rightup(map);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHTDOWN:
+				sv_scroll_rightdown(map);
+				len = 1;
+				break;
+
+			case SV_SETVAL0:
+				sv_setval(buf, 0);
+				len = 4;
+				break;
+			case SV_SETVAL1:
+				sv_setval(buf, 1);
+				len = 4;
+				break;
+
+			case SV_SETHP:
+				sv_sethp(buf);
+				len = 3;
+				break;
+			case SV_SETMANA:
+				sv_setmana(buf);
+				len = 3;
+				break;
+			case SV_SETRAGE:
+				sv_setrage(buf);
+				len = 3;
+				break;
+			case SV_ENDURANCE:
+				sv_endurance(buf);
+				len = 3;
+				break;
+			case SV_LIFESHIELD:
+				sv_lifeshield(buf);
+				len = 3;
+				break;
+
+			case SV_SETITEM:
+				sv_setitem(buf);
+				len = 10;
+				break;
+
+			case SV_SETORIGIN:
+				sv_setorigin(buf);
+				len = 5;
+				break;
+			case SV_SETTICK:
+				sv_settick(buf);
+				len = 5;
+				break;
+			case SV_SETCITEM:
+				sv_setcitem(buf);
+				len = 9;
+				break;
+
+			case SV_ACT:
+				if (!(game_options & GO_PREDICT)) {
+					sv_act(buf);
+				}
+				len = 7;
+				break;
+			case SV_EXIT:
+				len = sv_exit(buf);
+				break;
+			case SV_TEXT:
+				len = sv_text(buf);
+				break;
+
+			case SV_NAME:
+				len = sv_name(buf);
+				break;
+
+			case SV_CONTAINER:
+				sv_container(buf);
+				len = 6;
+				break;
+			case SV_PRICE:
+				sv_price(buf);
+				len = 6;
+				break;
+			case SV_CPRICE:
+				sv_cprice(buf);
+				len = 5;
+				break;
+			case SV_CONCNT:
+				sv_concnt(buf);
+				len = 2;
+				break;
+			case SV_ITEMPRICE:
+				sv_itemprice(buf);
+				len = 6;
+				break;
+			case SV_CONTYPE:
+				sv_contype(buf);
+				len = 2;
+				break;
+			case SV_CONNAME:
+				len = sv_conname(buf);
+				break;
+
+			case SV_GOLD:
+				sv_gold(buf);
+				len = 5;
+				break;
+
+			case SV_EXP:
+				sv_exp(buf);
+				len = 5;
+				break;
+			case SV_EXP_USED:
+				sv_exp_used(buf);
+				len = 5;
+				break;
+			case SV_MIL_EXP:
+				sv_mil_exp(buf);
+				len = 5;
+				break;
+			case SV_LOOKINV:
+				sv_lookinv(buf);
+				len = 17 + 12 * 4;
+				break;
+			case SV_CYCLES:
+				sv_cycles(buf);
+				len = 5;
+				break;
+			case SV_CEFFECT:
+				len = sv_ceffect(buf);
+				break;
+			case SV_UEFFECT:
+				sv_ueffect(buf);
+				len = 9;
+				break;
+
+			case SV_SERVER:
+				sv_server(buf);
+				len = 7;
+				break;
+
+			case SV_REALTIME:
+				sv_realtime(buf);
+				len = 5;
+				break;
+
+			case SV_SPEEDMODE:
+				sv_speedmode(buf);
+				len = 2;
+				break;
+			case SV_FIGHTMODE:
+				sv_fightmode(buf);
+				len = 2;
+				break;
+			case SV_LOGINDONE:
+				sv_logindone();
+				len = 1;
+				break;
+			case SV_SPECIAL:
+				sv_special(buf);
+				len = 13;
+				break;
+			case SV_TELEPORT:
+				sv_teleport(buf);
+				len = 13;
+				break;
+
+			case SV_MIRROR:
+				sv_mirror(buf);
+				len = 5;
+				break;
+			case SV_PROF:
+				sv_prof(buf);
+				len = 21;
+				break;
+			case SV_PING:
+				len = sv_ping(buf);
+				break;
+			case SV_UNIQUE:
+				sv_unique(buf);
+				len = 5;
+				break;
+			case SV_QUESTLOG:
+				sv_questlog(buf);
+				len = 101 + sizeof(struct shrine_ppd);
+				break;
+			case SV_PROTOCOL:
+				sv_protocol(buf);
+				len = 2;
+				break;
+
+			default:
+				len = amod_process(buf);
+				if (!len) {
+					fail("got illegal command %d", buf[0]);
+					exit(101);
+				}
+				break;
+			}
+		}
+
+		size -= len;
+		buf += len;
+	}
+
+	if (size) {
+		fail("PANIC! size=%d", size);
+		exit(102);
+	}
+}
+
+int prefetch(unsigned char *buf, int size)
+{
+	int len = 0, panic = 0, last = -1;
+	static int prefetch_tick = 0;
+
+	while (size > 0 && panic++ < 20000) {
+		if ((buf[0] & (64 + 128)) == SV_MAP01) {
+			len = sv_map01(buf, &last, map2); // ANKH
+		} else if ((buf[0] & (64 + 128)) == SV_MAP10) {
+			len = sv_map10(buf, &last, map2); // ANKH
+		} else if ((buf[0] & (64 + 128)) == SV_MAP11) {
+			len = sv_map11(buf, &last, map2); // ANKH
+		} else {
+			switch (buf[0]) {
+			case SV_SCROLL_UP:
+				sv_scroll_up(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_DOWN:
+				sv_scroll_down(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFT:
+				sv_scroll_left(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHT:
+				sv_scroll_right(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFTUP:
+				sv_scroll_leftup(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_LEFTDOWN:
+				sv_scroll_leftdown(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHTUP:
+				sv_scroll_rightup(map2);
+				len = 1;
+				break;
+			case SV_SCROLL_RIGHTDOWN:
+				sv_scroll_rightdown(map2);
+				len = 1;
+				break;
+
+			case SV_SETVAL0:
+				len = 4;
+				break;
+			case SV_SETVAL1:
+				len = 4;
+				break;
+
+			case SV_SETHP:
+				len = 3;
+				break;
+			case SV_SETMANA:
+				len = 3;
+				break;
+			case SV_SETRAGE:
+				len = 3;
+				break;
+			case SV_ENDURANCE:
+				len = 3;
+				break;
+			case SV_LIFESHIELD:
+				len = 3;
+				break;
+
+			case SV_SETITEM:
+				if (game_options & GO_PREDICT) {
+					sv_setitem(buf);
+				}
+				len = 10;
+				break;
+
+			case SV_SETORIGIN:
+				len = 5;
+				break;
+			case SV_SETTICK:
+				prefetch_tick = load_u32(buf + 1);
+				len = 5;
+				break;
+			case SV_SETCITEM:
+				if (game_options & GO_PREDICT) {
+					sv_setcitem(buf);
+				}
+				len = 9;
+				break;
+
+			case SV_ACT:
+				if (game_options & GO_PREDICT) {
+					sv_act(buf);
+				}
+				len = 7;
+				break;
+
+			case SV_TEXT:
+				len = svl_text(buf);
+				break;
+			case SV_EXIT:
+				len = svl_exit(buf);
+				break;
+
+			case SV_NAME:
+				len = svl_name(buf);
+				break;
+
+			case SV_CONTAINER:
+				len = 6;
+				break;
+			case SV_PRICE:
+				len = 6;
+				break;
+			case SV_CPRICE:
+				len = 5;
+				break;
+			case SV_CONCNT:
+				len = 2;
+				break;
+			case SV_ITEMPRICE:
+				len = 6;
+				break;
+			case SV_CONTYPE:
+				len = 2;
+				break;
+			case SV_CONNAME:
+				len = svl_conname(buf);
+				break;
+
+			case SV_MIRROR:
+				len = 5;
+				break;
+
+			case SV_GOLD:
+				len = 5;
+				break;
+
+			case SV_EXP:
+				len = 5;
+				break;
+			case SV_EXP_USED:
+				len = 5;
+				break;
+			case SV_MIL_EXP:
+				len = 5;
+				break;
+			case SV_LOOKINV:
+				len = 17 + 12 * 4;
+				break;
+			case SV_CYCLES:
+				len = 5;
+				break;
+			case SV_CEFFECT:
+				len = svl_ceffect(buf);
+				break;
+			case SV_UEFFECT:
+				len = 9;
+				break;
+
+			case SV_SERVER:
+				len = 7;
+				break;
+			case SV_REALTIME:
+				len = 5;
+				break;
+			case SV_SPEEDMODE:
+				len = 2;
+				break;
+			case SV_FIGHTMODE:
+				len = 2;
+				break;
+			case SV_LOGINDONE:
+				bzero(map2, sizeof(map2));
+				len = 1;
+				break;
+			case SV_SPECIAL:
+				len = 13;
+				break;
+			case SV_TELEPORT:
+				len = 13;
+				break;
+			case SV_PROF:
+				len = 21;
+				break;
+			case SV_PING:
+				len = svl_ping(buf);
+				break;
+			case SV_UNIQUE:
+				len = 5;
+				break;
+			case SV_QUESTLOG:
+				len = 101 + sizeof(struct shrine_ppd);
+				break;
+			case SV_PROTOCOL:
+				len = 2;
+				break;
+
+			default:
+				len = amod_prefetch(buf);
+				if (!len) {
+					fail("got illegal command %d", buf[0]);
+					exit(103);
+				}
+				break;
+			}
+		}
+
+		size -= len;
+		buf += len;
+	}
+
+	if (size) {
+		fail("2 PANIC! size=%d", size);
+		exit(104);
+	}
+
+	prefetch_tick++;
+
+	return prefetch_tick;
+}
+
+void cmd_move(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_MOVE;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_ping(void)
+{
+	char buf[16];
+
+	buf[0] = CL_PING;
+	store_u32((unsigned char *)buf + 1, (uint32_t)SDL_GetTicks());
+	client_send(buf, 5);
+}
+
+void cmd_swap(int with)
+{
+	char buf[16];
+
+	buf[0] = CL_SWAP;
+	buf[1] = with;
+	client_send(buf, 2);
+
+	// if two items with identical flags & sprites are swapped the server won't
+	// update them so we need to clear the slot in the cache
+	hover_invalidate_inv_delayed(with);
+}
+
+void cmd_fastsell(int with)
+{
+	char buf[16];
+
+	buf[0] = CL_FASTSELL;
+	buf[1] = with;
+	client_send(buf, 2);
+}
+
+void cmd_use_inv(int with)
+{
+	char buf[16];
+
+	buf[0] = CL_USE_INV;
+	buf[1] = with;
+	client_send(buf, 2);
+	hover_invalidate_inv(with);
+}
+
+void cmd_take(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_TAKE;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_look_map(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_LOOK_MAP;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_look_item(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_LOOK_ITEM;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_look_inv(int pos)
+{
+	char buf[16];
+
+	buf[0] = CL_LOOK_INV;
+	*(unsigned char *)(buf + 1) = pos;
+	client_send(buf, 2);
+}
+
+void cmd_look_char(int cn)
+{
+	char buf[16];
+
+	buf[0] = CL_LOOK_CHAR;
+	store_u16(buf + 1, cn);
+	client_send(buf, 3);
+}
+
+void cmd_use(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_USE;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_drop(int x, int y)
+{
+	char buf[16];
+
+	buf[0] = CL_DROP;
+	store_u16(buf + 1, x);
+	store_u16(buf + 3, y);
+	client_send(buf, 5);
+}
+
+void cmd_speed(int mode)
+{
+	char buf[16];
+
+	buf[0] = CL_SPEED;
+	buf[1] = mode;
+	client_send(buf, 2);
+}
+
+void cmd_teleport(int nr)
+{
+	char buf[64];
+
+	if (nr > 100) { // ouch
+		newmirror = nr - 100;
+		return;
+	}
+
+	buf[0] = CL_TELEPORT;
+	buf[1] = nr;
+	buf[2] = newmirror;
+	client_send(buf, 3);
+}
+
+void cmd_stop(void)
+{
+	char buf[16];
+
+	buf[0] = CL_STOP;
+	client_send(buf, 1);
+}
+
+void cmd_kill(int cn)
+{
+	char buf[16];
+
+	buf[0] = CL_KILL;
+	store_u16(buf + 1, cn);
+	client_send(buf, 3);
+}
+
+void cmd_give(int cn)
+{
+	char buf[16];
+
+	buf[0] = CL_GIVE;
+	store_u16(buf + 1, cn);
+	client_send(buf, 3);
+}
+
+void cmd_some_spell(int spell, int x, int y, int chr)
+{
+	char buf[16], len;
+
+	switch (spell) {
+	case CL_BLESS:
+	case CL_HEAL:
+		buf[0] = spell;
+		store_u16(buf + 1, chr);
+		len = 3;
+		break;
+
+	case CL_FIREBALL:
+	case CL_BALL:
+		buf[0] = spell;
+		if (x) {
+			store_u16(buf + 1, x);
+			store_u16(buf + 3, y);
+		} else {
+			store_u16(buf + 1, 0);
+			store_u16(buf + 3, chr);
+		}
+
+		len = 5;
+		break;
+
+	case CL_MAGICSHIELD:
+	case CL_FLASH:
+	case CL_WARCRY:
+	case CL_FREEZE:
+	case CL_PULSE:
+		buf[0] = spell;
+		len = 1;
+		break;
+	default:
+		addline("WARNING: unknown spell %d\n", spell);
+		return;
+	}
+
+	client_send(buf, len);
+}
+
+void cmd_raise(int vn)
+{
+	char buf[16];
+
+	buf[0] = CL_RAISE;
+	store_u16(buf + 1, vn);
+	client_send(buf, 3);
+}
+
+void cmd_take_gold(int vn)
+{
+	char buf[16];
+
+	buf[0] = CL_TAKE_GOLD;
+	store_u32(buf + 1, vn);
+	client_send(buf, 5);
+}
+
+void cmd_drop_gold(void)
+{
+	char buf[16];
+
+	buf[0] = CL_DROP_GOLD;
+	client_send(buf, 1);
+}
+
+void cmd_junk_item(void)
+{
+	char buf[16];
+
+	buf[0] = CL_JUNK_ITEM;
+	client_send(buf, 1);
+}
+
+void cmd_text(char *text)
+{
+	char buf[512];
+	int len;
+
+	if (!text) {
+		return;
+	}
+
+	buf[0] = CL_TEXT;
+
+	for (len = 0; text[len] && text[len] != DDT && len < 254; len++) {
+		buf[len + 2] = text[len];
+	}
+
+	buf[2 + len] = 0;
+	buf[1] = len + 1;
+
+	client_send(buf, len + 3);
+}
+
+void cmd_log(char *text)
+{
+	char buf[512];
+	int len;
+
+	if (!text) {
+		return;
+	}
+
+	buf[0] = CL_LOG;
+
+	for (len = 0; len < 254 && text[len]; len++) {
+		buf[len + 2] = text[len];
+	}
+
+	buf[2 + len] = 0;
+	buf[1] = len + 1;
+
+	client_send(buf, len + 3);
+}
+
+void cmd_con(int pos)
+{
+	char buf[16];
+
+	buf[0] = CL_CONTAINER;
+	buf[1] = pos;
+	client_send(buf, 2);
+}
+
+void cmd_con_fast(int pos)
+{
+	char buf[16];
+
+	buf[0] = CL_CONTAINER_FAST;
+	buf[1] = pos;
+	client_send(buf, 2);
+}
+
+void cmd_look_con(int pos)
+{
+	char buf[16];
+
+	buf[0] = CL_LOOK_CONTAINER;
+	buf[1] = pos;
+	client_send(buf, 2);
+}
+
+void cmd_getquestlog(void)
+{
+	char buf[16];
+
+	buf[0] = CL_GETQUESTLOG;
+	client_send(buf, 1);
+}
+
+void cmd_reopen_quest(int nr)
+{
+	char buf[16];
+
+	buf[0] = CL_REOPENQUEST;
+	buf[1] = nr;
+	client_send(buf, 2);
+}
+

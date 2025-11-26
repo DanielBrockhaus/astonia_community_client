@@ -687,10 +687,10 @@ char *dd_create_rawrun(char letter[64][64])
 				step++;
 			}
 		}
-		*ptr++ = 254;
+		*ptr++ = (char)254;
 	}
 	ptr = last;
-	*ptr++ = 255;
+	*ptr++ = (char)255;
 
 	fon = xrealloc(fon, ptr - fon, MEM_GLOB);
 	return fon;
