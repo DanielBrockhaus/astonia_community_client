@@ -15,6 +15,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#include <mimalloc.h>
 
 #include "../../src/astonia.h"
 #include "../../src/game.h"
@@ -318,7 +319,7 @@ void *xmalloc(int size, int ID)
 
 	memptrused++;
 
-	mem = calloc(1, 8 + sizeof(memcheck) + size + sizeof(memcheck));
+	mem = mi_calloc(1, 8 + sizeof(memcheck) + size + sizeof(memcheck));
 	if (!mem) {
 		fail("OUT OF MEMORY !!!");
 		return NULL;
@@ -398,7 +399,7 @@ void xfree(void *ptr)
 	memptrused--;
 	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
 
-	free(mem);
+	mi_free(mem);
 }
 
 void xinfo(void *ptr)
@@ -446,7 +447,7 @@ void *xrealloc(void *ptr, int size, int ID)
 
 	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
 
-	struct memhead *new_mem = realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
+	struct memhead *new_mem = mi_realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
 	if (!new_mem) {
 		// Restore counters since realloc failed
 		memsize[mem->ID] += mem->size;
@@ -513,7 +514,7 @@ void *xrecalloc(void *ptr, int size, int ID)
 	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
 
 	int old_size = mem->size;
-	struct memhead *new_mem = realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
+	struct memhead *new_mem = mi_realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
 	if (!new_mem) {
 		// Restore counters since realloc failed
 		memsize[mem->ID] += old_size;
@@ -580,7 +581,7 @@ void display_usage(void)
 {
 	char *buf, *txt;
 
-	txt = buf = malloc(1024 * 8);
+	txt = buf = mi_malloc(1024 * 8);
 	*buf = '\0'; // Initialize buffer
 	buf += sprintf(
 	    buf, "The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n");
@@ -614,7 +615,7 @@ void display_usage(void)
 
 	printf("%s", txt);
 
-	free(txt);
+	mi_free(txt);
 }
 
 DLL_EXPORT char server_url[256];

@@ -16,7 +16,7 @@ CFLAGS_PIC=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fPIC -f
 LDFLAGS=$(OPT) $(DEBUG) -rdynamic -Wl,-rpath,\$$ORIGIN
 
 SDL_LIBS=$(shell $(SDL_CONFIG) --libs)
-LIBS = -lz -lpng -lzip $(SDL_LIBS) -lSDL2_mixer -lm
+LIBS = -lz -lpng -lzip $(SDL_LIBS) -lSDL2_mixer -lmimalloc -lm
 
 ASTONIA_NET_DIR=astonia_net
 ASTONIA_NET_TGT=x86_64-unknown-linux-gnu
