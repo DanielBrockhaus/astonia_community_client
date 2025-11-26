@@ -87,15 +87,14 @@ RUN make linux && \
     strip bin/amod.so
 
 # Create AppDir structure
-RUN mkdir -p AppDir/usr/bin && \
-    mkdir -p AppDir/usr/lib && \
-    mkdir -p AppDir/usr/share/astonia && \
-    cp bin/moac AppDir/usr/bin/ && \
+RUN mkdir -p AppDir/usr/lib && \
+    mkdir -p AppDir/usr/share/astonia/bin && \
+    cp bin/moac AppDir/usr/share/astonia/bin/ && \
     cp bin/libastonia_net.so AppDir/usr/lib/ && \
-    cp bin/amod.so AppDir/usr/lib/ && \
+    cp bin/amod.so AppDir/usr/share/astonia/bin/ && \
     cp -r res AppDir/usr/share/astonia/
 
-# Create wrapper script
+# Create wrapper script (symlink in /usr/bin for desktop integration)
 RUN printf '#!/bin/bash\n\
 # Get the AppImage'\''s AppDir location\n\
 APPDIR="${APPDIR:-$(cd "$(dirname "$0")/../.." && pwd)}"\n\
@@ -107,7 +106,7 @@ export LD_LIBRARY_PATH="$APPDIR/usr/lib:${LD_LIBRARY_PATH}"\n\
 cd "$APPDIR/usr/share/astonia" || exit 1\n\
 \n\
 # Execute the actual binary\n\
-exec "$APPDIR/usr/bin/moac" "$@"\n' > AppDir/usr/bin/moac-wrapper && \
+exec "$APPDIR/usr/share/astonia/bin/moac" "$@"\n' > AppDir/usr/bin/moac-wrapper && \
     chmod +x AppDir/usr/bin/moac-wrapper
 
 # Create desktop file
@@ -130,11 +129,11 @@ RUN LD_LIBRARY_PATH=/build/AppDir/usr/lib:$LD_LIBRARY_PATH \
     NO_STRIP=1 \
     ./linuxdeploy-root/AppRun \
       --appdir=AppDir \
-      --executable=AppDir/usr/bin/moac \
+      --executable=AppDir/usr/share/astonia/bin/moac \
       --desktop-file=AppDir/astonia.desktop \
       --icon-file=AppDir/astonia.png \
       --library=AppDir/usr/lib/libastonia_net.so \
-      --library=AppDir/usr/lib/amod.so \
+      --library=AppDir/usr/share/astonia/bin/amod.so \
       --library=/usr/lib/libSDL3.so.0 \
       --library=/usr/lib/libSDL2-2.0.so.0 \
       --library=/usr/lib/libSDL2_mixer-2.0.so.0
@@ -151,7 +150,7 @@ export LD_LIBRARY_PATH="$APPDIR/usr/lib:${LD_LIBRARY_PATH}"\n\
 cd "$APPDIR/usr/share/astonia" || exit 1\n\
 \n\
 # Execute the actual binary\n\
-exec "$APPDIR/usr/bin/moac" "$@"\n' > AppDir/AppRun && \
+exec "$APPDIR/usr/share/astonia/bin/moac" "$@"\n' > AppDir/AppRun && \
     chmod +x AppDir/AppRun
 
 # Create the final AppImage
