@@ -22,7 +22,8 @@
 #define SF_DIDALLOC (1 << 3)
 #define SF_DIDMAKE  (1 << 4)
 #define SF_DIDTEX   (1 << 5)
-#define SF_BUSY     (1 << 6)
+#define SF_CLAIMJOB (1 << 6)
+#define SF_INQUEUE  (1 << 7)
 
 struct sdl_texture {
 	SDL_Texture *tex;
@@ -31,7 +32,7 @@ struct sdl_texture {
 	int prev, next;
 	int hprev, hnext;
 
-	uint16_t flags;
+	_Atomic(uint16_t) flags; // Atomic for lock-free reads, writes under mutex
 
 	int fortick; // pre-cached for tick X
 
@@ -80,7 +81,8 @@ struct ddfont {
 
 #define DDT '\xB0' // draw text terminator - (zero stays one, too)
 
-int sdl_ic_load(int sprite);
+struct zip_handles;
+int sdl_ic_load(int sprite, struct zip_handles *zips);
 int sdl_pre_backgnd(void *ptr);
 int sdl_create_cursors(void);
 
