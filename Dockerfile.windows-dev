@@ -65,12 +65,14 @@ RUN pacman -S --noconfirm \
     mingw-w64-clang-x86_64-libpng \
     mingw-w64-clang-x86_64-libzip \
     mingw-w64-clang-x86_64-dwarfstack \
+    mingw-w64-clang-x86_64-mimalloc \
     mingw-w64-x86_64-SDL2 \
     mingw-w64-x86_64-SDL2_mixer \
     mingw-w64-x86_64-zlib \
     mingw-w64-x86_64-libpng \
     mingw-w64-x86_64-libzip \
     mingw-w64-x86_64-dwarfstack \
+    mingw-w64-x86_64-mimalloc \
     && pacman -Scc --noconfirm
 
 # Install GCC toolchain for comparison/fallback

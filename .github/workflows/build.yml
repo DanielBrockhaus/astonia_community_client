@@ -26,7 +26,8 @@ jobs:
             libsdl2-mixer-dev \
             libpng-dev \
             libzip-dev \
-            zlib1g-dev
+            zlib1g-dev \
+            libmimalloc-dev
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -80,6 +81,7 @@ jobs:
             mingw-w64-clang-x86_64-SDL2_mixer
             mingw-w64-clang-x86_64-libzip
             mingw-w64-clang-x86_64-dwarfstack
+            mingw-w64-clang-x86_64-mimalloc
             make
             zip
 
@@ -110,7 +112,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          brew install sdl2 sdl2_mixer libzip zlib
+          brew install sdl2 sdl2_mixer libzip zlib mimalloc
 
       - name: Setup Rust
         uses: actions-rust-lang/setup-rust-toolchain@v1

@@ -23,7 +23,7 @@ Install [MSYS2](https://www.msys2.org/). It comes with three shells, launch the 
 Install dependencies:
 ```bash
 pacman -Syu
-pacman -Sy mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-SDL2 mingw-w64-clang-x86_64-libpng mingw-w64-clang-x86_64-SDL2_mixer mingw-w64-clang-x86_64-libzip make zip mingw-w64-clang-x86_64-dwarfstack mingw-w64-clang-x86_64-zig mingw-w64-clang-x86_64-rustup
+pacman -Sy mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-SDL2 mingw-w64-clang-x86_64-libpng mingw-w64-clang-x86_64-SDL2_mixer mingw-w64-clang-x86_64-libzip mingw-w64-clang-x86_64-mimalloc make zip mingw-w64-clang-x86_64-dwarfstack mingw-w64-clang-x86_64-zig mingw-w64-clang-x86_64-rustup
 rustup toolchain install stable-x86_64-pc-windows-gnu
 rustup default stable-x86_64-pc-windows-gnu
 ```
@@ -32,7 +32,7 @@ rustup default stable-x86_64-pc-windows-gnu
 
 Install dependencies:
 ```bash
-sudo pacman -S base-devel sdl3 sdl2-compat sdl2_mixer libpng libzip zlib zig rust
+sudo pacman -S base-devel sdl3 sdl2-compat sdl2_mixer libpng libzip zlib mimalloc zig rust
 ```
 
 Or use Docker (no dependencies needed):
@@ -80,7 +80,7 @@ xcode-select --install
 
 Install dependencies:
 ```bash
-brew install zig sdl2 sdl2_mixer libpng zlib libzip rust
+brew install zig sdl2 sdl2_mixer libpng zlib libzip mimalloc rust
 ```
 
 ## Commands

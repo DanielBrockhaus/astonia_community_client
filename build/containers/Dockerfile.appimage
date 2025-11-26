@@ -50,6 +50,7 @@ RUN pacman -S --noconfirm --ask=4 --overwrite="*" \
       libpng \
       libzip \
       zlib \
+      mimalloc \
       patchelf \
       desktop-file-utils \
       fuse2 \
@@ -88,19 +89,27 @@ RUN make linux && \
 
 # Create AppDir structure
 RUN mkdir -p AppDir/usr/lib && \
+    mkdir -p AppDir/usr/bin && \
     mkdir -p AppDir/usr/share/astonia/bin && \
     cp bin/moac AppDir/usr/share/astonia/bin/ && \
     cp bin/libastonia_net.so AppDir/usr/lib/ && \
     cp bin/amod.so AppDir/usr/share/astonia/bin/ && \
+    cp /usr/lib/libmimalloc.so.* AppDir/usr/lib/ 2>/dev/null || cp /usr/lib/libmimalloc.so AppDir/usr/lib/ 2>/dev/null || true && \
     cp -r res AppDir/usr/share/astonia/
 
-# Create wrapper script (symlink in /usr/bin for desktop integration)
+# Create wrapper script
 RUN printf '#!/bin/bash\n\
 # Get the AppImage'\''s AppDir location\n\
 APPDIR="${APPDIR:-$(cd "$(dirname "$0")/../.." && pwd)}"\n\
 \n\
 # Set library path\n\
 export LD_LIBRARY_PATH="$APPDIR/usr/lib:${LD_LIBRARY_PATH}"\n\
+\n\
+# Preload mimalloc for global override
+MIMALLOC_LIB=$(find "$APPDIR/usr/lib" -name "libmimalloc.so*" | head -n 1)\n\
+if [ -n "$MIMALLOC_LIB" ]; then\n\
+    export LD_PRELOAD="$MIMALLOC_LIB"\n\
+fi\n\
 \n\
 # Change to the resource directory\n\
 cd "$APPDIR/usr/share/astonia" || exit 1\n\
@@ -145,6 +154,12 @@ APPDIR="${APPDIR:-$(cd "$(dirname "$0")" && pwd)}"\n\
 \n\
 # Set library path (linuxdeploy already set this up, but we ensure it'\''s there)\n\
 export LD_LIBRARY_PATH="$APPDIR/usr/lib:${LD_LIBRARY_PATH}"\n\
+\n\
+# Preload mimalloc for global override
+MIMALLOC_LIB=$(find "$APPDIR/usr/lib" -name "libmimalloc.so*" | head -n 1)\n\
+if [ -n "$MIMALLOC_LIB" ]; then\n\
+    export LD_PRELOAD="$MIMALLOC_LIB"\n\
+fi\n\
 \n\
 # Change to the resource directory\n\
 cd "$APPDIR/usr/share/astonia" || exit 1\n\
