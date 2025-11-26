@@ -12,8 +12,8 @@
 #include <SDL2/SDL_mixer.h>
 
 #include "astonia.h"
-#include "sdl.h"
-#include "sdl/_sdl.h"
+#include "sdl/sdl.h"
+#include "sdl/sdl_private.h"
 
 // Sound definitions
 static char *sfx_name[] = {

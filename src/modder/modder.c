@@ -11,14 +11,14 @@
 #include <stdio.h>
 #include <SDL_loadso.h>
 
-#include "../../src/astonia.h"
-#include "../../src/modder.h"
-#include "../../src/modder/_modder.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/client.h"
-#include "../../src/gui.h"
-#include "../../src/sdl.h"
+#include "astonia.h"
+#include "modder/modder.h"
+#include "modder/modder_private.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "client/client.h"
+#include "gui/gui.h"
+#include "sdl/sdl.h"
 
 struct mod {
 	void (*_amod_init)(void);

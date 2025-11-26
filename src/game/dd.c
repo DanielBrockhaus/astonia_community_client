@@ -14,12 +14,12 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 
-#include "../../src/dll.h"
-#include "../../src/astonia.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/client.h"
-#include "../../src/sdl.h"
+#include "dll.h"
+#include "astonia.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "client/client.h"
+#include "sdl/sdl.h"
 
 DDFONT *fonta_shaded = NULL;
 DDFONT *fonta_framed = NULL;

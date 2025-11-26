@@ -2,6 +2,8 @@
  * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
  */
 
+#include <stdint.h>
+#include <string.h>
 #include "dll.h"
 
 #define DEVELOPER // this one will compile the developer version - comment me out for the final release

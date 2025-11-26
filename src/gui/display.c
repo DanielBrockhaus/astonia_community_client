@@ -11,12 +11,12 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include "../../src/astonia.h"
-#include "../../src/gui.h"
-#include "../../src/gui/_gui.h"
-#include "../../src/game.h"
-#include "../../src/client.h"
-#include "../../src/modder.h"
+#include "astonia.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
+#include "game/game.h"
+#include "client/client.h"
+#include "modder/modder.h"
 
 char tutor_text[1024] = {""};
 int show_tutor = 0;

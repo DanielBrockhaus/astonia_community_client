@@ -11,13 +11,13 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 
-#include "../../src/astonia.h"
-#include "../../src/gui.h"
-#include "../../src/gui/_gui.h"
-#include "../../src/client.h"
-#include "../../src/game.h"
-#include "../../src/sdl.h"
-#include "../../src/modder.h"
+#include "astonia.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
+#include "client/client.h"
+#include "game/game.h"
+#include "sdl/sdl.h"
+#include "modder/modder.h"
 
 static int c_on = 0, c_x, c_y, d_y, csel, isel, msel, ori_x, ori_y;
 

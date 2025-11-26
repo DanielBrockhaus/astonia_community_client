@@ -11,9 +11,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "../../src/astonia.h"
-#include "../../src/gui.h"
-#include "../../src/gui/_gui.h"
+#include "astonia.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
 
 extern int __textdisplay_sy;
 

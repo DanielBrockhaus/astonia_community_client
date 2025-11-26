@@ -12,11 +12,11 @@
 #include <stddef.h>
 #include <SDL2/SDL.h>
 
-#include "../../src/astonia.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/gui.h"
-#include "../../src/client.h"
+#include "astonia.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "gui/gui.h"
+#include "client/client.h"
 
 static int fsprite_cnt = 0, f2sprite_cnt = 0, gsprite_cnt = 0, g2sprite_cnt = 0, isprite_cnt = 0, csprite_cnt = 0;
 static int qs_time = 0, dg_time = 0, ds_time = 0;

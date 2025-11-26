@@ -12,14 +12,14 @@
 #include <time.h>
 #include <SDL2/SDL.h>
 
-#include "../../src/astonia.h"
-#include "../../src/gui.h"
-#include "../../src/gui/_gui.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/client.h"
-#include "../../src/sdl.h"
-#include "../../src/modder.h"
+#include "astonia.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "client/client.h"
+#include "sdl/sdl.h"
+#include "modder/modder.h"
 
 DLL_EXPORT char hover_bless_text[120];
 DLL_EXPORT char hover_freeze_text[120];

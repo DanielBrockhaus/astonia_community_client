@@ -17,12 +17,12 @@
 #endif
 
 #include "astonia.h"
-#include "game.h"
-#include "game/_game.h"
-#include "sdl.h"
-#include "gui.h"
-#include "client.h"
-#include "modder.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "sdl/sdl.h"
+#include "gui/gui.h"
+#include "client/client.h"
+#include "modder/modder.h"
 
 int quit = 0;
 
@@ -566,32 +566,34 @@ void display_usage(void)
 	int size = 4096;
 
 	buf = xmalloc(size, MEM_TEMP);
-	if (!buf) return;
+	if (!buf) {
+		return;
+	}
 
 	snprintf(buf, size,
-		"The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n"
-		"Usage: moac -u playername -p password -d url\n ... [-w width] [-h height]\n"
-		" ... [-m threads] [-o options] [-c cachesize]\n ... [-k framespersecond]\n\n"
-		"url being, for example, \"server.astonia.com\" or \"192.168.77.132\" (without the quotes).\n\n"
-		"width and height are the desired window size. If this matches the desktop size the client "
-		"will start in windowed borderless pseudo-fullscreen mode.\n\n"
-		"threads is the number of background threads the game should use. Use 0 to disable. Default is 4.\n\n"
-		"options is a bitfield.\nBit 0 (value of 1) enables the Dark GUI by Tegra.\n"
-		"Bit 1 enables the context menu.\nBit 2 the new keybindings.\nBit 3 the smaller bottom GUI.\n"
-		"Bit 4 the sliding away of the top GUI.\nBit 5 enables the bigger health/mana bars.\n"
-		"Bit 6 enables sound.\nBit 7 the large font.\nBit 8 true full screen mode.\nBit 9 enables the "
-		"legacy mouse wheel logic.\n"
-		"Bit 10 enables out-of-order execution (read: faster) of inventory access and command feedback.\n"
-		"Bit 11 reduces the animation buffer for faster reactions and more stutter.\n"
-		"Bit 12 writes application files to %%appdata%% instead of the current folder.\n"
-		"Bit 13 enables the loading and saving of minimaps.\n"
-		"Bit 14 and 15 increase gamma.\n"
-		"Bit 16 makes the sliding top bar less sensitive.\n"
-		"Bit 17 reduces lighting effects (more performance, less pretty).\n"
-		"Bit 18 disables the minimap.\n"
-		"Default depends on screen height.\n\n"
-		"cachesize is the size of the texture cache. Default is 8000. Lower numbers might crash!\n\n"
-		"framespersecond will set the display rate in frames per second.\n\n");
+	    "The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n"
+	    "Usage: moac -u playername -p password -d url\n ... [-w width] [-h height]\n"
+	    " ... [-m threads] [-o options] [-c cachesize]\n ... [-k framespersecond]\n\n"
+	    "url being, for example, \"server.astonia.com\" or \"192.168.77.132\" (without the quotes).\n\n"
+	    "width and height are the desired window size. If this matches the desktop size the client "
+	    "will start in windowed borderless pseudo-fullscreen mode.\n\n"
+	    "threads is the number of background threads the game should use. Use 0 to disable. Default is 4.\n\n"
+	    "options is a bitfield.\nBit 0 (value of 1) enables the Dark GUI by Tegra.\n"
+	    "Bit 1 enables the context menu.\nBit 2 the new keybindings.\nBit 3 the smaller bottom GUI.\n"
+	    "Bit 4 the sliding away of the top GUI.\nBit 5 enables the bigger health/mana bars.\n"
+	    "Bit 6 enables sound.\nBit 7 the large font.\nBit 8 true full screen mode.\nBit 9 enables the "
+	    "legacy mouse wheel logic.\n"
+	    "Bit 10 enables out-of-order execution (read: faster) of inventory access and command feedback.\n"
+	    "Bit 11 reduces the animation buffer for faster reactions and more stutter.\n"
+	    "Bit 12 writes application files to %%appdata%% instead of the current folder.\n"
+	    "Bit 13 enables the loading and saving of minimaps.\n"
+	    "Bit 14 and 15 increase gamma.\n"
+	    "Bit 16 makes the sliding top bar less sensitive.\n"
+	    "Bit 17 reduces lighting effects (more performance, less pretty).\n"
+	    "Bit 18 disables the minimap.\n"
+	    "Default depends on screen height.\n\n"
+	    "cachesize is the size of the texture cache. Default is 8000. Lower numbers might crash!\n\n"
+	    "framespersecond will set the display rate in frames per second.\n\n");
 
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Usage", buf, NULL);
 	printf("%s", buf);
@@ -613,7 +615,7 @@ int parse_args(int argc, char *argv[])
 		char *arg = argv[i];
 
 		if (arg[0] != '-') {
-			continue; 
+			continue;
 		}
 
 		char opt = tolower(arg[1]);
@@ -623,55 +625,91 @@ int parse_args(int argc, char *argv[])
 			val = &arg[2];
 		} else if (i + 1 < argc) {
 			val = argv[i + 1];
-			// We only consume the next arg if we use it. 
-			// However, in the loop, we need to be careful. 
+			// We only consume the next arg if we use it.
+			// However, in the loop, we need to be careful.
 			// If we define that flags taking args MUST have them, we increment i.
 		}
 
 		switch (opt) {
 		case 'u':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) snprintf(username, sizeof(username), "%s", val);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(username, sizeof(username), "%s", val);
+			}
 			break;
 		case 'p':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) snprintf(password, sizeof(password), "%s", val);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(password, sizeof(password), "%s", val);
+			}
 			break;
 		case 'd':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) snprintf(server_url, sizeof(server_url), "%s", val);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(server_url, sizeof(server_url), "%s", val);
+			}
 			break;
 		case 'h':
-			if (!val && i + 1 < argc) val = argv[++i];
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
 			if (val) {
 				want_height = strtol(val, &end, 10);
 			}
 			break;
 		case 'w':
-			if (!val && i + 1 < argc) val = argv[++i];
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
 			if (val) {
 				want_width = strtol(val, &end, 10);
 			}
 			break;
 		case 'm':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) sdl_multi = strtol(val, &end, 10);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				sdl_multi = strtol(val, &end, 10);
+			}
 			break;
 		case 'o':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) game_options = strtoull(val, &end, 10);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				game_options = strtoull(val, &end, 10);
+			}
 			break;
 		case 'c':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) sdl_cache_size = strtol(val, &end, 10);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				sdl_cache_size = strtol(val, &end, 10);
+			}
 			break;
 		case 'k':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) frames_per_second = strtol(val, &end, 10);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				frames_per_second = strtol(val, &end, 10);
+			}
 			break;
 		case 't':
-			if (!val && i + 1 < argc) val = argv[++i];
-			if (val) server_port = strtol(val, &end, 10);
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				server_port = strtol(val, &end, 10);
+			}
 			break;
 		default:
 			// Unknown option, ignore or warn?
@@ -796,7 +834,7 @@ int main(int argc, char *argv[])
 	if ((ret = parse_args(argc, argv)) != 0) {
 		return -1;
 	}
-	
+
 	init_logging();
 
 #ifdef ENABLE_CRASH_HANDLER

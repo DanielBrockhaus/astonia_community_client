@@ -16,10 +16,10 @@
 #include <png.h>
 #include <zip.h>
 
-#include "../../src/dll.h"
-#include "../../src/astonia.h"
-#include "../../src/sdl.h"
-#include "../../src/sdl/_sdl.h"
+#include "dll.h"
+#include "astonia.h"
+#include "sdl/sdl.h"
+#include "sdl/sdl_private.h"
 
 static SDL_Window *sdlwnd;
 static SDL_Renderer *sdlren;

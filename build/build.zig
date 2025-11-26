@@ -47,6 +47,7 @@ pub fn build(b: *std.Build) void {
         // CLIENT
         "src/client/client.c",
         "src/client/skill.c",
+        "src/client/protocol.c",
 
         // GAME
         "src/game/dd.c",

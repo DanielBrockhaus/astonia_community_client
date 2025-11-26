@@ -13,12 +13,12 @@
 #include <SDL2/SDL.h>
 
 #include "astonia.h"
-#include "gui.h"
-#include "gui/_gui.h"
-#include "client.h"
-#include "game.h"
-#include "sdl.h"
-#include "modder.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
+#include "client/client.h"
+#include "game/game.h"
+#include "sdl/sdl.h"
+#include "modder/modder.h"
 
 uint64_t gui_time_misc = 0;
 
@@ -2188,9 +2188,10 @@ static void calculate_lcmd_logic(void)
 {
 	lcmd = CMD_NONE;
 
-	if (context_key_set_cmd())
+	if (context_key_set_cmd()) {
 		return;
-	
+	}
+
 	if (action_ovr != -1) {
 		if (action_ovr == 0 && chrsel != -1) {
 			lcmd = CMD_CHR_ATTACK;
@@ -2447,7 +2448,7 @@ static void set_cmd_states(void)
 	detect_hover_target();
 
 	calculate_lcmd_logic();
-	
+
 	set_cmd_invsel();
 	set_cmd_weasel();
 	set_cmd_consel();

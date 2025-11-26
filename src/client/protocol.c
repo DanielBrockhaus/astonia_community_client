@@ -13,13 +13,14 @@
 #include <SDL2/SDL.h>
 
 #include "astonia.h"
-#include "client.h"
-#include "client/_client.h"
-#include "gui.h"
-#include "modder.h"
+#include "client/client.h"
+#include "client/client_private.h"
+#include "gui/gui.h"
+#include "modder/modder.h"
 #include "protocol.h"
-#include "sdl.h"
-#include "sdl/_sdl.h"
+#include "sdl/sdl.h"
+#include "sdl/sdl_private.h"
+
 int sv_map01(unsigned char *buf, int *last, struct map *cmap)
 {
 	int p, c;
@@ -1784,4 +1785,3 @@ void cmd_reopen_quest(int nr)
 	buf[1] = nr;
 	client_send(buf, 2);
 }
-

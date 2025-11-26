@@ -4,8 +4,8 @@
 
 #include <stdint.h>
 
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
+#include "game/game.h"
+#include "game/game_private.h"
 
 unsigned char fontb_000[] = /*   */ {255};
 unsigned char fontb_001[] = /*   */ {255};
