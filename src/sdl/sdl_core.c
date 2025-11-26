@@ -35,7 +35,6 @@ zip_t *sdl_zip1m = NULL;
 zip_t *sdl_zip2m = NULL;
 
 // Prefetch threading (shared with sdl_texture.c)
-SDL_sem *prework = NULL;
 SDL_mutex *premutex = NULL;
 
 // Scale and resolution settings
@@ -53,7 +52,20 @@ struct prefetch {
 	int stx;
 };
 static struct prefetch pre[MAXPRE];
-int pre_in = 0, pre_1 = 0, pre_2 = 0, pre_3 = 0;
+int pre_in = 0, pre_ready = 0, pre_done = 0;
+
+// Job queue for background workers
+static int job_queue[MAXPRE];
+static int jq_head = 0, jq_tail = 0;
+
+// Worker thread management
+struct zip_handles;
+static struct zip_handles *worker_zips = NULL;
+static SDL_atomic_t pre_quit;
+static SDL_Thread **prethreads = NULL;
+
+// Image loading state machine (shared with sdl_image.c)
+int *sdli_state = NULL;
 
 void sdl_dump(FILE *fp)
 {
@@ -67,8 +79,8 @@ void sdl_dump(FILE *fp)
 	fprintf(fp, "sdl_multi: %d\n", sdl_multi);
 	fprintf(fp, "sdl_cache_size: %d\n", sdl_cache_size);
 
-	fprintf(fp, "mem_png: %lld\n", mem_png);
-	fprintf(fp, "mem_tex: %lld\n", mem_tex);
+	fprintf(fp, "mem_png: %lld\n", (long long)__atomic_load_n(&mem_png, __ATOMIC_RELAXED));
+	fprintf(fp, "mem_tex: %lld\n", (long long)__atomic_load_n(&mem_tex, __ATOMIC_RELAXED));
 	fprintf(fp, "texc_hit: %lld\n", texc_hit);
 	fprintf(fp, "texc_miss: %lld\n", texc_miss);
 	fprintf(fp, "texc_pre: %lld\n", texc_pre);
@@ -146,8 +158,19 @@ int sdl_init(int width, int height, char *title)
 		return fail("Out of memory in sdl_init");
 	}
 
+	// Initialize sdli_state array for image loading state machine
+	sdli_state = xmalloc(MAXSPRITE * sizeof(int), MEM_SDL_BASE);
+	if (!sdli_state) {
+		return fail("Out of memory in sdl_init");
+	}
+	for (i = 0; i < MAXSPRITE; i++) {
+		sdli_state[i] = 0; // IMG_UNLOADED
+	}
+
 	for (i = 0; i < MAX_TEXCACHE; i++) {
-		sdlt[i].flags = 0;
+		// Initialize flags atomically
+		uint16_t *flags_ptr = (uint16_t *)&sdlt[i].flags;
+		__atomic_store_n(flags_ptr, 0, __ATOMIC_RELAXED);
 		sdlt[i].prev = i - 1;
 		sdlt[i].next = i + 1;
 		sdlt[i].hnext = STX_NONE;
@@ -253,16 +276,155 @@ int sdl_init(int width, int height, char *title)
 		note("Allocated %d sound channels", number_of_sound_channels);
 	}
 
+	// Initialize mutex unconditionally (needed for job queue even in single-threaded mode)
+	premutex = SDL_CreateMutex();
+	if (!premutex) {
+		fail("Failed to create premutex");
+		return 0;
+	}
+
+	SDL_AtomicSet(&pre_quit, 0);
+
 	if (sdl_multi) {
 		char buf[80];
 		int n;
 
-		prework = SDL_CreateSemaphore(0);
-		premutex = SDL_CreateMutex();
+		// Allocate worker zip handles
+		worker_zips = xmalloc(sdl_multi * sizeof(struct zip_handles), MEM_SDL_BASE);
+		if (!worker_zips) {
+			fail("Out of memory for worker zip handles");
+			sdl_multi = 0;
+		} else {
+			// Open zip handles for each worker
+			for (n = 0; n < sdl_multi; n++) {
+				worker_zips[n].zip1 = zip_open("res/gx1.zip", ZIP_RDONLY, NULL);
+				worker_zips[n].zip1p = zip_open("res/gx1_patch.zip", ZIP_RDONLY, NULL);
+				worker_zips[n].zip1m = zip_open("res/gx1_mod.zip", ZIP_RDONLY, NULL);
 
-		for (n = 0; n < sdl_multi; n++) {
-			sprintf(buf, "moac background worker %d", n);
-			SDL_CreateThread(sdl_pre_backgnd, buf, (void *)(long long)n);
+				switch (sdl_scale) {
+				case 2:
+					worker_zips[n].zip2 = zip_open("res/gx2.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2p = zip_open("res/gx2_patch.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2m = zip_open("res/gx2_mod.zip", ZIP_RDONLY, NULL);
+					break;
+				case 3:
+					worker_zips[n].zip2 = zip_open("res/gx3.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2p = zip_open("res/gx3_patch.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2m = zip_open("res/gx3_mod.zip", ZIP_RDONLY, NULL);
+					break;
+				case 4:
+					worker_zips[n].zip2 = zip_open("res/gx4.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2p = zip_open("res/gx4_patch.zip", ZIP_RDONLY, NULL);
+					worker_zips[n].zip2m = zip_open("res/gx4_mod.zip", ZIP_RDONLY, NULL);
+					break;
+				default:
+					break;
+				}
+
+				if (!worker_zips[n].zip1) {
+					warn("Worker %d: Failed to open res/gx1.zip - aborting initialization", n);
+					// Clean up already opened zips
+					for (int i = 0; i < n; i++) {
+						if (worker_zips[i].zip1) {
+							zip_close(worker_zips[i].zip1);
+						}
+						if (worker_zips[i].zip1p) {
+							zip_close(worker_zips[i].zip1p);
+						}
+						if (worker_zips[i].zip1m) {
+							zip_close(worker_zips[i].zip1m);
+						}
+						if (worker_zips[i].zip2) {
+							zip_close(worker_zips[i].zip2);
+						}
+						if (worker_zips[i].zip2p) {
+							zip_close(worker_zips[i].zip2p);
+						}
+						if (worker_zips[i].zip2m) {
+							zip_close(worker_zips[i].zip2m);
+						}
+					}
+					xfree(worker_zips);
+					worker_zips = NULL;
+					sdl_multi = 0;
+					break;
+				}
+			}
+
+			// Only create threads if all zip handles succeeded
+			if (sdl_multi > 0) {
+				prethreads = xmalloc(sdl_multi * sizeof(SDL_Thread *), MEM_SDL_BASE);
+				if (!prethreads) {
+					fail("Out of memory for thread handles");
+					// Clean up zip handles
+					for (n = 0; n < sdl_multi; n++) {
+						if (worker_zips[n].zip1) {
+							zip_close(worker_zips[n].zip1);
+						}
+						if (worker_zips[n].zip1p) {
+							zip_close(worker_zips[n].zip1p);
+						}
+						if (worker_zips[n].zip1m) {
+							zip_close(worker_zips[n].zip1m);
+						}
+						if (worker_zips[n].zip2) {
+							zip_close(worker_zips[n].zip2);
+						}
+						if (worker_zips[n].zip2p) {
+							zip_close(worker_zips[n].zip2p);
+						}
+						if (worker_zips[n].zip2m) {
+							zip_close(worker_zips[n].zip2m);
+						}
+					}
+					xfree(worker_zips);
+					worker_zips = NULL;
+					sdl_multi = 0;
+				} else {
+					// Create all threads
+					for (n = 0; n < sdl_multi; n++) {
+						sprintf(buf, "moac background worker %d", n);
+						prethreads[n] = SDL_CreateThread(sdl_pre_backgnd, buf, (void *)(long long)n);
+						if (!prethreads[n]) {
+							warn("Failed to create worker thread %d", n);
+							// Signal quit and join already created threads
+							SDL_AtomicSet(&pre_quit, 1);
+							for (int i = 0; i < n; i++) {
+								if (prethreads[i]) {
+									SDL_WaitThread(prethreads[i], NULL);
+								}
+							}
+							// Clean up
+							xfree(prethreads);
+							prethreads = NULL;
+							for (int i = 0; i < sdl_multi; i++) {
+								if (worker_zips[i].zip1) {
+									zip_close(worker_zips[i].zip1);
+								}
+								if (worker_zips[i].zip1p) {
+									zip_close(worker_zips[i].zip1p);
+								}
+								if (worker_zips[i].zip1m) {
+									zip_close(worker_zips[i].zip1m);
+								}
+								if (worker_zips[i].zip2) {
+									zip_close(worker_zips[i].zip2);
+								}
+								if (worker_zips[i].zip2p) {
+									zip_close(worker_zips[i].zip2p);
+								}
+								if (worker_zips[i].zip2m) {
+									zip_close(worker_zips[i].zip2m);
+								}
+							}
+							xfree(worker_zips);
+							worker_zips = NULL;
+							sdl_multi = 0;
+							break;
+						}
+					}
+				}
+			}
 		}
 	}
 
@@ -289,6 +451,44 @@ int sdl_render(void)
 
 void sdl_exit(void)
 {
+	// Signal workers to quit and join them
+	if (sdl_multi && prethreads) {
+		SDL_AtomicSet(&pre_quit, 1);
+		for (int n = 0; n < sdl_multi; n++) {
+			if (prethreads[n]) {
+				SDL_WaitThread(prethreads[n], NULL);
+			}
+		}
+		xfree(prethreads);
+		prethreads = NULL;
+	}
+
+	// Close worker zip handles
+	if (worker_zips) {
+		for (int n = 0; n < sdl_multi; n++) {
+			if (worker_zips[n].zip1) {
+				zip_close(worker_zips[n].zip1);
+			}
+			if (worker_zips[n].zip1p) {
+				zip_close(worker_zips[n].zip1p);
+			}
+			if (worker_zips[n].zip1m) {
+				zip_close(worker_zips[n].zip1m);
+			}
+			if (worker_zips[n].zip2) {
+				zip_close(worker_zips[n].zip2);
+			}
+			if (worker_zips[n].zip2p) {
+				zip_close(worker_zips[n].zip2p);
+			}
+			if (worker_zips[n].zip2m) {
+				zip_close(worker_zips[n].zip2m);
+			}
+		}
+		xfree(worker_zips);
+		worker_zips = NULL;
+	}
+
 	if (sdl_zip1) {
 		zip_close(sdl_zip1);
 	}
@@ -306,6 +506,16 @@ void sdl_exit(void)
 	}
 	if (sdl_zip2p) {
 		zip_close(sdl_zip2p);
+	}
+
+	if (premutex) {
+		SDL_DestroyMutex(premutex);
+		premutex = NULL;
+	}
+
+	if (sdli_state) {
+		xfree(sdli_state);
+		sdli_state = NULL;
 	}
 
 	if (game_options & GO_SOUND) {
@@ -582,37 +792,117 @@ void sdl_set_cursor(int cursor)
 	SDL_SetCursor(curs[cursor]);
 }
 
+// Helper function to get next job from queue (returns -1 if queue is empty)
+int next_job_id(void)
+{
+	int idx = -1;
+	if (!premutex) {
+		fail("premutex is NULL in next_job_id");
+		abort();
+	}
+	SDL_LockMutex(premutex);
+	if (jq_head != jq_tail) {
+		idx = job_queue[jq_head];
+		jq_head = (jq_head + 1) % MAXPRE;
+	}
+	SDL_UnlockMutex(premutex);
+	return idx;
+}
+
+// Neutralize stale jobs in the queue for a given stx
+void neutralize_stale_jobs(int stx)
+{
+	if (!premutex) {
+		return;
+	}
+
+	SDL_LockMutex(premutex);
+	int qpos = jq_head;
+	while (qpos != jq_tail) {
+		int idx = job_queue[qpos];
+		if (idx >= 0 && idx < MAXPRE && pre[idx].stx == stx) {
+			pre[idx].stx = STX_NONE; // kill job
+		}
+		qpos = (qpos + 1) % MAXPRE;
+	}
+	SDL_UnlockMutex(premutex);
+}
+
+// Worker function to process jobs from the queue
+// Returns 1 if work was found and processed, 0 if queue was empty
+int sdl_pre_worker(struct zip_handles *zips)
+{
+	extern struct sdl_texture *sdlt;
+	extern struct sdl_image *sdli;
+	extern int sdl_ic_load(int sprite, struct zip_handles *zips);
+	extern void sdl_make(struct sdl_texture * st, struct sdl_image * si, int preload);
+
+	int idx = next_job_id();
+	if (idx == -1) {
+		return 0; // Queue empty
+	}
+
+	int stx = pre[idx].stx;
+	if (stx == STX_NONE) {
+		// Job was neutralized
+		return 0;
+	}
+
+	if (stx < 0 || stx >= MAX_TEXCACHE) {
+		// Invalid stx
+		return 0;
+	}
+
+	// Check if already processed
+	uint16_t flags = flags_load(&sdlt[stx]);
+	if (flags & SF_DIDMAKE) {
+		// Already processed
+		return 0;
+	}
+
+	// Try to claim the job atomically
+	if (job_claimed(&sdlt[stx])) {
+		// Already claimed by another worker
+		return 0;
+	}
+
+	// Clear SF_INQUEUE now that we've claimed the job
+	uint16_t *flags_ptr = (uint16_t *)&sdlt[stx].flags;
+	__atomic_fetch_and(flags_ptr, (uint16_t)~SF_INQUEUE, __ATOMIC_RELEASE);
+
+	int sprite = sdlt[stx].sprite;
+
+	// Load image using worker's zip handles
+	if (sdl_ic_load(sprite, zips) < 0) {
+		// Loading failed; mark as done but with no texture
+		__atomic_fetch_or(flags_ptr, SF_DIDMAKE, __ATOMIC_RELEASE);
+		return 0;
+	}
+
+	// Stage 1: Allocate pixel buffer
+	sdl_make(sdlt + stx, sdli + sprite, 1);
+	if (!sdlt[stx].pixel) {
+		// Allocation failed
+		__atomic_fetch_or(flags_ptr, SF_DIDALLOC | SF_DIDMAKE, __ATOMIC_RELEASE);
+		return 0;
+	}
+
+	// Stage 2: Process pixels
+	sdl_make(sdlt + stx, sdli + sprite, 2);
+	__atomic_fetch_or(flags_ptr, SF_DIDMAKE, __ATOMIC_RELEASE);
+
+	return 1;
+}
+
 void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze, unsigned char scale, char cr, char cg,
     char cb, char light, char sat, int c1, int c2, int c3, int shine, char ml, char ll, char rl, char ul, char dl)
 {
 	int n;
 	long long start;
-	int reserved_idx;
 
-	if (sprite > MAXSPRITE || sprite < 0) {
+	if (sprite >= MAXSPRITE || sprite < 0) {
 		note("illegal sprite %d wanted in pre_add", sprite);
 		return;
-	}
-
-	// Lock mutex to check buffer and reserve slot
-	if (sdl_multi) {
-		SDL_LockMutex(premutex);
-	}
-
-	if ((pre_in + 1) % MAXPRE == pre_3) { // buffer is full
-		if (sdl_multi) {
-			SDL_SemPost(prework); // nudge background tasks
-			SDL_UnlockMutex(premutex);
-		}
-		return;
-	}
-
-	// Reserve a slot
-	reserved_idx = pre_in;
-	pre_in = (pre_in + 1) % MAXPRE;
-
-	if (sdl_multi) {
-		SDL_UnlockMutex(premutex);
 	}
 
 	// Find in texture cache (expensive operation done outside lock)
@@ -620,29 +910,53 @@ void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze,
 	start = SDL_GetTicks64();
 	n = sdl_tx_load(sprite, sink, freeze, scale, cr, cg, cb, light, sat, c1, c2, c3, shine, ml, ll, rl, ul, dl, NULL, 0,
 	    0, NULL, 0, 1, attick);
+	extern long long sdl_time_alloc;
 	sdl_time_alloc += SDL_GetTicks64() - start;
 
-	// Re-acquire lock to update the reserved slot or roll back
-	if (sdl_multi) {
-		SDL_LockMutex(premutex);
-	}
-
 	if (n == -1) {
-		// Roll back the slot reservation
-		pre_in = (pre_in - 1 + MAXPRE) % MAXPRE;
-		if (sdl_multi) {
-			SDL_UnlockMutex(premutex);
-		}
+		// Already in cache or failed
 		return;
 	}
 
-	// Write to the reserved slot
-	pre[reserved_idx].stx = n;
-	pre[reserved_idx].attick = attick;
-
-	if (sdl_multi) {
-		SDL_UnlockMutex(premutex);
+	// Check if job is already queued or claimed
+	extern struct sdl_texture *sdlt;
+	uint16_t flags = flags_load(&sdlt[n]);
+	if (flags & (SF_CLAIMJOB | SF_INQUEUE)) {
+		// Already queued or being processed
+		return;
 	}
+
+	// Lock mutex to add to queue
+	SDL_LockMutex(premutex);
+
+	// Double-check after acquiring lock
+	flags = flags_load(&sdlt[n]);
+	if (flags & (SF_CLAIMJOB | SF_INQUEUE)) {
+		SDL_UnlockMutex(premutex);
+		return;
+	}
+
+	// Check if buffer is full
+	if ((pre_in + 1) % MAXPRE == pre_done) {
+		SDL_UnlockMutex(premutex);
+		return;
+	}
+
+	// Set SF_INQUEUE before adding to queue
+	uint16_t *flags_ptr = (uint16_t *)&sdlt[n].flags;
+	__atomic_fetch_or(flags_ptr, SF_INQUEUE, __ATOMIC_RELEASE);
+
+	// Add to prefetch buffer
+	int idx = pre_in;
+	pre[idx].stx = n;
+	pre[idx].attick = attick;
+	pre_in = (pre_in + 1) % MAXPRE;
+
+	// Add to job queue
+	job_queue[jq_tail] = idx;
+	jq_tail = (jq_tail + 1) % MAXPRE;
+
+	SDL_UnlockMutex(premutex);
 }
 
 long long sdl_time_mutex = 0;
@@ -656,94 +970,54 @@ void sdl_lock(void *a)
 
 #define SDL_LockMutex(a) sdl_lock(a)
 
-int sdl_pre_1(void)
+int sdl_pre_ready(void)
 {
-	if (pre_in == pre_1) {
+	extern struct sdl_texture *sdlt;
+	extern struct sdl_image *sdli;
+
+	if (pre_in == pre_ready) {
 		return 0; // prefetch buffer is empty
 	}
 
-	if (!(sdlt[pre[pre_1].stx].flags & SF_DIDALLOC)) {
-		sdl_ic_load(sdlt[pre[pre_1].stx].sprite);
-
-		sdl_make(sdlt + pre[pre_1].stx, sdli + sdlt[pre[pre_1].stx].sprite, 1);
-
-		if (sdl_multi) {
-			SDL_SemPost(prework);
-		}
+	int stx = pre[pre_ready].stx;
+	if (stx == STX_NONE) {
+		// Slot is dead; skip it
+		pre_ready = (pre_ready + 1) % MAXPRE;
+		return 1;
 	}
-	pre_1 = (pre_1 + 1) % MAXPRE;
 
-	return 1;
+	uint16_t flags = flags_load(&sdlt[stx]);
+
+	if (flags & SF_DIDMAKE) {
+		pre_ready = (pre_ready + 1) % MAXPRE;
+		return 1;
+	}
+
+	return 1; // work still pending
 }
 
-int sdl_pre_2(void)
+int sdl_pre_done(void)
 {
-	int i, work = 0;
+	extern struct sdl_texture *sdlt;
+	extern struct sdl_image *sdli;
 
-	if (pre_1 == pre_2) {
+	if (pre_ready == pre_done) {
 		return 0; // prefetch buffer is empty
 	}
 
-	for (i = pre_2; i != pre_1; i = (i + 1) % MAXPRE) {
-		if (sdl_multi) {
-			SDL_LockMutex(premutex);
-		}
-
-		// printf("Preload2: Slot %d, STX %d, flags %X\n",i,pre[i].stx,pre[i].stx!=-1 ? sdlt[pre[i].stx].flags : 0);
-		if (pre[i].stx != STX_NONE && !(sdlt[pre[i].stx].flags & (SF_DIDMAKE | SF_BUSY)) &&
-		    (sdlt[pre[i].stx].flags & SF_DIDALLOC)) {
-			// printf("Preload2: Slot %d, sprite %d (%d, %d, %d, %d)\n",i,pre[i].sprite,pre_in,pre_1,pre_2,pre_3);
-			// fflush(stdout);
-
-			sdlt[pre[i].stx].flags |= SF_BUSY;
-			if (sdl_multi) {
-				SDL_UnlockMutex(premutex);
-			}
-
-			sdl_make(sdlt + pre[i].stx, sdli + sdlt[pre[i].stx].sprite, 2);
-
-			if (sdl_multi) {
-				SDL_LockMutex(premutex);
-			}
-			sdlt[pre[i].stx].flags &= ~SF_BUSY;
-			sdlt[pre[i].stx].flags |= SF_DIDMAKE;
-			if (sdl_multi) {
-				SDL_UnlockMutex(premutex);
-			}
-			work = 1;
-			break;
-
-		} else {
-			if (sdl_multi) {
-				SDL_UnlockMutex(premutex);
-			}
-		}
+	int stx = pre[pre_done].stx;
+	if (stx == STX_NONE) {
+		pre_done = (pre_done + 1) % MAXPRE;
+		return 1;
 	}
 
-	if (sdl_multi) {
-		SDL_LockMutex(premutex);
-	}
-	while ((pre[pre_2].stx == STX_NONE || (sdlt[pre[pre_2].stx].flags & SF_DIDMAKE)) && pre_1 != pre_2) {
-		work = 1;
-		pre_2 = (pre_2 + 1) % MAXPRE;
-	}
-	if (sdl_multi) {
-		SDL_UnlockMutex(premutex);
+	uint16_t flags = flags_load(&sdlt[stx]);
+	if (!(flags & SF_DIDTEX) && (flags & SF_DIDMAKE)) {
+		sdl_make(sdlt + stx, sdli + sdlt[stx].sprite, 3);
 	}
 
-	return work;
-}
-
-int sdl_pre_3(void)
-{
-	if (pre_2 == pre_3) {
-		return 0; // prefetch buffer is empty
-	}
-
-	if (!(sdlt[pre[pre_3].stx].flags & SF_DIDTEX) && (sdlt[pre[pre_3].stx].flags & SF_DIDMAKE)) {
-		sdl_make(sdlt + pre[pre_3].stx, sdli + sdlt[pre[pre_3].stx].sprite, 3);
-	}
-	pre_3 = (pre_3 + 1) % MAXPRE;
+	pre[pre_done].stx = STX_NONE; // Clear slot after processing
+	pre_done = (pre_done + 1) % MAXPRE;
 
 	return 1;
 }
@@ -754,82 +1028,71 @@ int sdl_pre_do(int curtick)
 	int size;
 
 	start = SDL_GetTicks64();
-	sdl_pre_1();
+	sdl_pre_ready();
+	extern long long sdl_time_pre1;
 	sdl_time_pre1 += SDL_GetTicks64() - start;
 
 	start = SDL_GetTicks64();
 	if (!sdl_multi) {
-		sdl_pre_2();
+		// In single-threaded mode, process jobs on main thread
+		sdl_pre_worker(NULL);
 	}
+	extern long long sdl_time_pre2;
 	sdl_time_pre2 += SDL_GetTicks64() - start;
 
 	start = SDL_GetTicks64();
-	sdl_pre_3();
+	sdl_pre_done();
+	extern long long sdl_time_pre3;
 	sdl_time_pre3 += SDL_GetTicks64() - start;
 
-	if (pre_in >= pre_1) {
-		size = pre_in - pre_1;
+	// Calculate queue size
+	if (pre_in >= pre_ready) {
+		size = pre_in - pre_ready;
 	} else {
-		size = MAXPRE + pre_in - pre_1;
+		size = MAXPRE + pre_in - pre_ready;
 	}
 
-	if (pre_1 >= pre_2) {
-		size += pre_1 - pre_2;
+	if (pre_ready >= pre_done) {
+		size += pre_ready - pre_done;
 	} else {
-		size += MAXPRE + pre_1 - pre_2;
-	}
-
-	if (pre_2 >= pre_3) {
-		size += pre_2 - pre_3;
-	} else {
-		size += MAXPRE + pre_2 - pre_3;
+		size += MAXPRE + pre_ready - pre_done;
 	}
 
 	return size;
 }
 
-uint64_t sdl_backgnd_wait = 0, sdl_backgnd_work = 0;
+uint64_t sdl_backgnd_wait = 0, sdl_backgnd_work = 0, sdl_backgnd_jobs = 0;
 
 int sdl_pre_backgnd(void *ptr)
 {
-	uint64_t start;
-	int sem_result;
+	int worker_id = (int)(long long)ptr;
+	struct zip_handles *zips = worker_zips ? &worker_zips[worker_id] : NULL;
+	uint64_t start, t1, t2;
+	int found_work;
 
-	// Validate semaphore before entering loop
-	if (!prework) {
-		SDL_Log("sdl_pre_backgnd: prework semaphore is NULL, exiting thread");
+	// Validate mutex
+	if (!premutex) {
+		SDL_Log("sdl_pre_backgnd: premutex is NULL, exiting thread");
 		return -1;
 	}
 
-	// Validate mutex if multithreading is enabled
-	if (sdl_multi && !premutex) {
-		SDL_Log("sdl_pre_backgnd: premutex is NULL but sdl_multi is enabled, exiting thread");
-		return -1;
-	}
-
-	while (!quit) {
+	while (!quit && !SDL_AtomicGet(&pre_quit)) {
 		start = SDL_GetTicks64();
-		sem_result = SDL_SemWait(prework);
+		t1 = start;
 
-		// Check for semaphore wait errors
-		if (sem_result != 0) {
-			SDL_Log("sdl_pre_backgnd: SDL_SemWait failed: %s", SDL_GetError());
-			// On fatal error, sleep briefly to avoid tight loop, then continue
-			SDL_Delay(100);
-			continue;
+		// Poll job queue with 1ms delay when idle
+		found_work = sdl_pre_worker(zips);
+
+		t2 = SDL_GetTicks64();
+
+		if (!found_work) {
+			SDL_Delay(1);
+			sdl_backgnd_wait += t2 - t1;
+		} else {
+			uint64_t work_time = t2 - t1;
+			sdl_backgnd_work += work_time;
+			sdl_backgnd_jobs++;
 		}
-
-		sdl_backgnd_wait += SDL_GetTicks64() - start;
-
-		// Double-check mutex validity before calling sdl_pre_2()
-		if (sdl_multi && !premutex) {
-			SDL_Log("sdl_pre_backgnd: premutex became NULL during execution");
-			return -1;
-		}
-
-		start = SDL_GetTicks64();
-		sdl_pre_2();
-		sdl_backgnd_work += SDL_GetTicks64() - start;
 	}
 
 	return 0;

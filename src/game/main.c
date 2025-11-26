@@ -240,7 +240,7 @@ unsigned long long get_total_system_memory(void);
 void list_mem(void)
 {
 	int i, flag = 0;
-	extern long long mem_tex;
+	long long mem_tex = sdl_get_mem_tex();
 
 	note("--mem----------------------");
 	for (i = 1; i < MAX_MEM; i++) {

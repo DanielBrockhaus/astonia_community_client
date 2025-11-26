@@ -92,3 +92,4 @@ void sdl_dump_spritecache(void);
 #endif
 void sdl_tex_alpha(int stx, int alpha);
 int sdl_check_mouse(void);
+long long sdl_get_mem_tex(void);

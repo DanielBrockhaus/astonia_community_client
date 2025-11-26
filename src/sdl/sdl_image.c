@@ -212,6 +212,9 @@ int png_load_helper(struct png_helper *p)
 
 	p->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 	if (!p->png_ptr) {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -221,6 +224,9 @@ int png_load_helper(struct png_helper *p)
 
 	p->info_ptr = png_create_info_struct(p->png_ptr);
 	if (!p->info_ptr) {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -239,6 +245,9 @@ int png_load_helper(struct png_helper *p)
 
 	p->row = png_get_rows(p->png_ptr, p->info_ptr);
 	if (!p->row) {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -257,6 +266,9 @@ int png_load_helper(struct png_helper *p)
 	} else if (tmp == p->xres * 4) {
 		p->bpp = 32;
 	} else {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -266,6 +278,9 @@ int png_load_helper(struct png_helper *p)
 	}
 
 	if (png_get_bit_depth(p->png_ptr, p->info_ptr) != 8) {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -274,6 +289,9 @@ int png_load_helper(struct png_helper *p)
 		return -1;
 	}
 	if (png_get_channels(p->png_ptr, p->info_ptr) != p->bpp / 8) {
+		if (zp) {
+			zip_fclose(zp);
+		}
 		if (fp) {
 			fclose(fp);
 		}
@@ -365,7 +383,8 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 #else
 	si->pixel = xmalloc(si->xres * si->yres * sizeof(uint32_t), MEM_SDL_PNG);
 #endif
-	mem_png += si->xres * si->yres * sizeof(uint32_t);
+	extern long long mem_png;
+	__atomic_add_fetch(&mem_png, si->xres * si->yres * sizeof(uint32_t), __ATOMIC_RELAXED);
 
 	for (y = 0; y < si->yres; y++) {
 		for (x = 0; x < si->xres; x++) {
@@ -485,7 +504,8 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 #else
 	si->pixel = xmalloc(si->xres * si->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, MEM_SDL_PNG);
 #endif
-	mem_png += si->xres * si->yres * sizeof(uint32_t);
+	extern long long mem_png;
+	__atomic_add_fetch(&mem_png, si->xres * si->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, __ATOMIC_RELAXED);
 
 	for (y = 0; y < si->yres; y++) {
 		for (x = 0; x < si->xres; x++) {
@@ -616,11 +636,29 @@ int do_smoothify(int sprite)
 	return 0;
 }
 
-int sdl_load_image(struct sdl_image *si, int sprite)
+int sdl_load_image(struct sdl_image *si, int sprite, struct zip_handles *zips)
 {
 	char filename[1024];
+	zip_t *zip1, *zip1p, *zip1m, *zip2, *zip2p, *zip2m;
 
-	if (sprite > MAXSPRITE || sprite < 0) {
+	if (zips) {
+		zip1 = zips->zip1;
+		zip1p = zips->zip1p;
+		zip1m = zips->zip1m;
+		zip2 = zips->zip2;
+		zip2p = zips->zip2p;
+		zip2m = zips->zip2m;
+	} else {
+		extern zip_t *sdl_zip1, *sdl_zip2, *sdl_zip1p, *sdl_zip2p, *sdl_zip1m, *sdl_zip2m;
+		zip1 = sdl_zip1;
+		zip1p = sdl_zip1p;
+		zip1m = sdl_zip1m;
+		zip2 = sdl_zip2;
+		zip2p = sdl_zip2p;
+		zip2m = sdl_zip2m;
+	}
+
+	if (sprite >= MAXSPRITE || sprite < 0) {
 		note("sdl_load_image: illegal sprite %d wanted", sprite);
 		return -1;
 	}
@@ -632,15 +670,15 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 #endif
 
 	// get high res from archive
-	if (sdl_zip2 || sdl_zip2p || sdl_zip2m) {
+	if (zip2 || zip2p || zip2m) {
 		sprintf(filename, "%08d.png", sprite);
-		if (sdl_zip2m && sdl_load_image_png_(si, filename, sdl_zip2m) == 0) {
+		if (zip2m && sdl_load_image_png_(si, filename, zip2m) == 0) {
 			return 0; // check mod archive first
 		}
-		if (sdl_zip2p && sdl_load_image_png_(si, filename, sdl_zip2p) == 0) {
+		if (zip2p && sdl_load_image_png_(si, filename, zip2p) == 0) {
 			return 0; // check patch archive second
 		}
-		if (sdl_zip2 && sdl_load_image_png_(si, filename, sdl_zip2) == 0) {
+		if (zip2 && sdl_load_image_png_(si, filename, zip2) == 0) {
 			return 0; // check base archive third
 		}
 	}
@@ -652,15 +690,15 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 #endif
 
 	// get standard from archive
-	if (sdl_zip1 || sdl_zip1p || sdl_zip1m) {
+	if (zip1 || zip1p || zip1m) {
 		sprintf(filename, "%08d.png", sprite);
-		if (sdl_zip1m && sdl_load_image_png(si, filename, sdl_zip1m, do_smoothify(sprite)) == 0) {
+		if (zip1m && sdl_load_image_png(si, filename, zip1m, do_smoothify(sprite)) == 0) {
 			return 0;
 		}
-		if (sdl_zip1p && sdl_load_image_png(si, filename, sdl_zip1p, do_smoothify(sprite)) == 0) {
+		if (zip1p && sdl_load_image_png(si, filename, zip1p, do_smoothify(sprite)) == 0) {
 			return 0;
 		}
-		if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0) {
+		if (zip1 && sdl_load_image_png(si, filename, zip1, do_smoothify(sprite)) == 0) {
 			return 0;
 		}
 	}
@@ -678,7 +716,7 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 
 	// get unknown sprite image
 	sprintf(filename, "%08d.png", 2);
-	if (sdl_zip1 && sdl_load_image_png(si, filename, sdl_zip1, do_smoothify(sprite)) == 0) {
+	if (zip1 && sdl_load_image_png(si, filename, zip1, do_smoothify(sprite)) == 0) {
 		return 0;
 	}
 
@@ -691,27 +729,71 @@ int sdl_load_image(struct sdl_image *si, int sprite)
 	return -1;
 }
 
-int sdl_ic_load(int sprite)
+int sdl_ic_load(int sprite, struct zip_handles *zips)
 {
-	uint64_t start;
+#ifdef DEVELOPER
+	uint64_t start = SDL_GetTicks64();
+#endif
 
-	start = SDL_GetTicks64();
-
-	if (sprite >= MAXSPRITE || sprite < 0) {
+	if (sprite < 0 || sprite >= MAXSPRITE) {
 		note("illegal sprite %d wanted in sdl_ic_load", sprite);
 		return -1;
 	}
-	if (sdli[sprite].flags) {
+
+	// sdli_state is in sdl_core.c, we need to access it
+	// For now, we'll use a helper function or make it extern
+	extern int *sdli_state; // declared in sdl_core.c
+
+	enum {
+		IMG_UNLOADED = 0,
+		IMG_LOADING = 1,
+		IMG_READY = 2,
+		IMG_FAILED = 3,
+	};
+
+	int state;
+retry:
+	state = __atomic_load_n((int *)&sdli_state[sprite], __ATOMIC_ACQUIRE);
+
+	if (state == IMG_READY) {
+#ifdef DEVELOPER
+		extern long long sdl_time_load;
+		sdl_time_load += SDL_GetTicks64() - start;
+#endif
 		return sprite;
 	}
 
-	if (sdl_load_image(sdli + sprite, sprite)) {
+	if (state == IMG_FAILED) {
 		return -1;
 	}
 
-	sdl_time_load += SDL_GetTicks64() - start;
+	if (state == IMG_LOADING) {
+		// Someone else is loading; wait for them
+		SDL_Delay(1);
+		goto retry;
+	}
 
-	return sprite;
+	// state == IMG_UNLOADED, try to become the loader
+	int expected = IMG_UNLOADED;
+	if (!__atomic_compare_exchange_n(
+	        (int *)&sdli_state[sprite], &expected, IMG_LOADING, 0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE)) {
+		// Lost the race, someone else started loading; wait
+		goto retry;
+	}
+
+	// We are the loader now
+	extern struct sdl_image *sdli;
+	if (sdl_load_image(sdli + sprite, sprite, zips) == 0) {
+		__atomic_store_n((int *)&sdli_state[sprite], IMG_READY, __ATOMIC_RELEASE);
+#ifdef DEVELOPER
+		extern long long sdl_time_load;
+		sdl_time_load += SDL_GetTicks64() - start;
+#endif
+		return sprite;
+	} else {
+		__atomic_store_n((int *)&sdli_state[sprite], IMG_FAILED, __ATOMIC_RELEASE);
+		return -1;
+	}
 }
 
 void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
@@ -720,7 +802,9 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 	int x, y, scale, sink;
 	double ix, iy, low_x, low_y, high_x, high_y, dbr, dbg, dbb, dba;
 	uint32_t irgb;
-	long long start;
+#ifdef DEVELOPER
+	long long start = SDL_GetTicks64();
+#endif
 
 	if (si->xres == 0 || si->yres == 0) {
 		scale = 100; // !!! needs better handling !!!
@@ -754,19 +838,18 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 	}
 
 	if (!preload || preload == 1) {
-		if (st->flags & SF_DIDALLOC) {
-			fail("double alloc for sprite %d (%d)", st->sprite, preload);
-			note("... sprite=%d (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", st->sprite, st->sink, st->freeze,
-			    st->scale, st->cr, st->cg, st->cb, st->light, st->sat, st->c1, st->c2, st->c3, st->shine, st->ml,
-			    st->ll, st->rl, st->ul, st->dl);
-			return;
-		}
+		if (!(flags_load(st) & SF_DIDALLOC)) {
+			// Only allocate if not already allocated (may be set by caller with mutex protection in multi-threaded
+			// mode)
 #ifdef SDL_FAST_MALLOC
-		st->pixel = malloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
+			st->pixel = malloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
 #else
-		st->pixel = xmalloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, MEM_SDL_PIXEL);
+			st->pixel = xmalloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, MEM_SDL_PIXEL);
 #endif
-		st->flags |= SF_DIDALLOC;
+			uint16_t *flags_ptr = (uint16_t *)&st->flags;
+			__atomic_fetch_or(flags_ptr, SF_DIDALLOC, __ATOMIC_RELEASE);
+		}
+		// If already allocated, skip allocation but continue to set sdlm_* variables below
 	}
 
 	sdlm_sprite = st->sprite;
@@ -774,15 +857,8 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 	sdlm_pixel = si->pixel;
 
 	if (!preload || preload == 2) {
-		if (!(st->flags & SF_DIDALLOC)) {
+		if (!(flags_load(st) & SF_DIDALLOC)) {
 			fail("cannot make without alloc for sprite %d (%p)", st->sprite, st);
-			note("... sprite=%d (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", st->sprite, st->sink, st->freeze,
-			    st->scale, st->cr, st->cg, st->cb, st->light, st->sat, st->c1, st->c2, st->c3, st->shine, st->ml,
-			    st->ll, st->rl, st->ul, st->dl);
-			return;
-		}
-		if (!(st->flags & SF_BUSY)) {
-			fail("cannot make non-busy for sprite %d (%p)", st->sprite, st);
 			note("... sprite=%d (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", st->sprite, st->sink, st->freeze,
 			    st->scale, st->cr, st->cg, st->cb, st->light, st->sat, st->c1, st->c2, st->c3, st->shine, st->ml,
 			    st->ll, st->rl, st->ul, st->dl);
@@ -795,7 +871,7 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			    st->ll, st->rl, st->ul, st->dl);
 			return;
 		}
-		if (st->flags & SF_DIDMAKE) {
+		if (flags_load(st) & SF_DIDMAKE) {
 			fail("double make for sprite %d (%d)", st->sprite, preload);
 			note("... sprite=%d (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)", st->sprite, st->sink, st->freeze,
 			    st->scale, st->cr, st->cg, st->cb, st->light, st->sat, st->c1, st->c2, st->c3, st->shine, st->ml,
@@ -803,7 +879,9 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			return;
 		}
 
+#ifdef DEVELOPER
 		start = SDL_GetTicks64();
+#endif
 
 		for (y = 0; y < st->yres * sdl_scale; y++) {
 			for (x = 0; x < st->xres * sdl_scale; x++) {
@@ -1009,30 +1087,37 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 				st->pixel[x + y * st->xres * sdl_scale] = irgb;
 			}
 		}
-		st->flags |= SF_DIDMAKE;
+		uint16_t *flags_ptr = (uint16_t *)&st->flags;
+		__atomic_fetch_or(flags_ptr, SF_DIDMAKE, __ATOMIC_RELEASE);
 
+#ifdef DEVELOPER
 		if (preload) {
+			extern long long sdl_time_preload;
 			sdl_time_preload += SDL_GetTicks64() - start;
 		} else {
+			extern long long sdl_time_make;
 			sdl_time_make += SDL_GetTicks64() - start;
 		}
+#endif
 	}
 
 	if (!preload || preload == 3) {
-		if (!(st->flags & SF_DIDMAKE)) {
+		if (!(flags_load(st) & SF_DIDMAKE)) {
 			fail("cannot texture without make for sprite %d (%d)", st->sprite, preload);
 			// note("... sprite=%d
 			// (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",st->sprite,st->sink,st->freeze,st->scale,st->cr,st->cg,st->cb,st->light,st->sat,st->c1,st->c2,st->c3,st->shine,st->ml,st->ll,st->rl,st->ul,st->dl);
 			return;
 		}
-		if (st->flags & SF_DIDTEX) {
+		if (flags_load(st) & SF_DIDTEX) {
 			fail("double texture for sprite %d (%d)", st->sprite, preload);
 			// note("... sprite=%d
 			// (%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d)",st->sprite,st->sink,st->freeze,st->scale,st->cr,st->cg,st->cb,st->light,st->sat,st->c1,st->c2,st->c3,st->shine,st->ml,st->ll,st->rl,st->ul,st->dl);
 			return;
 		}
 
+#ifdef DEVELOPER
 		start = SDL_GetTicks64();
+#endif
 
 		if (st->xres > 0 && st->yres > 0) {
 			texture = SDL_CreateTexture(
@@ -1044,6 +1129,9 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			}
 			SDL_UpdateTexture(texture, NULL, st->pixel, st->xres * sizeof(uint32_t) * sdl_scale);
 			SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+			// Update memory accounting when texture is actually created
+			extern long long mem_tex;
+			__atomic_add_fetch(&mem_tex, st->xres * st->yres * sizeof(uint32_t), __ATOMIC_RELAXED);
 		} else {
 			texture = NULL;
 		}
@@ -1055,9 +1143,13 @@ void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 		st->pixel = NULL;
 		st->tex = texture;
 
-		st->flags |= SF_DIDTEX;
+		uint16_t *flags_ptr = (uint16_t *)&st->flags;
+		__atomic_fetch_or(flags_ptr, SF_DIDTEX, __ATOMIC_RELEASE);
 
+#ifdef DEVELOPER
+		extern long long sdl_time_tex;
 		sdl_time_tex += SDL_GetTicks64() - start;
+#endif
 	}
 }
 

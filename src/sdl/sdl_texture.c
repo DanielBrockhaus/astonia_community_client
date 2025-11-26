@@ -16,6 +16,9 @@
 #include "astonia.h"
 #include "sdl/sdl.h"
 #include "sdl/sdl_private.h"
+#ifdef DEVELOPER
+extern int sockstate; // Declare early for use in wait logging
+#endif
 
 // Texture cache data
 struct sdl_texture *sdlt = NULL;
@@ -27,8 +30,14 @@ struct sdl_image *sdli = NULL;
 
 // Statistics
 int texc_used = 0;
-long long mem_png = 0, mem_tex = 0;
+long long mem_png = 0;
+long long mem_tex = 0;
 long long texc_hit = 0, texc_miss = 0, texc_pre = 0;
+
+#ifdef DEVELOPER
+uint64_t sdl_render_wait = 0;
+uint64_t sdl_render_wait_count = 0;
+#endif
 
 // Timing
 long long sdl_time_preload = 0;
@@ -114,40 +123,10 @@ static inline unsigned int hashfunc_text(const char *text, int color, int flags)
 
 SDL_Texture *sdl_maketext(const char *text, struct renderfont *font, uint32_t color, int flags);
 
-static void not_busy_or_panic(struct sdl_texture *st)
-{
-	int panic = 0;
-
-	if (sdl_multi) {
-		while (42) {
-			SDL_LockMutex(premutex);
-			if (!(st->flags & (SF_BUSY))) {
-				st->flags |= SF_BUSY;
-				SDL_UnlockMutex(premutex);
-				break;
-			}
-			SDL_UnlockMutex(premutex);
-			SDL_Delay(1);
-			if (panic++ > 100) {
-				fail("texture cache too small (Delete: BUSY)");
-				exit(42);
-			}
-		}
-	} else {
-		st->flags |= SF_BUSY;
-	}
-}
-
-static void unbusy(struct sdl_texture *st)
-{
-	if (sdl_multi) {
-		SDL_LockMutex(premutex);
-	}
-	st->flags &= ~SF_BUSY;
-	if (sdl_multi) {
-		SDL_UnlockMutex(premutex);
-	}
-}
+// Forward declarations
+extern int next_job_id(void); // in sdl_core.c
+extern SDL_mutex *premutex;
+extern int sdl_pre_worker(struct zip_handles *zips); // in sdl_core.c
 
 int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int cb, int light, int sat, int c1, int c2,
     int c3, int shine, int ml, int ll, int rl, int ul, int dl, const char *text, int text_color, int text_flags,
@@ -168,6 +147,17 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 	}
 
 	for (stx = sdlt_cache[hash]; stx != STX_NONE; stx = sdlt[stx].hnext, panic++) {
+#ifdef DEVELOPER
+		// Detect and break self-loops to recover gracefully
+		if (sdlt[stx].hnext == stx) {
+			warn("Hash self-loop detected at stx=%d for sprite=%d - breaking chain", stx, sprite);
+			sdlt[stx].hnext = STX_NONE; // break the loop to recover gracefully
+			if (panic > maxpanic) {
+				maxpanic = panic;
+			}
+			break;
+		}
+#endif
 		if (panic > 999) {
 			warn("%04d: stx=%d, hprev=%d, hnext=%d sprite=%d (%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d%d,%p) PANIC\n", panic,
 			    stx, sdlt[stx].hprev, sdlt[stx].hnext, sprite, sdlt[stx].sink, sdlt[stx].freeze, sdlt[stx].scale,
@@ -182,7 +172,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			}
 		}
 		if (text) {
-			if (!(sdlt[stx].flags & SF_TEXT)) {
+			if (!(flags_load(&sdlt[stx]) & SF_TEXT)) {
 				continue;
 			}
 			if (!(sdlt[stx].tex)) {
@@ -201,7 +191,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 				continue;
 			}
 		} else {
-			if (!(sdlt[stx].flags & SF_SPRITE)) {
+			if (!(flags_load(&sdlt[stx]) & SF_SPRITE)) {
 				continue;
 			}
 			if (sdlt[stx].sprite != sprite) {
@@ -271,83 +261,65 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			maxpanic = panic;
 		}
 
-		if (!preload && (sdlt[stx].flags & SF_SPRITE)) {
-			// load image and allocate memory if preload didn't do it yet
-			if (!(sdlt[stx].flags & SF_DIDALLOC)) {
-				// long long start=SDL_GetTicks64();
-				// printf("main-making alloc and make for sprite %d (%d)\n",sprite,preload);
-				sdl_ic_load(sprite);
-
-				not_busy_or_panic(sdlt + stx);
-				sdl_make(sdlt + stx, sdli + sprite, 1);
-				sdl_make(sdlt + stx, sdli + sprite, 2);
-				unbusy(sdlt + stx);
-				// sdl_time_tex_main+=SDL_GetTicks64()-start; TODO
-			}
-
-			// Make make in main if not busy
-			if (sdl_multi) {
-				SDL_LockMutex(premutex);
-			}
-
-			if (!(sdlt[stx].flags & (SF_DIDMAKE | SF_BUSY))) {
-				sdlt[stx].flags |= SF_BUSY;
-
-				if (sdl_multi) {
-					SDL_UnlockMutex(premutex);
-				}
-
-				sdl_make(sdlt + stx, sdli + sprite, 2);
-
-				if (sdl_multi) {
-					SDL_LockMutex(premutex);
-				}
-
-				sdlt[stx].flags &= ~SF_BUSY;
-				sdlt[stx].flags |= SF_DIDMAKE;
-
-				if (sdl_multi) {
-					SDL_UnlockMutex(premutex);
-				}
-			} else {
-				if (sdl_multi) {
-					SDL_UnlockMutex(premutex);
-				}
-			}
-
-			// wait for the background preloader if we have multiple threads
+		if (!preload && (flags_load(&sdlt[stx]) & SF_SPRITE)) {
+			// Wait for background workers to complete processing
 			panic = 0;
-			while (sdl_multi) {
-				if (sdlt[stx].flags & SF_DIDMAKE) {
-					break;
+#ifdef DEVELOPER
+			uint64_t wait_start = 0;
+#endif
+			while (!(flags_load(&sdlt[stx]) & SF_DIDMAKE)) {
+#ifdef DEVELOPER
+				if (wait_start == 0) {
+					wait_start = SDL_GetTicks64();
+					extern uint64_t sdl_render_wait_count;
+					sdl_render_wait_count++;
+				}
+#endif
+
+				// In single-threaded mode, process queue to make progress
+				if (!sdl_multi) {
+					sdl_pre_worker(NULL);
 				}
 
-				// warn("waiting for graphics...");
 				SDL_Delay(1);
 
-				if (panic++ > 100) {
-					fail("graphics not being made for sprite %d (flags=%s %s %s %s)", sdlt[stx].sprite,
-					    (sdlt[stx].flags & SF_DIDALLOC) ? "didalloc" : "",
-					    (sdlt[stx].flags & SF_DIDMAKE) ? "didmake" : "", (sdlt[stx].flags & SF_DIDTEX) ? "didtex" : "",
-					    (sdlt[stx].flags & SF_BUSY) ? "busy" : "");
-					exit(42);
+				if (panic++ > 1000) {
+					uint16_t flags = flags_load(&sdlt[stx]);
+					// Worker is stuck or taking too long - give up this frame rather than corrupting memory
+					warn("Render thread timeout waiting for sprite %d (stx=%d, flags=%s %s %s %s) - giving up this "
+					     "frame",
+					    sdlt[stx].sprite, stx, (flags & SF_CLAIMJOB) ? "claimed" : "",
+					    (flags & SF_DIDALLOC) ? "didalloc" : "", (flags & SF_DIDMAKE) ? "didmake" : "",
+					    (flags & SF_DIDTEX) ? "didtex" : "");
+					// Return STX_NONE to skip this texture this frame - better than use-after-free
+					return STX_NONE;
 				}
 			}
-
-			// if we are single threaded do it yourself
-			if (!sdl_multi && !(sdlt[stx].flags & SF_DIDMAKE)) {
-				// printf("main-making make for sprite %d\n",sprite);
-				long long start = SDL_GetTicks64();
-				sdl_make(sdlt + stx, sdli + sprite, 2);
-				sdl_time_make_main += SDL_GetTicks64() - start;
+#ifdef DEVELOPER
+			if (wait_start > 0) {
+				uint64_t wait_time = SDL_GetTicks64() - wait_start;
+				extern uint64_t sdl_render_wait;
+				sdl_render_wait += wait_time;
+#ifdef DEVELOPER_NOISY
+				// Suppress warnings during boot - only show "real" stalls (>= 10ms)
+				extern int sockstate;
+				if (sockstate >= 4 && wait_time >= 10) {
+					warn("Render thread waited %lu ms for sprite %d", (unsigned long)wait_time, sdlt[stx].sprite);
+				}
+#endif
 			}
+#endif
 
 			// make texture now if preload didn't finish it
-			if (!(sdlt[stx].flags & SF_DIDTEX)) {
+			if (!(flags_load(&sdlt[stx]) & SF_DIDTEX)) {
 				// printf("main-making texture for sprite %d\n",sprite);
+#ifdef DEVELOPER
 				long long start = SDL_GetTicks64();
 				sdl_make(sdlt + stx, sdli + sprite, 3);
 				sdl_time_tex_main += SDL_GetTicks64() - start;
+#else
+				sdl_make(sdlt + stx, sdli + sprite, 3);
+#endif
 			}
 		}
 
@@ -395,17 +367,81 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 
 	stx = sdlt_last;
 
-	// delete
-	if (sdlt[stx].flags) {
-		int hash2;
-
-		if (sdlt[stx].flags & SF_SPRITE) {
-			not_busy_or_panic(sdlt + stx);
+	// Try to evict an entry, potentially trying multiple LRU candidates if workers are stuck
+	static int sdl_eviction_failures = 0;
+	for (int eviction_attempts = 0; eviction_attempts < 10; eviction_attempts++) {
+		// delete
+		if (!flags_load(&sdlt[stx])) {
+			// Empty slot, just use it
+			break;
 		}
 
-		if (sdlt[stx].flags & SF_SPRITE) {
+		int hash2;
+		int can_evict = 1;
+
+		// Wait for any in-progress work to complete before deleting
+		if (sdl_multi && (flags_load(&sdlt[stx]) & SF_SPRITE)) {
+			int panic = 0;
+			for (;;) {
+				uint16_t f = flags_load(&sdlt[stx]);
+
+				// No job queued/claimed -> nothing to wait for
+				if (!(f & (SF_INQUEUE | SF_CLAIMJOB))) {
+					break;
+				}
+
+				// Job started and CPU-side work finished -> safe to evict
+				if ((f & SF_CLAIMJOB) && (f & SF_DIDMAKE)) {
+					break;
+				}
+
+				SDL_Delay(1);
+
+				// Timeout handling: After 100ms of waiting, we need to decide whether to evict or skip this entry.
+				// The key distinction:
+				//   - SF_CLAIMJOB set: A worker has claimed and is actively processing this job. We must NOT evict.
+				//   - SF_INQUEUE set (but not SF_CLAIMJOB): Job is queued but unclaimed after 100ms. This is stale
+				//     and can be neutralized/evicted. The worker will see STX_NONE when it eventually processes it.
+				//   - Neither set: No job activity, safe to evict.
+				if (panic++ > 100) {
+					uint16_t *flags_ptr = (uint16_t *)&sdlt[stx].flags;
+					uint16_t f2 = __atomic_load_n(flags_ptr, __ATOMIC_ACQUIRE);
+					warn("Timeout waiting to evict stx=%d sprite=%d (flags=0x%04x)", stx, sdlt[stx].sprite, f2);
+
+					// If a job is actually in progress (claimed by a worker), do NOT evict this entry
+					if (f2 & SF_CLAIMJOB) {
+						// Worker still owns this entry, try previous LRU candidate
+						can_evict = 0;
+						int candidate = sdlt[stx].prev;
+						if (candidate == STX_NONE) {
+							// No more candidates, give up
+							return STX_NONE;
+						}
+						// Clear SF_INQUEUE and neutralize any stale queue entries before trying next candidate
+						__atomic_fetch_and(flags_ptr, (uint16_t)~SF_INQUEUE, __ATOMIC_RELEASE);
+						neutralize_stale_jobs(stx);
+						stx = candidate;
+						break;
+					}
+
+					// No worker is claiming this entry. If SF_INQUEUE was set, the job is stale (queued but
+					// unclaimed for 100ms). Clear the flag and neutralize the queue entry, then proceed with eviction.
+					__atomic_fetch_and(flags_ptr, (uint16_t)~SF_INQUEUE, __ATOMIC_RELEASE);
+					neutralize_stale_jobs(stx);
+					break;
+				}
+			}
+		}
+
+		// If we can't evict this entry, try the next candidate
+		if (!can_evict) {
+			continue;
+		}
+
+		uint16_t flags = flags_load(&sdlt[stx]);
+		if (flags & SF_SPRITE) {
 			hash2 = hashfunc(sdlt[stx].sprite, sdlt[stx].ml, sdlt[stx].ll, sdlt[stx].rl, sdlt[stx].ul, sdlt[stx].dl);
-		} else if (sdlt[stx].flags & SF_TEXT) {
+		} else if (flags & SF_TEXT) {
 			hash2 = hashfunc_text(sdlt[stx].text, sdlt[stx].text_color, sdlt[stx].text_flags);
 		} else {
 			hash2 = 0;
@@ -429,12 +465,13 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			sdlt[ntx].hprev = sdlt[stx].hprev;
 		}
 
-		if (sdlt[stx].flags & SF_DIDTEX) {
-			mem_tex -= sdlt[stx].xres * sdlt[stx].yres * sizeof(uint32_t);
+		flags = flags_load(&sdlt[stx]);
+		if (flags & SF_DIDTEX) {
+			__atomic_sub_fetch(&mem_tex, sdlt[stx].xres * sdlt[stx].yres * sizeof(uint32_t), __ATOMIC_RELAXED);
 			if (sdlt[stx].tex) {
 				SDL_DestroyTexture(sdlt[stx].tex);
 			}
-		} else if (sdlt[stx].flags & SF_DIDALLOC) {
+		} else if (flags & SF_DIDALLOC) {
 			if (sdlt[stx].pixel) {
 #ifdef SDL_FAST_MALLOC
 				free(sdlt[stx].pixel);
@@ -445,27 +482,46 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 			}
 		}
 #ifdef SDL_FAST_MALLOC
-		if (sdlt[stx].flags & SF_TEXT) {
+		if (flags & SF_TEXT) {
 			free(sdlt[stx].text);
 			sdlt[stx].text = NULL;
 		}
 #else
-		if (sdlt[stx].flags & SF_TEXT) {
+		if (flags & SF_TEXT) {
 			xfree(sdlt[stx].text);
 			sdlt[stx].text = NULL;
 		}
 #endif
 
-		sdlt[stx].flags = 0;
-	} else {
-		texc_used++;
+		uint16_t *flags_ptr = (uint16_t *)&sdlt[stx].flags;
+		__atomic_store_n(flags_ptr, 0, __ATOMIC_RELEASE);
+		break; // Successfully evicted, exit the retry loop
 	}
+
+	// *** SAFETY CHECK ***
+	// If after all that the entry is still non-empty, we failed to get a usable slot.
+	// Do NOT reuse it; that would corrupt the hash chains.
+	if (flags_load(&sdlt[stx])) {
+		sdl_eviction_failures++;
+#ifdef DEVELOPER
+		if (sdl_eviction_failures == 1 || (sdl_eviction_failures % 100) == 0) {
+			warn("SDL: texture cache eviction failed %d times; workers may be wedged", sdl_eviction_failures);
+		}
+#endif
+		// Could not free or find an empty entry in the limited attempts.
+		// Safer to bail out than corrupt the cache.
+		return STX_NONE;
+	}
+
+	// From here on, stx is guaranteed empty
+	texc_used++;
 
 	// build
 	if (text) {
 		int w, h;
 		sdlt[stx].tex = sdl_maketext(text, (struct renderfont *)text_font, text_color, text_flags);
-		sdlt[stx].flags = SF_USED | SF_TEXT | SF_DIDALLOC | SF_DIDMAKE | SF_DIDTEX;
+		uint16_t *flags_ptr = (uint16_t *)&sdlt[stx].flags;
+		__atomic_store_n(flags_ptr, SF_USED | SF_TEXT | SF_DIDALLOC | SF_DIDMAKE | SF_DIDTEX, __ATOMIC_RELEASE);
 		sdlt[stx].text_color = text_color;
 		sdlt[stx].text_flags = text_flags;
 		sdlt[stx].text_font = text_font;
@@ -483,11 +539,10 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		}
 	} else {
 		if (preload != 1) {
-			sdl_ic_load(sprite);
+			sdl_ic_load(sprite, NULL);
 		}
 
-		// init
-		sdlt[stx].flags = SF_USED | SF_SPRITE | SF_BUSY;
+		// Initialize all non-atomic fields first
 		sdlt[stx].sprite = sprite;
 		sdlt[stx].sink = sink;
 		sdlt[stx].freeze = freeze;
@@ -507,13 +562,15 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		sdlt[stx].ul = ul;
 		sdlt[stx].dl = dl;
 
+		// Set flags with RELEASE to establish happens-before: workers reading flags with ACQUIRE
+		// will see all the above fields as initialized
+		uint16_t *flags_ptr = (uint16_t *)&sdlt[stx].flags;
+		__atomic_store_n(flags_ptr, SF_USED | SF_SPRITE, __ATOMIC_RELEASE);
+
 		if (preload != 1) {
 			sdl_make(sdlt + stx, sdli + sprite, preload);
 		}
-		unbusy(sdlt + stx);
 	}
-
-	mem_tex += sdlt[stx].xres * sdlt[stx].yres * sizeof(uint32_t);
 
 	ntx = sdlt_cache[hash];
 
@@ -552,17 +609,17 @@ int dump_cmp(const void *ca, const void *cb)
 	a = *(int *)ca;
 	b = *(int *)cb;
 
-	if (!sdlt[a].flags) {
+	if (!flags_load(&sdlt[a])) {
 		return 1;
 	}
-	if (!sdlt[b].flags) {
+	if (!flags_load(&sdlt[b])) {
 		return -1;
 	}
 
-	if (sdlt[a].flags & SF_TEXT) {
+	if (flags_load(&sdlt[a]) & SF_TEXT) {
 		return 1;
 	}
-	if (sdlt[b].flags & SF_TEXT) {
+	if (flags_load(&sdlt[b]) & SF_TEXT) {
 		return -1;
 	}
 
@@ -613,11 +670,12 @@ void sdl_dump_spritecache(void)
 
 	for (i = 0; i < MAX_TEXCACHE; i++) {
 		n = dumpidx[i];
-		if (!sdlt[n].flags) {
+		if (!flags_load(&sdlt[n])) {
 			break;
 		}
 
-		if (sdlt[n].flags & SF_TEXT) {
+		uint16_t flags_n = flags_load(&sdlt[n]);
+		if (flags_n & SF_TEXT) {
 			text++;
 		} else {
 			if (i == 0 || sdlt[dumpidx[i]].sprite != sdlt[dumpidx[i - 1]].sprite) {
@@ -626,11 +684,10 @@ void sdl_dump_spritecache(void)
 			cnt++;
 		}
 
-		if (sdlt[n].flags & SF_SPRITE) {
-			fprintf(fp, "Sprite: %6d (%7d) %s%s%s%s%s\n", sdlt[n].sprite, sdlt[n].fortick,
-			    (sdlt[n].flags & SF_USED) ? "SF_USED " : "", (sdlt[n].flags & SF_DIDALLOC) ? "SF_DIDALLOC " : "",
-			    (sdlt[n].flags & SF_DIDMAKE) ? "SF_DIDMAKE " : "", (sdlt[n].flags & SF_DIDTEX) ? "SF_DIDTEX " : "",
-			    (sdlt[n].flags & SF_BUSY) ? "SF_BUSY " : "");
+		if (flags_n & SF_SPRITE) {
+			fprintf(fp, "Sprite: %6d (%7d) %s%s%s%s\n", sdlt[n].sprite, sdlt[n].fortick,
+			    (flags_n & SF_USED) ? "SF_USED " : "", (flags_n & SF_DIDALLOC) ? "SF_DIDALLOC " : "",
+			    (flags_n & SF_DIDMAKE) ? "SF_DIDMAKE " : "", (flags_n & SF_DIDTEX) ? "SF_DIDTEX " : "");
 		}
 
 		/*fprintf(fp,"Sprite: %6d, Lights: %2d,%2d,%2d,%2d,%2d, Light: %3d, Colors: %3d,%3d,%3d, Colors: %4X,%4X,%4X,
@@ -652,7 +709,7 @@ void sdl_dump_spritecache(void)
 		       sdlt[n].shine,
 		       sdlt[n].xres,
 		       sdlt[n].yres);*/
-		if (sdlt[n].flags & SF_TEXT) {
+		if (flags_n & SF_TEXT) {
 			fprintf(fp, "Color: %08X, Flags: %04X, Font: %p, Text: %s (%dx%d)\n", sdlt[n].text_color,
 			    sdlt[n].text_flags, sdlt[n].text_font, sdlt[n].text, sdlt[n].xres, sdlt[n].yres);
 		}
@@ -701,4 +758,9 @@ void sdl_tex_alpha(int stx, int alpha)
 	if (sdlt[stx].tex) {
 		SDL_SetTextureAlphaMod(sdlt[stx].tex, alpha);
 	}
+}
+
+long long sdl_get_mem_tex(void)
+{
+	return (long long)__atomic_load_n(&mem_tex, __ATOMIC_RELAXED);
 }
