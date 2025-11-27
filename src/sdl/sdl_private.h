@@ -2,6 +2,14 @@
  * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
  */
 
+#ifndef SDL_PRIVATE_H
+#define SDL_PRIVATE_H
+
+#include <stdint.h>
+#include <zip.h>
+#include <png.h>
+#include <SDL2/SDL.h>
+
 #define MAX_TEXCACHE (sdl_cache_size)
 #define MAX_TEXHASH                                                                                                    \
 	(sdl_cache_size) // Note: MAX_TEXCACHE and MAX_TEXHASH do not have to be the same value. It just turned out to work
@@ -166,11 +174,13 @@ uint32_t sdl_light(int light, uint32_t irgb);
 uint32_t sdl_freeze(int freeze, uint32_t irgb);
 uint32_t sdl_shine_pix(uint32_t irgb, unsigned short shine);
 uint32_t sdl_colorize_pix(uint32_t irgb, unsigned short c1v, unsigned short c2v, unsigned short c3v);
-uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned short c2v, unsigned short c3v, int x,
-    int y, int xres, int yres, uint32_t *pixel, int sprite);
+uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned short c2v, unsigned short c3v, int x, int y,
+    int xres, int yres, uint32_t *pixel, int sprite);
 uint32_t sdl_colorbalance(uint32_t irgb, char cr, char cg, char cb, char light, char sat);
 
 // ============================================================================
 // Internal functions from sdl_draw.c
 // ============================================================================
 SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color, int flags);
+
+#endif // SDL_PRIVATE_H

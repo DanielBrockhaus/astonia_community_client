@@ -34,12 +34,20 @@ zip_t *sdl_zip2p = NULL;
 zip_t *sdl_zip1m = NULL;
 zip_t *sdl_zip2m = NULL;
 
-// Prefetch threading
-static SDL_sem *prework = NULL;
-static SDL_mutex *premutex = NULL;
+// Prefetch threading (shared with sdl_texture.c)
+SDL_sem *prework = NULL;
+SDL_mutex *premutex = NULL;
+
+// Scale and resolution settings
+DLL_EXPORT int sdl_scale = 1;
+DLL_EXPORT int sdl_frames = 0;
+DLL_EXPORT int sdl_multi = 4;
+DLL_EXPORT int sdl_cache_size = 8000;
+DLL_EXPORT int __yres = YRES0;
 
 // Prefetch buffer
 #define MAXPRE (16384)
+
 struct prefetch {
 	int attick;
 	int stx;
@@ -65,9 +73,10 @@ void sdl_dump(FILE *fp)
 	fprintf(fp, "texc_miss: %lld\n", texc_miss);
 	fprintf(fp, "texc_pre: %lld\n", texc_pre);
 
-	fprintf(fp, "sdlm_sprite: %d\n", sdlm_sprite);
-	fprintf(fp, "sdlm_scale: %d\n", sdlm_scale);
-	fprintf(fp, "sdlm_pixel: %p\n", sdlm_pixel);
+	// sdlm_sprite, sdlm_scale, sdlm_pixel are static in sdl_image.c
+	// fprintf(fp, "sdlm_sprite: %d\n", sdlm_sprite);
+	// fprintf(fp, "sdlm_scale: %d\n", sdlm_scale);
+	// fprintf(fp, "sdlm_pixel: %p\n", sdlm_pixel);
 
 	fprintf(fp, "\n");
 }

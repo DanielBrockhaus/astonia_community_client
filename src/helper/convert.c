@@ -37,7 +37,7 @@
 
 #ifndef STANDALONE
 #include <SDL2/SDL.h>
-#include "../../src/sdl/_sdl.h"
+#include "../sdl/sdl_private.h"
 #endif
 
 struct png_helper {

@@ -9,7 +9,7 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <SDL_loadso.h>
+#include <SDL2/SDL_loadso.h>
 
 #include "astonia.h"
 #include "modder/modder.h"

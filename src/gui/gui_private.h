@@ -246,6 +246,20 @@ struct spell {
 
 typedef struct spell SPELL;
 
+#ifndef HAVE_SPECIAL_TAB
+#define HAVE_SPECIAL_TAB
+
+struct special_tab {
+	char *name;
+	int shift_over;
+	int control_over;
+	int spell, target;
+	int req;
+};
+
+typedef struct special_tab SPECIAL_TAB;
+#endif
+
 extern int gui_topoff;
 extern DOT *dot;
 extern BUT *but;
@@ -304,6 +318,93 @@ extern int show_cx;
 extern char hitsel[];
 extern int hittype;
 extern int act_lck;
+
+// ============================================================================
+// Shared variables from gui_core.c
+// ============================================================================
+extern uint64_t gui_time_misc;
+extern int skip, idle, tota, frames;
+extern int display_vc;
+extern int display_help, display_quest;
+extern int playersprite_override;
+extern int update_skltab;
+extern int show_look;
+extern int control_override;
+extern int vk_rbut, vk_lbut;
+extern int vk_special, vk_special_time;
+extern struct special_tab special_tab[];
+extern int max_special;
+extern int plrmn;
+extern int mapsel;
+extern int itmsel;
+extern int chrsel;
+extern int last_right_click_invsel;
+extern int mapoffx, mapoffy;
+extern int mapaddx, mapaddy;
+extern int nextframe, nexttick;
+extern uint64_t gui_time_network;
+extern uint64_t gui_frametime;
+extern uint64_t gui_ticktime;
+extern int game_slowdown;
+
+// ============================================================================
+// Shared variables from gui_map.c (shared for map coordinate functions)
+// ============================================================================
+// (mapoffx, mapoffy, mapaddx, mapaddy are already declared above)
+
+// ============================================================================
+// Shared variables from gui_buttons.c
+// ============================================================================
+// (button handling variables)
+
+// ============================================================================
+// Shared variables from gui_display.c
+// ============================================================================
+// (display functions)
+
+// ============================================================================
+// Internal function prototypes for cross-module use
+// ============================================================================
+
+// From gui_core.c
+void gui_insert(void);
+int gui_keymode(void);
+int vk_special_inc(void);
+int vk_special_dec(void);
+
+// From gui_inventory.c
+void set_invoff(int bymouse, int ny);
+void set_invsel(int newinvsel);
+void set_skloff(int bymouse, int ny);
+void set_skltab(void);
+void set_conoff(int bymouse, int ny);
+void set_cmd_invsel(void);
+void set_cmd_consel(void);
+void set_cmd_weasel(void);
+void set_weasel(int newweasel);
+void set_button_flags(void);
+// get_skltab_* functions are function pointers declared in gui.h, not here
+int is_fkey_use_item(int invnr);
+
+// From gui_buttons.c
+int get_near_button(int x, int y);
+void calculate_lcmd_logic(void);
+void calculate_rcmd_logic(void);
+void handle_special_buttons_logic(void);
+void apply_gear_lock_logic(void);
+void exec_cmd(int cmd, int param);
+void set_cmd_states(void);
+
+// From gui_display.c
+void display_helpandquest(void);
+void display_wheel(void);
+void update_ui_layout(void);
+
+// From gui_map.c (already declared in gui.h but repeated here for clarity)
+// void set_mapoff(int cx, int cy, int mdx, int mdy);
+// void set_mapadd(int dx, int dy);
+// int mtos(int m, int o, int a, int *xs, int *ys);
+// int stom(int s, int o, int a, int *xm, int *ym);
 
 void dx_copysprite_emerald(int scrx, int scry, int emx, int emy);
 void display_cmd(void);
