@@ -4,6 +4,10 @@
 
 #include "../dll.h"
 
+// Forward declarations
+struct quicks; // QUICK is defined in gui/gui.h as typedef of struct quicks
+typedef struct quicks QUICK;
+
 #define GND_LAY       100
 #define GND2_LAY      101
 #define GNDSHD_LAY    102
@@ -123,8 +127,8 @@ void dd_display_strike(int fx, int fy, int tx, int ty);
 // Game module internal declarations - shared between game_*.c files
 
 // Shared global variables
-extern int ds_time, dg_time;  // timing statistics
-extern int fsprite_cnt, f2sprite_cnt, gsprite_cnt, g2sprite_cnt, isprite_cnt, csprite_cnt;  // sprite counters
+extern int ds_time, dg_time; // timing statistics
+extern int fsprite_cnt, f2sprite_cnt, gsprite_cnt, g2sprite_cnt, isprite_cnt, csprite_cnt; // sprite counters
 
 // From game_core.c
 extern QUICK *quick;

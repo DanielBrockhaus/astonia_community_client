@@ -80,7 +80,10 @@ else
     cppcheck --enable=warning,performance,portability \
         --inline-suppr \
         --suppress=missingIncludeSystem \
+        --suppress=unknownMacro \
         -Iinclude \
+        -Isrc \
+        -DPARANOIA= \
         src/ > "$LOG_DIR/cppcheck.log" 2>&1 || true
 
     if grep -qE "(error|warning):" "$LOG_DIR/cppcheck.log"; then

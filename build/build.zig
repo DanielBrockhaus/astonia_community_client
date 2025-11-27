@@ -33,7 +33,12 @@ pub fn build(b: *std.Build) void {
 
     const common_sources = &.{
         // GUI
-        "src/gui/gui.c",
+        "src/gui/gui_core.c",
+        "src/gui/gui_input.c",
+        "src/gui/gui_display.c",
+        "src/gui/gui_inventory.c",
+        "src/gui/gui_buttons.c",
+        "src/gui/gui_map.c",
         "src/gui/dots.c",
         "src/gui/display.c",
         "src/gui/teleport.c",
@@ -50,9 +55,12 @@ pub fn build(b: *std.Build) void {
         "src/client/protocol.c",
 
         // GAME
+        "src/game/game_core.c",
+        "src/game/game_effects.c",
+        "src/game/game_lighting.c",
+        "src/game/game_display.c",
         "src/game/dd.c",
         "src/game/font.c",
-        "src/game/game.c",
         "src/game/main.c",
         "src/game/sprite.c",
 
@@ -60,8 +68,12 @@ pub fn build(b: *std.Build) void {
         "src/modder/modder.c",
 
         // SDL layer
+        "src/sdl/sdl_core.c",
+        "src/sdl/sdl_texture.c",
+        "src/sdl/sdl_image.c",
+        "src/sdl/sdl_effects.c",
+        "src/sdl/sdl_draw.c",
         "src/sdl/sound.c",
-        "src/sdl/sdl.c",
 
         // HELPERS
         "src/helper/helper.c",

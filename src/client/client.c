@@ -33,9 +33,7 @@ int socktimeout = 0;
 int change_area = 0;
 int kicked_out = 0;
 unsigned int unique = 0;
-#ifdef STORE_UNIQUE
 unsigned int usum = 0;
-#endif
 int target_port = 5556;
 DLL_EXPORT char *target_server = NULL;
 DLL_EXPORT char password[16];

@@ -240,8 +240,8 @@ static int would_colorize_neigh(int x, int y, int xres, int yres, uint32_t *pixe
 	return v;
 }
 
-uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned short c2v, unsigned short c3v, int x,
-    int y, int xres, int yres, uint32_t *pixel, int sprite)
+uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned short c2v, unsigned short c3v, int x, int y,
+    int xres, int yres, uint32_t *pixel, int sprite)
 {
 	double rf, gf, bf, m, rm, gm, bm;
 	int r, g, b, a;

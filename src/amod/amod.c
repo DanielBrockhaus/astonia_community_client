@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../src/amod/amod.h"
+#include "amod.h"
 
 #if 0
 #include "strings.c"

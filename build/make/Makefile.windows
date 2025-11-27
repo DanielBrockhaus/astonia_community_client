@@ -41,7 +41,7 @@ OPT=-O3
 DEBUG=-gdwarf-4
 SDL_CFLAGS=$(shell $(SDL_CONFIG) --cflags)
 SDL_PREFIX=$(shell $(SDL_CONFIG) --prefix)
-CFLAGS=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fno-omit-frame-pointer -flto -fvisibility=hidden -DSTORE_UNIQUE -DENABLE_CRASH_HANDLER -DENABLE_SHAREDMEM -DENABLE_DRAGHACK $(SDL_CFLAGS) -I$(SDL_PREFIX)/include
+CFLAGS=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fno-omit-frame-pointer -flto -fvisibility=hidden -DSTORE_UNIQUE -DENABLE_CRASH_HANDLER -DENABLE_SHAREDMEM -DENABLE_DRAGHACK $(SDL_CFLAGS) -I$(SDL_PREFIX)/include -Iinclude -Isrc
 LDFLAGS=$(OPT) $(DEBUG) -Wl,-subsystem,windows
 LDFLAGS_CONSOLE=$(OPT) $(DEBUG) -Wl,-subsystem,console
 
@@ -49,14 +49,18 @@ SDL_LIBS=$(shell $(SDL_CONFIG) --libs)
 LIBS = -lwsock32 -lws2_32 -lpsapi -lz -lpng -lzip -ldwarfstack $(SDL_LIBS) -lSDL2_mixer
 
 ASTONIA_NET_DIR=astonia_net
-ASTONIA_NET_TGT=x86_64-pc-windows-gnu
+ASTONIA_NET_TGT=x86_64-pc-windows-gnullvm
 ASTONIA_NET_LIB=$(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/libastonia_net.dll.a
 
-OBJS	=		src/gui/gui.o src/client/client.o src/client/protocol.o src/client/skill.o src/game/dd.o src/game/font.o\
-			src/game/main.o src/game/sprite.o src/game/game.o src/modder/modder.o\
-			src/sdl/sound.o src/game/resource.o src/sdl/sdl.o src/helper/helper.helper.o\
+OBJS	=		src/gui/gui_core.o src/gui/gui_input.o src/gui/gui_display.o src/gui/gui_inventory.o src/gui/gui_buttons.o src/gui/gui_map.o\
+			src/client/client.o src/client/protocol.o src/client/skill.o\
+			src/game/game_core.o src/game/game_effects.o src/game/game_lighting.o src/game/game_display.o\
+			src/game/dd.o src/game/font.o src/game/main.o src/game/sprite.o\
+			src/modder/modder.o\
+			src/sdl/sdl_core.o src/sdl/sdl_texture.o src/sdl/sdl_image.o src/sdl/sdl_effects.o src/sdl/sdl_draw.o src/sdl/sound.o\
+			src/game/resource.o src/helper/helper.o\
 			src/gui/dots.o src/gui/display.o src/gui/teleport.o src/gui/color.o src/gui/cmd.o\
-			src/gui/questlog.o src/gui/context.o src/gui/gui.hover.o src/gui/minimap.o\
+			src/gui/questlog.o src/gui/context.o src/gui/hover.o src/gui/minimap.o\
 			src/modder/sharedmem_windows.o src/game/crash_handler_windows.o\
 			src/game/memory_windows.o src/gui/draghack_windows.o src/client/unique_windows.o\
 			src/game/version.o
@@ -83,6 +87,7 @@ bin/convert.exe:	src/helper/convert.c
 
 
 src/client/client.o:	src/client/client.c src/astonia.h src/client/client.h src/client/client_private.h src/sdl/sdl.h
+src/client/protocol.o: src/client/protocol.c src/astonia.h src/client/client.h src/client/client_private.h src/gui/gui.h src/modder/modder.h src/client/protocol.h
 
 src/game/dd.o:		src/game/dd.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/sdl/sdl.h
 src/game/font.o:	src/game/font.c src/game/game.h src/game/game_private.h
@@ -97,12 +102,33 @@ src/gui/cmd.o:		src/gui/cmd.c src/astonia.h src/gui/gui.h src/gui/gui_private.h 
 src/gui/dots.o:		src/gui/dots.c src/astonia.h src/gui/gui.h src/gui/gui_private.h
 src/gui/display.o:	src/gui/display.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h
 src/gui/gui.o:		src/gui/gui.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h  src/sdl/sdl.h src/modder/modder.h
-src/gui/gui.hover.o:	src/gui/gui.hover.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/gui/gui.h src/game/game.h src/sdl/sdl.h src/modder/modder.h
+src/gui/hover.o:	src/gui/hover.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/gui/gui.h src/game/game.h src/sdl/sdl.h src/modder/modder.h
 src/gui/minimap.o:	src/gui/minimap.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/sdl/sdl.h src/game/game.h
 src/gui/teleport.o:	src/gui/teleport.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h
 src/gui/questlog.o:	src/gui/questlog.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h
 
-src/helper/helper.helper.o:	src/helper/helper.helper.c src/astonia.h
+# Refactored GUI modules
+src/gui/gui_core.o:	src/gui/gui_core.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h src/sdl/sdl.h src/modder/modder.h
+src/gui/gui_input.o:	src/gui/gui_input.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h src/sdl/sdl.h
+src/gui/gui_display.o:	src/gui/gui_display.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h src/sdl/sdl.h
+src/gui/gui_inventory.o:	src/gui/gui_inventory.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h
+src/gui/gui_buttons.o:	src/gui/gui_buttons.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h src/sdl/sdl.h
+src/gui/gui_map.o:		src/gui/gui_map.c src/astonia.h src/gui/gui.h src/gui/gui_private.h src/client/client.h src/game/game.h
+
+# Refactored game modules
+src/game/game_core.o:	src/game/game_core.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/gui/gui.h
+src/game/game_display.o:	src/game/game_display.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/gui/gui.h src/sdl/sdl.h
+src/game/game_effects.o:	src/game/game_effects.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h
+src/game/game_lighting.o:	src/game/game_lighting.c src/astonia.h src/game/game.h src/game/game_private.h
+
+# Refactored SDL modules
+src/sdl/sdl_core.o:	src/sdl/sdl_core.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h src/client/client.h src/gui/gui.h src/modder/modder.h
+src/sdl/sdl_texture.o:	src/sdl/sdl_texture.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h
+src/sdl/sdl_image.o:	src/sdl/sdl_image.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h src/game/game.h
+src/sdl/sdl_effects.o:	src/sdl/sdl_effects.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h
+src/sdl/sdl_draw.o:	src/sdl/sdl_draw.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h src/game/game.h
+
+src/helper/helper.o:	src/helper/helper.c src/astonia.h
 src/helper/convert.o:	src/helper/convert.c src/astonia.h src/sdl/sdl.h src/sdl/sdl_private.h
 
 src/modder/modder.o:	src/modder/modder.c src/astonia.h src/modder/modder.h src/modder/modder_private.h src/client/client.h
@@ -155,4 +181,3 @@ convert:	bin/convert.exe
 anicopy:	bin/anicopy.exe
 debug:		bin/moac_dbg.exe
 
-src/client/protocol.o: src/client/protocol.c src/astonia.h src/client/client.h src/client/client_private.h src/gui/gui.h src/modder/modder.h src/client/protocol.h

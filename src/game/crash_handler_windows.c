@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-#include "../astonia.h"
-#include "../../src/sdl.h"
+#include "astonia.h"
+#include "../sdl/sdl.h"
 
 extern FILE *errorfp;
 
