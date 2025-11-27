@@ -37,7 +37,7 @@ void mtos(int mapx, int mapy, int *scrx, int *scry)
 
 int stom(int scrx, int scry, int *mapx, int *mapy)
 {
-	if (scrx < dotx(DOT_MTL) || scrx >= dotx(DOT_MBR) || scry < doty(DOT_MTL) || scry >= dotx(DOT_MBR)) {
+	if (scrx < dotx(DOT_MTL) || scrx >= dotx(DOT_MBR) || scry < doty(DOT_MTL) || scry >= doty(DOT_MBR)) {
 		return 0;
 	}
 

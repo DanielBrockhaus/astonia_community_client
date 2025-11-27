@@ -471,24 +471,102 @@ SDL_Cursor *sdl_create_cursor(char *filename)
 
 int sdl_create_cursors(void)
 {
+	int error = 0;
+
 	curs[SDL_CUR_c_only] = sdl_create_cursor("res/cursor/c_only.cur");
+	if (!curs[SDL_CUR_c_only]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_take] = sdl_create_cursor("res/cursor/c_take.cur");
+	if (!curs[SDL_CUR_c_take]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_drop] = sdl_create_cursor("res/cursor/c_drop.cur");
+	if (!curs[SDL_CUR_c_drop]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_attack] = sdl_create_cursor("res/cursor/c_atta.cur");
+	if (!curs[SDL_CUR_c_attack]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_raise] = sdl_create_cursor("res/cursor/c_rais.cur");
+	if (!curs[SDL_CUR_c_raise]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_give] = sdl_create_cursor("res/cursor/c_give.cur");
+	if (!curs[SDL_CUR_c_give]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_use] = sdl_create_cursor("res/cursor/c_use.cur");
+	if (!curs[SDL_CUR_c_use]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_usewith] = sdl_create_cursor("res/cursor/c_usew.cur");
+	if (!curs[SDL_CUR_c_usewith]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_swap] = sdl_create_cursor("res/cursor/c_swap.cur");
+	if (!curs[SDL_CUR_c_swap]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_sell] = sdl_create_cursor("res/cursor/c_sell.cur");
+	if (!curs[SDL_CUR_c_sell]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_buy] = sdl_create_cursor("res/cursor/c_buy.cur");
+	if (!curs[SDL_CUR_c_buy]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_look] = sdl_create_cursor("res/cursor/c_look.cur");
+	if (!curs[SDL_CUR_c_look]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_set] = sdl_create_cursor("res/cursor/c_set.cur");
+	if (!curs[SDL_CUR_c_set]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_spell] = sdl_create_cursor("res/cursor/c_spell.cur");
+	if (!curs[SDL_CUR_c_spell]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_pix] = sdl_create_cursor("res/cursor/c_pix.cur");
+	if (!curs[SDL_CUR_c_pix]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_say] = sdl_create_cursor("res/cursor/c_say.cur");
+	if (!curs[SDL_CUR_c_say]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_junk] = sdl_create_cursor("res/cursor/c_junk.cur");
+	if (!curs[SDL_CUR_c_junk]) {
+		error = 1;
+	}
+
 	curs[SDL_CUR_c_get] = sdl_create_cursor("res/cursor/c_get.cur");
+	if (!curs[SDL_CUR_c_get]) {
+		error = 1;
+	}
+
+	if (error) {
+		fail("Failed to load one or more cursor files");
+		return 0;
+	}
 
 	return 1;
 }
@@ -496,6 +574,9 @@ int sdl_create_cursors(void)
 void sdl_set_cursor(int cursor)
 {
 	if (cursor < SDL_CUR_c_only || cursor > SDL_CUR_c_get) {
+		return;
+	}
+	if (!curs[cursor]) {
 		return;
 	}
 	SDL_SetCursor(curs[cursor]);
@@ -506,32 +587,62 @@ void sdl_pre_add(int attick, int sprite, signed char sink, unsigned char freeze,
 {
 	int n;
 	long long start;
-
-	if ((pre_in + 1) % MAXPRE == pre_3) { // buffer is full
-		if (sdl_multi) {
-			SDL_SemPost(prework); // nudge background tasks
-		}
-		return;
-	}
+	int reserved_idx;
 
 	if (sprite > MAXSPRITE || sprite < 0) {
 		note("illegal sprite %d wanted in pre_add", sprite);
 		return;
 	}
 
-	// Find in texture cache
+	// Lock mutex to check buffer and reserve slot
+	if (sdl_multi) {
+		SDL_LockMutex(premutex);
+	}
+
+	if ((pre_in + 1) % MAXPRE == pre_3) { // buffer is full
+		if (sdl_multi) {
+			SDL_SemPost(prework); // nudge background tasks
+			SDL_UnlockMutex(premutex);
+		}
+		return;
+	}
+
+	// Reserve a slot
+	reserved_idx = pre_in;
+	pre_in = (pre_in + 1) % MAXPRE;
+
+	if (sdl_multi) {
+		SDL_UnlockMutex(premutex);
+	}
+
+	// Find in texture cache (expensive operation done outside lock)
 	// Will allocate a new entry if not found, or return -1 if already in cache
 	start = SDL_GetTicks64();
 	n = sdl_tx_load(sprite, sink, freeze, scale, cr, cg, cb, light, sat, c1, c2, c3, shine, ml, ll, rl, ul, dl, NULL, 0,
 	    0, NULL, 0, 1, attick);
 	sdl_time_alloc += SDL_GetTicks64() - start;
+
+	// Re-acquire lock to update the reserved slot or roll back
+	if (sdl_multi) {
+		SDL_LockMutex(premutex);
+	}
+
 	if (n == -1) {
+		// Roll back the slot reservation
+		pre_in = (pre_in - 1 + MAXPRE) % MAXPRE;
+		if (sdl_multi) {
+			SDL_UnlockMutex(premutex);
+		}
 		return;
 	}
 
-	pre[pre_in].stx = n;
-	pre[pre_in].attick = attick;
-	pre_in = (pre_in + 1) % MAXPRE;
+	// Write to the reserved slot
+	pre[reserved_idx].stx = n;
+	pre[reserved_idx].attick = attick;
+
+	if (sdl_multi) {
+		SDL_UnlockMutex(premutex);
+	}
 }
 
 long long sdl_time_mutex = 0;
@@ -682,11 +793,39 @@ uint64_t sdl_backgnd_wait = 0, sdl_backgnd_work = 0;
 int sdl_pre_backgnd(void *ptr)
 {
 	uint64_t start;
+	int sem_result;
+
+	// Validate semaphore before entering loop
+	if (!prework) {
+		SDL_Log("sdl_pre_backgnd: prework semaphore is NULL, exiting thread");
+		return -1;
+	}
+
+	// Validate mutex if multithreading is enabled
+	if (sdl_multi && !premutex) {
+		SDL_Log("sdl_pre_backgnd: premutex is NULL but sdl_multi is enabled, exiting thread");
+		return -1;
+	}
 
 	while (!quit) {
 		start = SDL_GetTicks64();
-		SDL_SemWait(prework);
+		sem_result = SDL_SemWait(prework);
+
+		// Check for semaphore wait errors
+		if (sem_result != 0) {
+			SDL_Log("sdl_pre_backgnd: SDL_SemWait failed: %s", SDL_GetError());
+			// On fatal error, sleep briefly to avoid tight loop, then continue
+			SDL_Delay(100);
+			continue;
+		}
+
 		sdl_backgnd_wait += SDL_GetTicks64() - start;
+
+		// Double-check mutex validity before calling sdl_pre_2()
+		if (sdl_multi && !premutex) {
+			SDL_Log("sdl_pre_backgnd: premutex became NULL during execution");
+			return -1;
+		}
 
 		start = SDL_GetTicks64();
 		sdl_pre_2();

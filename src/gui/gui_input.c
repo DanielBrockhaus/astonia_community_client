@@ -7,6 +7,7 @@
 
 #include <inttypes.h>
 #include <time.h>
+#include <ctype.h>
 #include <SDL2/SDL.h>
 
 #include "astonia.h"

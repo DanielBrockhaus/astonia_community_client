@@ -179,7 +179,6 @@ void display(void)
 			}
 		}
 		goto display_graphs; // I know, I know. goto considered harmful and all that.
-		return;
 	}
 
 	dd_push_clip();

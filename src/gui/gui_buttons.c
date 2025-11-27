@@ -21,7 +21,7 @@
 #define MAXQUEST2 10
 
 // Forward declarations for functions used by exec_cmd
-void cmd_add_text(char *buf, int typ);
+void cmd_add_text(const char *buf, int typ);
 void cmd_look_skill(int nr);
 void help_drag(void);
 void cmd_action(void);
@@ -788,7 +788,7 @@ void exec_cmd(int cmd, int a)
 
 void cmd_look_skill(int nr)
 {
-	if (nr >= 0 && nr <= (*game_v_max)) {
+	if (nr >= 0 && nr < (*game_v_max)) {
 		addline("%s: %s", game_skill[nr].name, game_skilldesc[nr]);
 	} else {
 		addline("Unknown.");

@@ -18,7 +18,7 @@
 #include "modder/modder.h"
 
 // Forward declarations for functions used by gui_insert
-void cmd_add_text(char *buf, int typ);
+void cmd_add_text(const char *buf, int typ);
 
 uint64_t gui_time_misc = 0;
 

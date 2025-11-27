@@ -282,7 +282,7 @@ uint32_t sdl_colorize_pix2(uint32_t irgb, unsigned short c1v, unsigned short c2v
 
 	// channel 3: red
 	if ((c3v && rm > 0.99 && gm < REDCOL && bm < REDCOL) ||
-	    (c3v && gm > 0.67 && would_colorize_neigh(x, y, xres, yres, pixel, 2))) {
+	    (c3v && rm > 0.67 && would_colorize_neigh(x, y, xres, yres, pixel, 2))) {
 		r = 8.0 * OGET_R(c3v) * rf;
 		g = 8.0 * (OGET_G(c3v) * rf + (1.0 - rf) * gf);
 		b = 8.0 * (OGET_B(c3v) * rf + (1.0 - rf) * bf);
@@ -320,7 +320,7 @@ uint32_t sdl_colorbalance(uint32_t irgb, char cr, char cg, char cb, char light, 
 	// color balancing
 	cr *= 0.75;
 	cg *= 0.75;
-	cg *= 0.75;
+	cb *= 0.75;
 
 	r += cr;
 	g -= cr / 2;
