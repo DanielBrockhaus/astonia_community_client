@@ -15,6 +15,7 @@
 #include <SDL2/SDL_mixer.h>
 #include <png.h>
 #include <zip.h>
+#include <mimalloc.h>
 
 #include "../../src/dll.h"
 #include "../../src/astonia.h"
@@ -641,7 +642,7 @@ int sdl_load_image_png_(struct sdl_image *si, char *filename, zip_t *zip)
 	si->yoff = -(p.yres / 2) + sy;
 
 #ifdef SDL_FAST_MALLOC
-	si->pixel = malloc(si->xres * si->yres * sizeof(uint32_t));
+	si->pixel = mi_malloc(si->xres * si->yres * sizeof(uint32_t));
 #else
 	si->pixel = xmalloc(si->xres * si->yres * sizeof(uint32_t), MEM_SDL_PNG);
 #endif
@@ -761,7 +762,7 @@ int sdl_load_image_png(struct sdl_image *si, char *filename, zip_t *zip, int smo
 	si->yoff = -(p.yres / 2) + sy;
 
 #ifdef SDL_FAST_MALLOC
-	si->pixel = malloc(si->xres * si->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
+	si->pixel = mi_malloc(si->xres * si->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
 #else
 	si->pixel = xmalloc(si->xres * si->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, MEM_SDL_PNG);
 #endif
@@ -1400,7 +1401,7 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			return;
 		}
 #ifdef SDL_FAST_MALLOC
-		st->pixel = malloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
+		st->pixel = mi_malloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale);
 #else
 		st->pixel = xmalloc(st->xres * st->yres * sizeof(uint32_t) * sdl_scale * sdl_scale, MEM_SDL_PIXEL);
 #endif
@@ -1686,7 +1687,7 @@ static void sdl_make(struct sdl_texture *st, struct sdl_image *si, int preload)
 			texture = NULL;
 		}
 #ifdef SDL_FAST_MALLOC
-		free(st->pixel);
+		mi_free(st->pixel);
 #else
 		xfree(st->pixel);
 #endif
@@ -2090,7 +2091,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		} else if (sdlt[stx].flags & SF_DIDALLOC) {
 			if (sdlt[stx].pixel) {
 #ifdef SDL_FAST_MALLOC
-				free(sdlt[stx].pixel);
+				mi_free(sdlt[stx].pixel);
 #else
 				xfree(sdlt[stx].pixel);
 #endif
@@ -2099,7 +2100,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		}
 #ifdef SDL_FAST_MALLOC
 		if (sdlt[stx].flags & SF_TEXT) {
-			free(sdlt[stx].text);
+			mi_free(sdlt[stx].text);
 			sdlt[stx].text = NULL;
 		}
 #else
@@ -2123,7 +2124,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 		sdlt[stx].text_flags = text_flags;
 		sdlt[stx].text_font = text_font;
 #ifdef SDL_FAST_MALLOC
-		sdlt[stx].text = strdup(text);
+		sdlt[stx].text = mi_strdup(text);
 #else
 		sdlt[stx].text = xstrdup(text, MEM_TEMP7);
 #endif
@@ -2283,7 +2284,7 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 	}
 
 #ifdef SDL_FAST_MALLOC
-	pixel = calloc(sizex * MAXFONTHEIGHT, sizeof(uint32_t));
+	pixel = mi_calloc(sizex * MAXFONTHEIGHT, sizeof(uint32_t));
 #else
 	pixel = xmalloc(sizex * MAXFONTHEIGHT * sizeof(uint32_t), MEM_SDL_PIXEL2);
 #endif
@@ -2345,7 +2346,7 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 		warn("SDL_texture Error: %s maketext (%s)", SDL_GetError(), otext);
 	}
 #ifdef SDL_FAST_MALLOC
-	free(pixel);
+	mi_free(pixel);
 #else
 	xfree(pixel);
 #endif
@@ -2505,6 +2506,19 @@ void sdl_exit(void)
 #ifdef DEVELOPER
 	sdl_dump_spritecache();
 #endif
+
+	// Clean up SDL resources before SDL_Quit()
+	if (sdlren) {
+		SDL_DestroyRenderer(sdlren);
+		sdlren = NULL;
+	}
+	if (sdlwnd) {
+		SDL_DestroyWindow(sdlwnd);
+		sdlwnd = NULL;
+	}
+
+	// Explicitly quit SDL - this will free all SDL-allocated memory using mi_free
+	SDL_Quit();
 }
 
 int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct ddfont *font, int clipsx,
@@ -2947,7 +2961,7 @@ DLL_EXPORT uint32_t *sdl_load_png(char *filename, int *dx, int *dy)
 	}
 
 #ifdef SDL_FAST_MALLOC
-	pixel = malloc(xres * yres * sizeof(uint32_t));
+	pixel = mi_malloc(xres * yres * sizeof(uint32_t));
 #else
 	pixel = xmalloc(xres * yres * sizeof(uint32_t), MEM_TEMP8);
 #endif

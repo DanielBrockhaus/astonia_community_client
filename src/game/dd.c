@@ -20,6 +20,7 @@
 #include "../../src/game/_game.h"
 #include "../../src/client.h"
 #include "../../src/sdl.h"
+#include <mimalloc.h>
 
 DDFONT *fonta_shaded = NULL;
 DDFONT *fonta_framed = NULL;
@@ -784,7 +785,7 @@ void dd_create_font(void)
 		dd_create_font_png(fontb, pixel, dx, dy, 0, sdl_scale);
 		dd_create_font_png(fontc, pixel, dx, dy, 80 * sdl_scale, sdl_scale);
 #ifdef SDL_FAST_MALLOC
-		free(pixel);
+		mi_free(pixel);
 #else
 		xfree(pixel);
 #endif

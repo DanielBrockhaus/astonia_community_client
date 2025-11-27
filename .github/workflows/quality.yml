@@ -157,7 +157,8 @@ jobs:
           libsdl2-mixer-dev \
           libpng-dev \
           libzip-dev \
-          zlib1g-dev
+          zlib1g-dev \
+          libmimalloc-dev
         # Create symlink for clang
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
 

@@ -43,7 +43,7 @@ CFLAGS_PIC=$(OPT) $(DEBUG) -Wall -Wno-pointer-sign -Wno-char-subscripts -fPIC -f
 LDFLAGS=$(OPT) $(DEBUG) -rdynamic -Wl,-rpath,@loader_path
 
 SDL_LIBS=$(shell $(SDL_CONFIG) --libs)
-LIBS = -lz -lpng $(ZIP_LIBS) $(SDL_MIXER_LIBS) -lm
+LIBS = -lz -lpng $(ZIP_LIBS) $(SDL_MIXER_LIBS) -lmimalloc -lm
 
 ASTONIA_NET_DIR=astonia_net
 # Detect macOS architecture
