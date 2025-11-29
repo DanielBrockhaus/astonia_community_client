@@ -90,5 +90,6 @@ void sdl_flush_textinput(void);
 #ifdef DEVELOPER
 void sdl_dump_spritecache(void);
 #endif
+long long sdl_get_mem_tex(void);
 void sdl_tex_alpha(int stx, int alpha);
 int sdl_check_mouse(void);
