@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build-linux:
     name: Build Linux
@@ -58,12 +62,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Install Rust toolchain (GNU variant)
+      - name: Install Rust toolchain (LLVM variant)
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable-x86_64-pc-windows-gnu
+          toolchain: stable-x86_64-pc-windows-gnullvm
           cache: true
           cache-workspaces: astonia_net
 
@@ -87,7 +91,7 @@ jobs:
         run: make CC=clang windows
 
       - name: Copy DLL to bin
-        run: cp astonia_net/target/x86_64-pc-windows-gnu/release/astonia_net.dll bin/
+        run: cp astonia_net/target/x86_64-pc-windows-gnullvm/release/astonia_net.dll bin/
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -106,7 +110,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install dependencies
         run: |
@@ -130,5 +134,62 @@ jobs:
           path: |
             bin/moac
             bin/libastonia_net.dylib
+          retention-days: 30
+          if-no-files-found: error
+
+  build-docker-linux:
+    name: Build Linux (Docker/Zig)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build with Docker (Zig)
+        run: make docker-linux
+
+      - name: Verify artifacts
+        run: |
+          test -f bin/moac
+          test -f bin/libastonia_net.so
+          file bin/moac
+
+      - name: Upload Docker build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-linux-build
+          path: |
+            bin/moac
+            bin/libastonia_net.so
+          retention-days: 30
+          if-no-files-found: error
+
+  build-docker-windows:
+    name: Build Windows (Docker/Cross-Compile)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Build with Docker (Clang cross-compile)
+        run: make docker-windows
+
+      - name: Verify artifacts
+        run: |
+          test -f bin/moac.exe
+          test -f bin/astonia_net.dll
+          file bin/moac.exe
+          file bin/astonia_net.dll
+
+      - name: Upload Docker build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-windows-build
+          path: |
+            bin/moac.exe
+            bin/astonia_net.dll
           retention-days: 30
           if-no-files-found: error

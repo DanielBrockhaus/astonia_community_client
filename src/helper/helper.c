@@ -7,14 +7,14 @@
 #include <string.h>
 #include <stdio.h>
 
-#define DD_OFFSET 0 // this has to be zero, so bzero on the structures default this
-#define DD_CENTER 1 // also used in dd_drawtext
-#define DD_NORMAL 2
+#define RENDER_ALIGN_OFFSET 0 // this has to be zero, so bzero on the structures default this
+#define RENDER_ALIGN_CENTER 1 // also used in render_text
+#define RENDER_ALIGN_NORMAL 2
 
-#define DDFX_NLIGHT 15
-#define DDFX_BRIGHT 0
+#define RENDERFX_NORMAL_LIGHT 15
+#define RENDERFX_BRIGHT       0
 
-#define DDFX_MAX_FREEZE 8
+#define RENDERFX_MAX_FREEZE 8
 
 struct ddfx {
 	int sprite;             // sprite_fx:           primary sprite number - should be the first entry cause dl_qcmp sorts the by this
@@ -25,8 +25,8 @@ struct ddfx {
 	char clight,sat;        // lightness, saturation
 	unsigned short c1,c2,c3,shine;  // color replacer
 
-	char light;             // videocache_fx:       0=bright(DDFX_BRIGHT) 1=almost black; 15=normal (DDFX_NLIGHT)
-	char freeze;            // videocache_fx:       0 to DDFX_MAX_FREEZE-1  !!! exclusive DDFX_MAX_FREEZE
+	char light;             // videocache_fx:       0=bright(RENDERFX_BRIGHT) 1=almost black; 15=normal (RENDERFX_NORMAL_LIGHT)
+	char freeze;            // videocache_fx:       0 to RENDERFX_MAX_FREEZE-1  !!! exclusive RENDERFX_MAX_FREEZE
 
 	char ml,ll,rl,ul,dl;
 
@@ -35,7 +35,7 @@ struct ddfx {
 	short int clipsy,clipey; // blitpos_fx:          additional y - clipping around the offset
 };
 
-typedef struct ddfx DDFX;
+typedef struct ddfx RenderFX;
 
 #define DL_STEP 128
 
@@ -54,7 +54,7 @@ struct dl {
 	int x,y,h;      // scrx=x scry=y-h sorted bye x,y ;) normally used for height, but also misused to place doors right
 	// int movy;
 
-	DDFX ddfx;
+	RenderFX ddfx;
 
 	// functions to call
 	char call;
@@ -105,7 +105,7 @@ int dl_cmp(const void *ca,const void *cb) {
 	diff=a->x-b->x;
 	if (diff) return diff;
 
-	return a->ddfx.sprite-b->ddfx.sprite;
+	return a->renderfx.sprite-b->renderfx.sprite;
 }
 
 static void msg_skip(DL *d,int i, char *text) {

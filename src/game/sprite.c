@@ -10,12 +10,12 @@
 
 #include <stdint.h>
 
-#include "../../src/astonia.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/gui.h"
-#include "../../src/client.h"
-#include "../../src/modder.h"
+#include "astonia.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "gui/gui.h"
+#include "client/client.h"
+#include "modder/modder.h"
 
 // is_..._sprite
 int (*is_cut_sprite)(int sprite) = _is_cut_sprite;

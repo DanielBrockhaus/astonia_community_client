@@ -2,6 +2,8 @@
  * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
  */
 
+#include <stdint.h>
+#include <string.h>
 #include "dll.h"
 
 #define DEVELOPER // this one will compile the developer version - comment me out for the final release
@@ -172,5 +174,5 @@ DLL_EXPORT int doty(int didx);
 DLL_EXPORT int butx(int bidx);
 DLL_EXPORT int buty(int bidx);
 
-void dd_set_offset(int x, int y);
+void render_set_offset(int x, int y);
 char *client_version(void);

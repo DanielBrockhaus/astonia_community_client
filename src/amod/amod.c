@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "../../src/amod/amod.h"
+#include "amod.h"
 
 #if 0
 #include "strings.c"
@@ -123,9 +123,9 @@ DLL_EXPORT int do_display_help(int nr)
 
 	switch (nr) {
 	case 19:
-		y = dd_drawtext_break(x, y, x + 192, whitecolor, 0, "Reading books, signs, etc.");
+		y = render_text_break(x, y, x + 192, whitecolor, 0, "Reading books, signs, etc.");
 		y += 5;
-		y = dd_drawtext_break(x, y, x + 192, graycolor, 0,
+		y = render_text_break(x, y, x + 192, graycolor, 0,
 		    "To read a book, turn off your computer and take the book. Open it. Choose a page. Read. To read signs, "
 		    "use SHIFT + RIGHT CLICK.");
 		y += 10;

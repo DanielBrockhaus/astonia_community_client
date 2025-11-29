@@ -1,7 +1,7 @@
 #include <windows.h>
 #include <SDL2/SDL.h>
 
-#include "_gui.h"
+#include "gui_private.h"
 
 void gui_sdl_draghack(void)
 {

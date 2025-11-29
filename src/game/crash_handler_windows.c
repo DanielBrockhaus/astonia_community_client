@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-#include "../astonia.h"
-#include "../../src/sdl.h"
+#include "astonia.h"
+#include "../sdl/sdl.h"
 
 extern FILE *errorfp;
 
@@ -85,7 +85,7 @@ static LONG WINAPI exceptionPrinter(LPEXCEPTION_POINTERS ep)
 {
 	void xlog(FILE * logfp, char *format, ...);
 	void sdl_dump(FILE * fp);
-	void dd_dump(FILE * fp);
+	void render_dump(FILE * fp);
 	void gui_dump(FILE * fp);
 	char filename[MAX_PATH + 128];
 
@@ -97,8 +97,8 @@ static LONG WINAPI exceptionPrinter(LPEXCEPTION_POINTERS ep)
 	main_dump(errorfp);
 	sdl_dump(stderr);
 	sdl_dump(errorfp);
-	dd_dump(stderr);
-	dd_dump(errorfp);
+	render_dump(stderr);
+	render_dump(errorfp);
 	gui_dump(stderr);
 	gui_dump(errorfp);
 

@@ -574,3 +574,8 @@ void cl_client_info(struct client_info *ci);
 void cl_ticker(void);
 int close_client(void);
 int is_char_ceffect(int type);
+
+extern int server_cycles;
+extern int change_area;
+extern int login_done;
+extern unsigned int unique;

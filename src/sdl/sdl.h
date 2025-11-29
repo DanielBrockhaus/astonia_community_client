@@ -34,8 +34,8 @@
 #define SDL_MOUM_MDOWN 6
 #define SDL_MOUM_WHEEL 7
 
-struct ddfont;
-typedef struct ddfont DDFONT;
+struct renderfont;
+typedef struct renderfont RenderFont;
 
 DLL_EXPORT extern int sdl_cache_size;
 DLL_EXPORT extern int sdl_scale;
@@ -69,8 +69,8 @@ int sdlt_yoff(int stx);
 int sdlt_xres(int stx);
 int sdlt_yres(int stx);
 void sdl_blit(int stx, int sx, int sy, int clipsx, int clipsy, int clipex, int clipey, int x_offset, int y_offset);
-int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct ddfont *font, int clipsx,
-    int clipsy, int clipex, int clipey, int x_offset, int y_offset);
+int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct renderfont *font,
+    int clipsx, int clipsy, int clipex, int clipey, int x_offset, int y_offset);
 void sdl_rect(int sx, int sy, int ex, int ey, unsigned short int color, int clipsx, int clipsy, int clipex, int clipey,
     int x_offset, int y_offset);
 void sdl_shaded_rect(int sx, int sy, int ex, int ey, unsigned short int color, unsigned short alpha, int clipsx,

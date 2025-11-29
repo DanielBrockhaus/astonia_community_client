@@ -25,7 +25,7 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 shift 2>/dev/null || true
-ARGS="$@"
+ARGS=("$@")
 
 echo "Binary: $BINARY"
 echo "Args: $ARGS"
@@ -42,7 +42,7 @@ valgrind --tool=cachegrind \
     --cachegrind-out-file=cachegrind.out \
     --cache-sim=yes \
     --branch-sim=yes \
-    $BINARY $ARGS
+    $BINARY "${ARGS[@]}"
 
 echo ""
 echo "=== Profiling Complete ==="

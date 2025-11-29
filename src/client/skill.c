@@ -9,11 +9,11 @@
 
 #include <stdint.h>
 
-#include "../dll.h"
-#include "../../src/astonia.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/client.h"
+#include "dll.h"
+#include "astonia.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "client/client.h"
 
 int _game_v_profbase = 43;
 int *game_v_profbase = &_game_v_profbase;

@@ -1,0 +1,68 @@
+name: 'Setup LLVM Toolchain'
+description: 'Install LLVM toolchain (clang, clang-tidy, clang-format) with dynamic Ubuntu version detection'
+inputs:
+  llvm-version:
+    description: 'LLVM version to install'
+    required: false
+    default: '21'
+  packages:
+    description: 'Space-separated list of LLVM packages to install (e.g., "clang-21 clang-tidy-21")'
+    required: true
+  create-alternatives:
+    description: 'Whether to create update-alternatives symlinks for version-agnostic commands'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Add LLVM repository
+      shell: bash
+      run: |
+        # Detect Ubuntu version dynamically
+        UBUNTU_VERSION=$(lsb_release -cs)
+        echo "Detected Ubuntu version: $UBUNTU_VERSION"
+
+        # Add LLVM repository GPG key
+        # Ensure the directory for trusted GPG keys exists
+        sudo mkdir -p /etc/apt/trusted.gpg.d/
+        # Add LLVM repository GPG key
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm-snapshot.gpg
+
+        # Add LLVM repository for the detected Ubuntu version
+        sudo add-apt-repository "deb http://apt.llvm.org/$UBUNTU_VERSION/ llvm-toolchain-$UBUNTU_VERSION-${{ inputs.llvm-version }} main"
+
+        # Update package lists
+        sudo apt-get update
+
+    - name: Install LLVM packages
+      shell: bash
+      run: |
+        sudo apt-get install -y ${{ inputs.packages }}
+
+    - name: Create update-alternatives symlinks
+      if: inputs.create-alternatives == 'true'
+      shell: bash
+      run: |
+        # Create version-agnostic symlinks for common tools
+        if command -v clang-${{ inputs.llvm-version }} &> /dev/null; then
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${{ inputs.llvm-version }} 100
+        fi
+
+        if command -v clang-tidy-${{ inputs.llvm-version }} &> /dev/null; then
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-${{ inputs.llvm-version }} 100
+        fi
+
+        if command -v clang-format-${{ inputs.llvm-version }} &> /dev/null; then
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-${{ inputs.llvm-version }} 100
+        fi
+
+    - name: Verify installation
+      shell: bash
+      run: |
+        echo "Installed LLVM packages:"
+        for pkg in ${{ inputs.packages }}; do
+          if command -v $pkg &> /dev/null; then
+            echo "  ✓ $pkg: $($pkg --version | head -n1)"
+          fi
+        done

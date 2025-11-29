@@ -1,5 +1,5 @@
 /*
- * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
+ * Part of Astonia Client. Please read license.txt.
  *
  * Sound
  *
@@ -11,25 +11,76 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 
-#include "../../src/astonia.h"
-#include "../../src/sdl.h"
-#include "../../src/sdl/_sdl.h"
+#include "astonia.h"
+#include "sdl/sdl.h"
+#include "sdl/sdl_private.h"
+
+// Sound definitions
+static char *sfx_name[] = {
+    "sfx/null.wav", // 0
+    "sfx/sdemonawaken.wav", // 1
+    "sfx/door.wav", // 2
+    "sfx/door2.wav", // 3
+    "sfx/man_dead.wav", // 4
+    "sfx/thunderrumble3.wav", // 5
+    "sfx/explosion.wav", // 6
+    "sfx/hit_body2.wav", // 7
+    "sfx/miss.wav", // 8
+    "sfx/man_hurt.wav", // 9
+    "sfx/pigeon.wav", // 10
+    "sfx/crow.wav", // 11
+    "sfx/crow2.wav", // 12
+    "sfx/laughingman6.wav", // 13
+    "sfx/drip1.wav", // 14
+    "sfx/drip2.wav", // 15
+    "sfx/drip3.wav", // 16
+    "sfx/howl1.wav", // 17
+    "sfx/howl2.wav", // 18
+    "sfx/bird1.wav", // 19
+    "sfx/bird2.wav", // 20
+    "sfx/bird3.wav", // 21
+    "sfx/catmeow2.wav", // 22
+    "sfx/cricket.wav", // 23
+    "sfx/specht.wav", // 24
+    "sfx/haeher.wav", // 25
+    "sfx/owl1.wav", // 26
+    "sfx/owl2.wav", // 27
+    "sfx/owl3.wav", // 28
+    "sfx/magic.wav", // 29
+    "sfx/flash.wav", // 30	lightning strike
+    "sfx/scarynote.wav", // 31	freeze
+    "sfx/woman_hurt.wav", // 32
+    "sfx/woman_dead.wav", // 33
+    "sfx/parry1.wav", // 34
+    "sfx/parry2.wav", // 35
+    "sfx/dungeon_breath1.wav", // 36
+    "sfx/dungeon_breath2.wav", // 37
+    "sfx/pents_mood1.wav", // 38
+    "sfx/pents_mood2.wav", // 39
+    "sfx/pents_mood3.wav", // 40
+    "sfx/ancient_activate.wav", // 41
+    "sfx/pent_activate.wav", // 42
+    "sfx/ancient_runout.wav", // 43
+    "sfx/bubble1.wav", // 44
+    "sfx/bubble2.wav", // 45
+    "sfx/bubble3.wav", // 46
+    "sfx/whale1.wav", // 47
+    "sfx/whale2.wav", // 48
+    "sfx/whale3.wav" // 49
+};
+static int sfx_name_cnt = ARRAYSIZE(sfx_name);
 
 int sound_volume = 128;
 static uint64_t time_play_sound = 0;
 
-static char *sfx_name[];
-static int sfx_name_cnt;
 static Mix_Chunk *sound_effect[MAXSOUND];
+
+Mix_Chunk *load_sound_from_zip(zip_t *zip_archive, const char *filename);
 
 int init_sound(void)
 {
-	int i, len, err;
+	int i, err;
 	zip_t *sz;
-	zip_file_t *zp;
-	zip_stat_t stat;
-	SDL_RWops *rw;
-	char *buf;
 
 	if (!(game_options & GO_SOUND)) {
 		return -1;
@@ -42,51 +93,61 @@ int init_sound(void)
 		return -1;
 	}
 
-	for (i = 1; i < sfx_name_cnt; i++) {
-		if (zip_stat(sz, sfx_name[i], 0, &stat) && !(stat.valid & ZIP_STAT_SIZE)) {
-			warn("Could not stat sound file %s in archive.", sfx_name[i]);
-			sound_effect[i] = NULL;
-			continue;
-		}
-		len = stat.size;
-
-		zp = zip_fopen(sz, sfx_name[i], 0);
-		if (!zp) {
-			warn("Could not open sound file %s in archive.", sfx_name[i]);
-			sound_effect[i] = NULL;
-			continue;
-		}
-
-		buf = xmalloc(len, MEM_TEMP6);
-		if (!buf) {
-			warn("Could alloc memory for sound file %s.", sfx_name[i]);
-			sound_effect[i] = NULL;
-			zip_fclose(zp);
-			continue;
-		}
-		if (zip_fread(zp, buf, len) != len) {
-			warn("Could alloc read sound file %s from archive.", sfx_name[i]);
-			sound_effect[i] = NULL;
-			zip_fclose(zp);
-			xfree(buf);
-			continue;
-		}
-		zip_fclose(zp);
-
-		rw = SDL_RWFromConstMem(buf, len);
-
-		sound_effect[i] = Mix_LoadWAV_RW(rw, 1);
-		if (!sound_effect[i]) {
-			warn("Could alloc memory for sound file %s.", sfx_name[i]);
-			sound_effect[i] = NULL;
-			xfree(buf);
-			continue;
-		}
-		xfree(buf);
+	// Load all sound effects from the zip archive
+	for (i = 1; i < sfx_name_cnt && i < MAXSOUND; i++) {
+		sound_effect[i] = load_sound_from_zip(sz, sfx_name[i]);
 	}
 	zip_close(sz);
 
 	return 0;
+}
+
+Mix_Chunk *load_sound_from_zip(zip_t *zip_archive, const char *filename)
+{
+	zip_stat_t stat;
+	zip_file_t *zip_file;
+	char *buffer;
+	int len;
+	SDL_RWops *rw;
+	Mix_Chunk *chunk;
+
+	// Get file stats from zip
+	if (zip_stat(zip_archive, filename, 0, &stat) != 0 || !(stat.valid & ZIP_STAT_SIZE)) {
+		warn("Could not stat sound file %s in archive.", filename);
+		return NULL;
+	}
+	len = stat.size;
+
+	// Open file in zip
+	zip_file = zip_fopen(zip_archive, filename, 0);
+	if (!zip_file) {
+		warn("Could not open sound file %s in archive.", filename);
+		return NULL;
+	}
+
+	// Allocate buffer and read file data
+	buffer = xmalloc(len, MEM_TEMP6);
+	if (zip_fread(zip_file, buffer, len) != len) {
+		warn("Could not read sound file %s from archive.", filename);
+		zip_fclose(zip_file);
+		xfree(buffer);
+		return NULL;
+	}
+	zip_fclose(zip_file);
+
+	// Create an SDL_RWops from the memory buffer
+	rw = SDL_RWFromConstMem(buffer, len);
+	if (!rw) {
+		warn("Could not create SDL_RWops for sound %s.", filename);
+		xfree(buffer);
+		return NULL;
+	}
+
+	// Load WAV from the RWops. The '1' frees the RWops struct, but not the buffer.
+	chunk = Mix_LoadWAV_RW(rw, 1);
+	xfree(buffer); // Free the original buffer to prevent a memory leak.
+
+	return chunk;
 }
 
 void sound_exit()
@@ -145,6 +206,12 @@ void play_sdl_sound(int nr, int distance, int angle)
 	return;
 }
 
+/*
+ * play_sound: Plays a sound effect with volume and pan.
+ * nr: Sound effect number.
+ * vol: Volume, from 0 (max) to -9999 (min).
+ * p: Pan, from -9999 (left) to 9999 (right).
+ */
 void play_sound(int nr, int vol, int p)
 {
 	int dist, angle;
@@ -178,59 +245,3 @@ void play_sound(int nr, int vol, int p)
 
 	play_sdl_sound(nr, dist, angle);
 }
-
-static char *sfx_name[] = {
-    "sfx/null.wav", // 0
-    "sfx/sdemonawaken.wav", // 1
-    "sfx/door.wav", // 2
-    "sfx/door2.wav", // 3
-    "sfx/man_dead.wav", // 4
-    "sfx/thunderrumble3.wav", // 5
-    "sfx/explosion.wav", // 6
-    "sfx/hit_body2.wav", // 7
-    "sfx/miss.wav", // 8
-    "sfx/man_hurt.wav", // 9
-    "sfx/pigeon.wav", // 10
-    "sfx/crow.wav", // 11
-    "sfx/crow2.wav", // 12
-    "sfx/laughingman6.wav", // 13
-    "sfx/drip1.wav", // 14
-    "sfx/drip2.wav", // 15
-    "sfx/drip3.wav", // 16
-    "sfx/howl1.wav", // 17
-    "sfx/howl2.wav", // 18
-    "sfx/bird1.wav", // 19
-    "sfx/bird2.wav", // 20
-    "sfx/bird3.wav", // 21
-    "sfx/catmeow2.wav", // 22
-    "sfx/cricket.wav", // 23
-    "sfx/specht.wav", // 24
-    "sfx/haeher.wav", // 25
-    "sfx/owl1.wav", // 26
-    "sfx/owl2.wav", // 27
-    "sfx/owl3.wav", // 28
-    "sfx/magic.wav", // 29
-    "sfx/flash.wav", // 30	lightning strike
-    "sfx/scarynote.wav", // 31	freeze
-    "sfx/woman_hurt.wav", // 32
-    "sfx/woman_dead.wav", // 33
-    "sfx/parry1.wav", // 34
-    "sfx/parry2.wav", // 35
-    "sfx/dungeon_breath1.wav", // 36
-    "sfx/dungeon_breath2.wav", // 37
-    "sfx/pents_mood1.wav", // 38
-    "sfx/pents_mood2.wav", // 39
-    "sfx/pents_mood3.wav", // 40
-    "sfx/ancient_activate.wav", // 41
-    "sfx/pent_activate.wav", // 42
-    "sfx/ancient_runout.wav", // 43
-
-    "sfx/bubble1.wav", // 44
-    "sfx/bubble2.wav", // 45
-    "sfx/bubble3.wav", // 46
-    "sfx/whale1.wav", // 47
-    "sfx/whale2.wav", // 48
-    "sfx/whale3.wav" // 49
-};
-
-static int sfx_name_cnt = ARRAYSIZE(sfx_name);

@@ -5,6 +5,10 @@ on:
     tags:
       - "*"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-linux-release:
     name: Build Linux Release
@@ -75,10 +79,10 @@ jobs:
         shell: bash
         run: git lfs pull
 
-      - name: Install Rust toolchain (GNU variant)
+      - name: Install Rust toolchain (LLVM variant)
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable-x86_64-pc-windows-gnu
+          toolchain: stable-x86_64-pc-windows-gnullvm
           cache: true
           cache-workspaces: astonia_net
 
@@ -102,7 +106,7 @@ jobs:
         run: make windows
 
       - name: Copy DLL to bin
-        run: cp astonia_net/target/x86_64-pc-windows-gnu/release/astonia_net.dll bin/
+        run: cp astonia_net/target/x86_64-pc-windows-gnullvm/release/astonia_net.dll bin/
 
       - name: Strip debug symbols
         run: |

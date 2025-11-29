@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # Format checking for C code only
   format-check:
@@ -15,17 +19,13 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Install clang-format-21
-      run: |
-        # Add LLVM repository for clang-format-21
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main"
-        sudo apt-get update
-        sudo apt-get install -y clang-format-21
-        # Verify installation
-        clang-format-21 --version
+      uses: ./.github/actions/setup-llvm-toolchain
+      with:
+        llvm-version: '21'
+        packages: clang-format-21
 
     - name: Run C format check script
       run: scripts/check-format-c.sh
@@ -38,18 +38,18 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Install dependencies
+    - name: Install LLVM toolchain
+      uses: ./.github/actions/setup-llvm-toolchain
+      with:
+        llvm-version: '21'
+        packages: clang-21 clang-tidy-21 clang-format-21
+        create-alternatives: 'true'
+
+    - name: Install additional dependencies
       run: |
-        # Add LLVM repository for clang-21 tools
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main"
-        sudo apt-get update
         sudo apt-get install -y \
-          clang-21 \
-          clang-tidy-21 \
-          clang-format-21 \
           bear \
           cppcheck \
           libsdl2-dev \
@@ -57,10 +57,6 @@ jobs:
           libpng-dev \
           libzip-dev \
           zlib1g-dev
-        # Create symlinks for version-agnostic names
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
-        sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-21 100
-        sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-21 100
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -88,7 +84,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -109,7 +105,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1
@@ -130,7 +126,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Run file consistency script
       run: scripts/check-files.sh
@@ -143,23 +139,23 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
-    - name: Install dependencies
+    - name: Install LLVM toolchain
+      uses: ./.github/actions/setup-llvm-toolchain
+      with:
+        llvm-version: '21'
+        packages: clang-21
+        create-alternatives: 'true'
+
+    - name: Install additional dependencies
       run: |
-        # Add LLVM repository for clang-21
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-21 main"
-        sudo apt-get update
         sudo apt-get install -y \
-          clang-21 \
           libsdl2-dev \
           libsdl2-mixer-dev \
           libpng-dev \
           libzip-dev \
           zlib1g-dev
-        # Create symlink for clang
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-21 100
 
     - name: Setup Rust
       uses: actions-rust-lang/setup-rust-toolchain@v1

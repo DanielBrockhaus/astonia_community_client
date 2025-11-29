@@ -91,3 +91,5 @@ int open_client(char *username, char *password);
 int init_network(void);
 void exit_network(void);
 void bzero_client(int part);
+DLL_EXPORT void client_send(void *buf, int len);
+void load_unique(void);

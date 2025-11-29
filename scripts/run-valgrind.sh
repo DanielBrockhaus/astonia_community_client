@@ -17,7 +17,7 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 shift 2>/dev/null || true
-ARGS="$@"
+ARGS=("$@")
 
 # Valgrind configuration
 VALGRIND_OPTS="
@@ -29,12 +29,12 @@ VALGRIND_OPTS="
     --suppressions=/dev/null
 "
 
-echo "Running: valgrind $BINARY $ARGS"
+echo "Running: valgrind $BINARY ${ARGS[@]}"
 echo "Output will be written to: valgrind-report.txt"
 echo ""
 
 # Run valgrind
-valgrind $VALGRIND_OPTS $BINARY $ARGS
+valgrind $VALGRIND_OPTS "$BINARY" "${ARGS[@]}"
 
 echo ""
 echo "=== Valgrind Complete ==="

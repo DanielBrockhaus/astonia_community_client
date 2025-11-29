@@ -16,13 +16,13 @@
 #include <windows.h>
 #endif
 
-#include "../../src/astonia.h"
-#include "../../src/game.h"
-#include "../../src/game/_game.h"
-#include "../../src/sdl.h"
-#include "../../src/gui.h"
-#include "../../src/client.h"
-#include "../../src/modder.h"
+#include "astonia.h"
+#include "game/game.h"
+#include "game/game_private.h"
+#include "sdl/sdl.h"
+#include "gui/gui.h"
+#include "client/client.h"
+#include "modder/modder.h"
 
 int quit = 0;
 
@@ -156,8 +156,8 @@ DLL_EXPORT void addline(const char *format, ...)
 	buf[sizeof(buf) - 1] = 0;
 	va_end(va);
 
-	if (dd_text_init_done()) {
-		dd_add_text(buf);
+	if (render_text_init_done()) {
+		render_add_text(buf);
 	}
 }
 
@@ -358,6 +358,35 @@ void *xmalloc(int size, int ID)
 	return rptr;
 }
 
+static void update_mem_stats_add(int ID, int size)
+{
+	memsize[ID] += size;
+	memptrs[ID] += 1;
+	memsize[0] += size;
+	memptrs[0] += 1;
+
+	if (memsize[0] > maxmemsize) {
+		maxmemsize = memsize[0];
+	}
+	if (memptrs[0] > maxmemptrs) {
+		maxmemptrs = memptrs[0];
+	}
+
+	memused += 8 + sizeof(memcheck) + size + sizeof(memcheck);
+	memptrused++;
+}
+
+static void update_mem_stats_remove(int ID, int size)
+{
+	memsize[ID] -= size;
+	memptrs[ID] -= 1;
+	memsize[0] -= size;
+	memptrs[0] -= 1;
+
+	memused -= 8 + sizeof(memcheck) + size + sizeof(memcheck);
+	memptrused--;
+}
+
 char *xstrdup(const char *src, int ID)
 {
 	int size;
@@ -389,15 +418,9 @@ void xfree(void *ptr)
 	// get mem
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
+	update_mem_stats_remove(mem->ID, mem->size);
+
 	// free
-	memsize[mem->ID] -= mem->size;
-	memptrs[mem->ID] -= 1;
-	memsize[0] -= mem->size;
-	memptrs[0] -= 1;
-
-	memptrused--;
-	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
-
 	free(mem);
 }
 
@@ -438,42 +461,23 @@ void *xrealloc(void *ptr, int size, int ID)
 
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
+	int old_ID = mem->ID;
+	int old_size = mem->size;
+	update_mem_stats_remove(old_ID, old_size);
+
 	// realloc
-	memsize[mem->ID] -= mem->size;
-	memptrs[mem->ID] -= 1;
-	memsize[0] -= mem->size;
-	memptrs[0] -= 1;
-
-	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
-
 	struct memhead *new_mem = realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
 	if (!new_mem) {
 		// Restore counters since realloc failed
-		memsize[mem->ID] += mem->size;
-		memptrs[mem->ID] += 1;
-		memsize[0] += mem->size;
-		memptrs[0] += 1;
-		memused += 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
+		update_mem_stats_add(old_ID, old_size);
 		fail("xrealloc: OUT OF MEMORY !!!");
 		return NULL;
 	}
 	mem = new_mem;
 
-	memused += 8 + sizeof(memcheck) + size + sizeof(memcheck);
-
-	mem->ID = ID;
+	update_mem_stats_add(ID, size);
+	mem->ID = ID; // Update ID in case it changed
 	mem->size = size;
-	memsize[mem->ID] += mem->size;
-	memptrs[mem->ID] += 1;
-	memsize[0] += mem->size;
-	memptrs[0] += 1;
-
-	if (memsize[0] > maxmemsize) {
-		maxmemsize = memsize[0];
-	}
-	if (memptrs[0] > maxmemptrs) {
-		maxmemptrs = memptrs[0];
-	}
 
 	head = ((unsigned char *)(mem)) + 8;
 	rptr = ((unsigned char *)(mem)) + 8 + sizeof(memcheck);
@@ -504,47 +508,27 @@ void *xrecalloc(void *ptr, int size, int ID)
 
 	mem = (struct memhead *)(((unsigned char *)(ptr)) - 8 - sizeof(memcheck));
 
-	// realloc
-	memsize[mem->ID] -= mem->size;
-	memptrs[mem->ID] -= 1;
-	memsize[0] -= mem->size;
-	memptrs[0] -= 1;
-
-	memused -= 8 + sizeof(memcheck) + mem->size + sizeof(memcheck);
-
+	int old_ID = mem->ID;
 	int old_size = mem->size;
+	update_mem_stats_remove(old_ID, old_size);
+
+	// realloc
 	struct memhead *new_mem = realloc(mem, 8 + sizeof(memcheck) + size + sizeof(memcheck));
 	if (!new_mem) {
 		// Restore counters since realloc failed
-		memsize[mem->ID] += old_size;
-		memptrs[mem->ID] += 1;
-		memsize[0] += old_size;
-		memptrs[0] += 1;
-		memused += 8 + sizeof(memcheck) + old_size + sizeof(memcheck);
+		update_mem_stats_add(old_ID, old_size);
 		fail("xrecalloc: OUT OF MEMORY !!!");
 		return NULL;
 	}
 	mem = new_mem;
 
-	memused += 8 + sizeof(memcheck) + size + sizeof(memcheck);
-
 	if (size - old_size > 0) {
 		bzero(((unsigned char *)(mem)) + 8 + sizeof(memcheck) + old_size, size - old_size);
 	}
 
-	mem->ID = ID;
+	update_mem_stats_add(ID, size);
+	mem->ID = ID; // Update ID in case it changed
 	mem->size = size;
-	memsize[mem->ID] += mem->size;
-	memptrs[mem->ID] += 1;
-	memsize[0] += mem->size;
-	memptrs[0] += 1;
-
-	if (memsize[0] > maxmemsize) {
-		maxmemsize = memsize[0];
-	}
-	if (memptrs[0] > maxmemptrs) {
-		maxmemptrs = memptrs[0];
-	}
 
 	head = ((unsigned char *)(mem)) + 8;
 	rptr = ((unsigned char *)(mem)) + 8 + sizeof(memcheck);
@@ -578,43 +562,43 @@ void display_messagebox(char *title, char *text)
 
 void display_usage(void)
 {
-	char *buf, *txt;
+	char *buf;
+	int size = 4096;
 
-	txt = buf = malloc(1024 * 8);
-	*buf = '\0'; // Initialize buffer
-	buf += sprintf(
-	    buf, "The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n");
-	buf += sprintf(buf, "Usage: moac -u playername -p password -d url\n ... [-w width] [-h height]\n");
-	buf += sprintf(buf, " ... [-m threads] [-o options] [-c cachesize]\n ... [-k framespersecond]\n\n");
-	buf +=
-	    sprintf(buf, "url being, for example, \"server.astonia.com\" or \"192.168.77.132\" (without the quotes).\n\n");
-	buf += sprintf(buf, "width and height are the desired window size. If this matches the desktop size the client "
-	                    "will start in windowed borderless pseudo-fullscreen mode.\n\n");
-	buf += sprintf(
-	    buf, "threads is the number of background threads the game should use. Use 0 to disable. Default is 4.\n\n");
-	buf += sprintf(buf, "options is a bitfield.\nBit 0 (value of 1) enables the Dark GUI by Tegra.");
-	buf += sprintf(buf, "Bit 1 enables the context menu.\nBit 2 the new keybindings.\nBit 3 the smaller bottom GUI.\n");
-	buf += sprintf(buf, "Bit 4 the sliding away of the top GUI.\nBit 5 enables the bigger health/mana bars.\n");
-	buf += sprintf(buf, "Bit 6 enables sound.\nBit 7 the large font.\nBit 8 true full screen mode.\nBit 9 enables the "
-	                    "legacy mouse wheel logic.\n");
-	buf += sprintf(
-	    buf, "Bit 10 enables out-of-order execution (read: faster) of inventory access and command feedback.\n");
-	buf += sprintf(buf, "Bit 11 reduces the animation buffer for faster reactions and more stutter.\n");
-	buf += sprintf(buf, "Bit 12 writes application files to %%appdata%% instead of the current folder.\n");
-	buf += sprintf(buf, "Bit 13 enables the loading and saving of minimaps.\n");
-	buf += sprintf(buf, "Bit 14 and 15 increase gamma.\n");
-	buf += sprintf(buf, "Bit 16 makes the sliding top bar less sensitive.\n");
-	buf += sprintf(buf, "Bit 17 reduces lighting effects (more performance, less pretty).\n");
-	buf += sprintf(buf, "Bit 18 disables the minimap.\n");
-	buf += sprintf(buf, "Default depends on screen height.\n\n");
-	buf += sprintf(buf, "cachesize is the size of the texture cache. Default is 8000. Lower numbers might crash!\n\n");
-	buf += sprintf(buf, "framespersecond will set the display rate in frames per second.\n\n");
+	buf = xmalloc(size, MEM_TEMP);
+	if (!buf) {
+		return;
+	}
 
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Usage", txt, NULL);
+	snprintf(buf, size,
+	    "The Astonia Client can only be started from the command line or with a specially created shortcut.\n\n"
+	    "Usage: moac -u playername -p password -d url\n ... [-w width] [-h height]\n"
+	    " ... [-m threads] [-o options] [-c cachesize]\n ... [-k framespersecond]\n\n"
+	    "url being, for example, \"server.astonia.com\" or \"192.168.77.132\" (without the quotes).\n\n"
+	    "width and height are the desired window size. If this matches the desktop size the client "
+	    "will start in windowed borderless pseudo-fullscreen mode.\n\n"
+	    "threads is the number of background threads the game should use. Use 0 to disable. Default is 4.\n\n"
+	    "options is a bitfield.\nBit 0 (value of 1) enables the Dark GUI by Tegra.\n"
+	    "Bit 1 enables the context menu.\nBit 2 the new keybindings.\nBit 3 the smaller bottom GUI.\n"
+	    "Bit 4 the sliding away of the top GUI.\nBit 5 enables the bigger health/mana bars.\n"
+	    "Bit 6 enables sound.\nBit 7 the large font.\nBit 8 true full screen mode.\nBit 9 enables the "
+	    "legacy mouse wheel logic.\n"
+	    "Bit 10 enables out-of-order execution (read: faster) of inventory access and command feedback.\n"
+	    "Bit 11 reduces the animation buffer for faster reactions and more stutter.\n"
+	    "Bit 12 writes application files to %%appdata%% instead of the current folder.\n"
+	    "Bit 13 enables the loading and saving of minimaps.\n"
+	    "Bit 14 and 15 increase gamma.\n"
+	    "Bit 16 makes the sliding top bar less sensitive.\n"
+	    "Bit 17 reduces lighting effects (more performance, less pretty).\n"
+	    "Bit 18 disables the minimap.\n"
+	    "Default depends on screen height.\n\n"
+	    "cachesize is the size of the texture cache. Default is 8000. Lower numbers might crash!\n\n"
+	    "framespersecond will set the display rate in frames per second.\n\n");
 
-	printf("%s", txt);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_INFORMATION, "Usage", buf, NULL);
+	printf("%s", buf);
 
-	free(txt);
+	xfree(buf);
 }
 
 DLL_EXPORT char server_url[256];
@@ -622,114 +606,114 @@ DLL_EXPORT int server_port = 0;
 DLL_EXPORT int want_width = 0;
 DLL_EXPORT int want_height = 0;
 
-int parse_cmd(char *s)
+int parse_args(int argc, char *argv[])
 {
-	int n;
+	int i;
 	char *end;
 
-	while (isspace(*s)) {
-		s++;
-	}
+	for (i = 1; i < argc; i++) {
+		char *arg = argv[i];
 
-	while (*s) {
-		if (*s == '-') {
-			s++;
-			if (tolower(*s) == 'u') { // -u <username>
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				n = 0;
-				while (n < 39 && *s && !isspace(*s)) {
-					username[n++] = *s++;
-				}
-				username[n] = 0;
-			} else if (tolower(*s) == 'p') { // -p <password>
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				n = 0;
-				while (n < 15 && *s && !isspace(*s)) {
-					password[n++] = *s++;
-				}
-				password[n] = 0;
-			} else if (tolower(*s) == 'd') { // -d <server url>
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				n = 0;
-				while (n < 250 && *s && !isspace(*s)) {
-					server_url[n++] = *s++;
-				}
-			} else if (tolower(*s) == 'h') { // -h <horizontal_resolution>
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				want_height = strtol(s, &end, 10);
-				s = end;
-				if (*s == 'p') {
-					s++;
-				}
-			} else if (tolower(*s) == 'w') { // -w <vertical_resolution>
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				if (isdigit(*s)) {
-					want_width = strtol(s, &end, 10);
-					s = end;
-				} else {
-					want_width = 800;
-				}
-			} else if (tolower(*s) == 'm') { // -m Multi-Threaded
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				sdl_multi = strtol(s, &end, 10);
-				s = end;
-			} else if (tolower(*s) == 'o') { // -o option
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				game_options = strtoull(s, &end, 10);
-				s = end;
-			} else if (tolower(*s) == 'c') { // -c cachesize
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				sdl_cache_size = strtol(s, &end, 10);
-				s = end;
-			} else if (tolower(*s) == 'k') { // -k frames per second
-				s++;
-				while (isspace(*s)) {
-					s++;
-				}
-				frames_per_second = strtol(s, &end, 10);
-				s = end;
-			} else if (tolower(*s) == 't') { // -t server port
-				s++;
-
-				while (isspace(*s)) {
-					s++;
-				}
-				server_port = strtol(s, &end, 10);
-				s = end;
-			} else {
-				display_usage();
-				return -1;
-			}
-		} else {
-			display_usage();
-			return -2;
+		if (arg[0] != '-') {
+			continue;
 		}
-		while (isspace(*s)) {
-			s++;
+
+		char opt = tolower(arg[1]);
+		char *val = NULL;
+
+		if (arg[2] != '\0') {
+			val = &arg[2];
+		} else if (i + 1 < argc) {
+			val = argv[i + 1];
+			// We only consume the next arg if we use it.
+			// However, in the loop, we need to be careful.
+			// If we define that flags taking args MUST have them, we increment i.
+		}
+
+		switch (opt) {
+		case 'u':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(username, sizeof(username), "%s", val);
+			}
+			break;
+		case 'p':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(password, sizeof(password), "%s", val);
+			}
+			break;
+		case 'd':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				snprintf(server_url, sizeof(server_url), "%s", val);
+			}
+			break;
+		case 'h':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				want_height = strtol(val, &end, 10);
+			}
+			break;
+		case 'w':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				want_width = strtol(val, &end, 10);
+			}
+			break;
+		case 'm':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				sdl_multi = strtol(val, &end, 10);
+			}
+			break;
+		case 'o':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				game_options = strtoull(val, &end, 10);
+			}
+			break;
+		case 'c':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				sdl_cache_size = strtol(val, &end, 10);
+			}
+			break;
+		case 'k':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				frames_per_second = strtol(val, &end, 10);
+			}
+			break;
+		case 't':
+			if (!val && i + 1 < argc) {
+				val = argv[++i];
+			}
+			if (val) {
+				server_port = strtol(val, &end, 10);
+			}
+			break;
+		default:
+			// Unknown option, ignore or warn?
+			break;
 		}
 	}
 	return 0;
@@ -783,82 +767,32 @@ void load_options(void)
 	actions_loaded();
 }
 
-// convert command line from unix style to windows style
-void convert_cmd_line(char *d, int argc, char *args[], int maxsize)
-{
-	int n;
-	char *s;
-
-	maxsize -= 2;
-
-	for (n = 1; n < argc && maxsize > 0; n++) {
-		for (s = args[n]; *s && maxsize > 0; *d++ = *s++) {
-			maxsize--;
-		}
-		*d++ = ' ';
-		maxsize--;
-	}
-	*d = 0;
-}
-
 void register_crash_handler(void);
 
-// main
-int main(int argc, char *args[])
+void init_logging(void)
 {
-	int ret;
-	char buf[80], buffer[1024];
 	char filename[MAX_PATH];
-
-	convert_cmd_line(buffer, argc, args, 1000);
-	if ((ret = parse_cmd(buffer)) != 0) {
-		return -1;
-	}
 
 	if (game_options & GO_APPDATA) {
 		localdata = SDL_GetPrefPath(ORG_NAME, APP_NAME);
-		sprintf(filename, "%s%s", localdata, "moac.log");
+		if (localdata) {
+			snprintf(filename, sizeof(filename), "%s%s", localdata, "moac.log");
+		} else {
+			// Fallback if SDL_GetPrefPath fails
+			snprintf(filename, sizeof(filename), "moac.log");
+		}
 	} else {
-		sprintf(filename, "%s", "moac.log");
+		snprintf(filename, sizeof(filename), "moac.log");
 	}
 
 	errorfp = fopen(filename, "a");
 	if (!errorfp) {
 		errorfp = stderr;
 	}
+}
 
-#ifdef ENABLE_CRASH_HANDLER
-	register_crash_handler();
-#endif
-
-	amod_init();
-#ifdef ENABLE_SHAREDMEM
-	sharedmem_init();
-#endif
-
-	load_options();
-
-	// set some stuff
-	if (!*username || !*password || !*server_url) {
-		display_usage();
-		return 0;
-	}
-
-	xlog(errorfp, "Client started with -h%d -w%d -o%d", want_height, want_width, game_options);
-
-#ifdef _WIN32
-	SetProcessDPIAware();
-#endif
-
-	target_server = server_url;
-
-	if (server_port) {
-		target_port = server_port;
-	}
-
-	// init random
-	rrandomize();
-
+void determine_resolution(void)
+{
 	if (!want_height) {
 		if (want_width == 800) {
 			want_height = 600;
@@ -889,19 +823,66 @@ int main(int argc, char *args[])
 			want_width = want_height * 16 / 9;
 		}
 	}
+}
 
-	sprintf(buf, "Astonia 3 v%d.%d.%d", (VERSION >> 16) & 255, (VERSION >> 8) & 255, (VERSION) & 255);
-	if (!sdl_init(want_width, want_height, buf)) {
-		dd_exit();
+// main
+int main(int argc, char *argv[])
+{
+	int ret;
+	char buf[80];
+
+	if ((ret = parse_args(argc, argv)) != 0) {
 		return -1;
 	}
 
-	dd_init();
+	init_logging();
+
+#ifdef ENABLE_CRASH_HANDLER
+	register_crash_handler();
+#endif
+
+	amod_init();
+#ifdef ENABLE_SHAREDMEM
+	sharedmem_init();
+#endif
+
+	load_options();
+
+	// set some stuff
+	if (!*username || !*password || !*server_url) {
+		display_usage();
+		return 0;
+	}
+
+	xlog(errorfp, "Client started with -h%d -w%d -o%llu", want_height, want_width, game_options);
+
+#ifdef _WIN32
+	SetProcessDPIAware();
+#endif
+
+	target_server = server_url;
+
+	if (server_port) {
+		target_port = server_port;
+	}
+
+	// init random
+	rrandomize();
+
+	determine_resolution();
+
+	sprintf(buf, "Astonia 3 v%d.%d.%d", (VERSION >> 16) & 255, (VERSION >> 8) & 255, (VERSION) & 255);
+	if (!sdl_init(want_width, want_height, buf)) {
+		render_exit();
+		return -1;
+	}
+
+	render_init();
 	init_sound();
 
 	if (game_options & GO_LARGE) {
 		namesize = 0;
-		dd_set_textfont(1);
+		render_set_textfont(1);
 	}
 
 	main_init();
@@ -915,7 +896,7 @@ int main(int argc, char *args[])
 	amod_exit();
 	main_exit();
 	sound_exit();
-	dd_exit();
+	render_exit();
 	sdl_exit();
 
 	list_mem();
@@ -932,6 +913,8 @@ int main(int argc, char *args[])
 	}
 
 	xlog(errorfp, "Clean client shutdown. Thank you for playing!");
-	fclose(errorfp);
+	if (errorfp != stderr) {
+		fclose(errorfp);
+	}
 	return 0;
 }

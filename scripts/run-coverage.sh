@@ -19,18 +19,17 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 shift 2>/dev/null || true
-ARGS="$@"
 
 # Clean previous coverage data
 echo "Cleaning previous coverage data..."
 find . -name "*.gcda" -delete 2>/dev/null || true
 rm -rf coverage-html 2>/dev/null || true
 
-echo "Running coverage-instrumented binary: $BINARY $ARGS"
+echo "Running coverage-instrumented binary: $BINARY $@"
 echo ""
 
 # Run the coverage-instrumented binary
-$BINARY $ARGS || {
+"$BINARY" "$@" || {
     echo "Warning: Binary exited with non-zero status, but coverage data may still be useful"
 }
 

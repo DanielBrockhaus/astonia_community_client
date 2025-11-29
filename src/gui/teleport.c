@@ -9,11 +9,11 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include "../../src/astonia.h"
-#include "../../src/gui.h"
-#include "../../src/gui/_gui.h"
-#include "../../src/client.h"
-#include "../../src/game.h"
+#include "astonia.h"
+#include "gui/gui.h"
+#include "gui/gui_private.h"
+#include "client/client.h"
+#include "game/game.h"
 
 int teleporter = 0;
 
@@ -162,9 +162,9 @@ void display_teleport(void)
 	}
 
 	if (!clan_offset) {
-		dd_copysprite(53519, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
+		render_sprite(53519, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
 	} else {
-		dd_copysprite(53520, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
+		render_sprite(53520, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
 	}
 
 	for (n = 0; n < 64; n++) {

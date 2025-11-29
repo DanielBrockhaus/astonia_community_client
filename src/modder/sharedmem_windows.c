@@ -10,11 +10,11 @@
 #include <stdio.h>
 #include <windows.h>
 
-#include "../../src/astonia.h"
-#include "../../src/modder.h"
-#include "../../src/modder/_modder.h"
-#include "../../src/client.h"
-#include "../../src/gui.h"
+#include "astonia.h"
+#include "../modder/modder.h"
+#include "../modder/modder_private.h"
+#include "../client/client.h"
+#include "../gui/gui.h"
 
 struct sharedmem {
 	unsigned int pid;
