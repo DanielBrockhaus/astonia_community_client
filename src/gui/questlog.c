@@ -154,142 +154,142 @@ DLL_EXPORT int _do_display_random(void)
 	static short jobless[10] = {0, 20, 45, 61, 82, 97};
 	static short security[10] = {0, 10, 29, 41, 58, 69, 75, 85, 94};
 
-	dd_drawtext(dotx(DOT_HLP) + (10 + 204) / 2, y, whitecolor, DD_CENTER, "Random Dungeon");
+	render_text(dotx(DOT_HLP) + (10 + 204) / 2, y, whitecolor, RENDER_ALIGN_CENTER, "Random Dungeon");
 	y += 24;
 
-	dd_drawtext_fmt(dotx(DOT_HLP) + 10, y, graycolor, 0, "Continuity: %d", shrine.continuity);
+	render_text_fmt(dotx(DOT_HLP) + 10, y, graycolor, 0, "Continuity: %d", shrine.continuity);
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Indecisiveness: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Indecisiveness: ");
 	for (n = 1; n < 10; n++) {
 		idx = n / 32;
 		bit = 1 << (n & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (indec[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", indec[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", indec[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Bribes: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Bribes: ");
 	for (n = 1; n < 10; n++) {
 		m = n + 10;
 		idx = m / 32;
 		bit = 1 << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (bribes[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", bribes[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", bribes[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Welding: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Welding: ");
 	for (n = 1; n < 10; n++) {
 		m = n + 20;
 		idx = m / 32;
 		bit = 1 << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (welding[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", welding[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", welding[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "LOE: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "LOE: ");
 	for (n = 1; n < 10; n++) {
 		m = n + 30;
 		idx = m / 32;
 		bit = 1U << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (edge[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", edge[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", edge[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Kindness: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Kindness: ");
 	for (n = 1; n < 3; n++) {
 		m = n + 40;
 		idx = m / 32;
 		bit = 1 << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (kindness[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", kindness[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", kindness[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Security: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Security: ");
 	for (n = 1; n < 9; n++) {
 		m = n + 53;
 		idx = m / 32;
 		bit = 1 << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (security[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", security[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", security[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Jobless: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Jobless: ");
 	for (n = 1; n < 6; n++) {
 		m = n + 63;
 		idx = m / 32;
 		bit = 1 << (m & 31);
 		if (shrine.used[idx] & bit) {
-			x = dd_drawtext(x, y, graycolor, 0, "- ");
+			x = render_text(x, y, graycolor, 0, "- ");
 		} else {
 			if (jobless[n] < shrine.continuity) {
-				x = dd_drawtext_fmt(x, y, graycolor, 0, "%d ", jobless[n]);
+				x = render_text_fmt(x, y, graycolor, 0, "%d ", jobless[n]);
 			}
 		}
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Vitality: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Vitality: ");
 	if (shrine.used[50 / 32] & (1 << (50 & 31))) {
-		dd_drawtext(x, y, graycolor, 0, "- ");
+		render_text(x, y, graycolor, 0, "- ");
 	} else if (30 < shrine.continuity) {
-		dd_drawtext(x, y, graycolor, 0, "30");
+		render_text(x, y, graycolor, 0, "30");
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Death: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Death: ");
 	if (shrine.used[51 / 32] & (1 << (51 & 31))) {
-		dd_drawtext(x, y, graycolor, 0, "- ");
+		render_text(x, y, graycolor, 0, "- ");
 	} else if (37 < shrine.continuity) {
-		dd_drawtext(x, y, graycolor, 0, "37");
+		render_text(x, y, graycolor, 0, "37");
 	}
 	y += 12;
 
-	x = dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, "Braveness: ");
+	x = render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, "Braveness: ");
 	if (shrine.used[52 / 32] & (1 << (52 & 31))) {
-		dd_drawtext(x, y, graycolor, 0, "- ");
+		render_text(x, y, graycolor, 0, "- ");
 	} else if (51 < shrine.continuity) {
-		dd_drawtext(x, y, graycolor, 0, "51");
+		render_text(x, y, graycolor, 0, "51");
 	}
 	y += 12;
 
 	y += 12;
-	y = dd_drawtext_break(dotx(DOT_HLP) + 10, y, dotx(DOT_HLP) + 204, graycolor, 0,
+	y = render_text_break(dotx(DOT_HLP) + 10, y, dotx(DOT_HLP) + 204, graycolor, 0,
 	    "Only shrines in dungeons you have already solved (used the continuity shrine), but not yet used, are shown. "
 	    "The continuity shrine shown is the first one you haven't used yet.");
 
@@ -332,28 +332,28 @@ int do_display_questlog(int nr)
 			    (pass == 1 && (quest[n].flags) == QF_DONE)) {
 				if (cnt >= off) {
 					if ((game_questlog[n].flags & QLF_REPEATABLE) && (quest[n].flags & QF_DONE) && quest[n].done < 10) {
-						dd_drawtext(dotx(DOT_HLP) + 200, y, lightbluecolor, DD_RIGHT, "Re-Open");
+						render_text(dotx(DOT_HLP) + 200, y, lightbluecolor, RENDER_TEXT_RIGHT, "Re-Open");
 					}
 					if ((game_questlog[n].flags & QLF_XREPEAT) && (quest[n].flags & QF_DONE)) {
-						dd_drawtext(dotx(DOT_HLP) + 200, y, graycolor, DD_RIGHT, "(Junk Item)");
+						render_text(dotx(DOT_HLP) + 200, y, graycolor, RENDER_TEXT_RIGHT, "(Junk Item)");
 					}
 					sprintf(buf, "Quest: %s", game_questlog[n].name);
-					dd_drawtext(dotx(DOT_HLP) + 10, y, whitecolor, 0, buf);
+					render_text(dotx(DOT_HLP) + 10, y, whitecolor, 0, buf);
 					y += 10;
 
 					sprintf(buf, "From: %s in %s.", game_questlog[n].giver, game_questlog[n].area);
-					dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
+					render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
 					y += 10;
 
 					if (game_questlog[n].flags & (QLF_REPEATABLE | QLF_XREPEAT)) {
 						sprintf(buf, "Done: %d time%s (%d%% exp). %s.", quest[n].done, quest[n].done != 1 ? "s" : "",
 						    questproz(quest[n].done), (quest[n].flags & QF_DONE) ? "Done" : "Open");
-						dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
+						render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
 						y += 10;
 					} else {
 						sprintf(buf, "Done: %d time. (not repeatable). %s.", quest[n].done,
 						    (quest[n].flags & QF_DONE) ? "Done" : "Open");
-						dd_drawtext(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
+						render_text(dotx(DOT_HLP) + 10, y, graycolor, 0, buf);
 						y += 10;
 					}
 					y += 10;
@@ -373,7 +373,7 @@ int do_display_questlog(int nr)
 	}
 	if (cnt == 0) {
 		y += 50;
-		y = dd_drawtext(dotx(DOT_HLP) + (10 + 202) / 2, y, whitecolor, DD_CENTER, "Your questlog is empty.");
+		y = render_text(dotx(DOT_HLP) + (10 + 202) / 2, y, whitecolor, RENDER_ALIGN_CENTER, "Your questlog is empty.");
 	}
 
 	return y;

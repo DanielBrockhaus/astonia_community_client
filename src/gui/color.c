@@ -24,13 +24,13 @@ void display_color(void)
 {
 	int csprite, scale, cr, cg, cb, light, sat, c1, c2, c3, shine;
 	static int col_anim = 4, col_step = 0, col_dir = 0;
-	DDFX fx;
+	RenderFX fx;
 
 	if (!show_color) {
 		return;
 	}
 
-	dd_copysprite(51082, dotx(DOT_COL), doty(DOT_COL), 14, 0);
+	render_sprite(51082, dotx(DOT_COL), doty(DOT_COL), 14, 0);
 
 	if (show_cur == 0) {
 		dx_copysprite_emerald(dotx(DOT_COL) - 38, doty(DOT_COL) + 40, 2, 2);
@@ -48,9 +48,9 @@ void display_color(void)
 		dx_copysprite_emerald(dotx(DOT_COL) - 38 + 24, doty(DOT_COL) + 40, 2, 1);
 	}
 
-	dd_copysprite(51083, dotx(DOT_COL) - 55, doty(DOT_COL) - 50 + 64 - IGET_R(show_color_c[show_cur]) * 2, 14, 0);
-	dd_copysprite(51083, dotx(DOT_COL) - 55 + 20, doty(DOT_COL) - 50 + 64 - IGET_G(show_color_c[show_cur]) * 2, 14, 0);
-	dd_copysprite(51083, dotx(DOT_COL) - 55 + 40, doty(DOT_COL) - 50 + 64 - IGET_B(show_color_c[show_cur]) * 2, 14, 0);
+	render_sprite(51083, dotx(DOT_COL) - 55, doty(DOT_COL) - 50 + 64 - IGET_R(show_color_c[show_cur]) * 2, 14, 0);
+	render_sprite(51083, dotx(DOT_COL) - 55 + 20, doty(DOT_COL) - 50 + 64 - IGET_G(show_color_c[show_cur]) * 2, 14, 0);
+	render_sprite(51083, dotx(DOT_COL) - 55 + 40, doty(DOT_COL) - 50 + 64 - IGET_B(show_color_c[show_cur]) * 2, 14, 0);
 
 	bzero(&fx, sizeof(fx));
 
@@ -84,9 +84,9 @@ void display_color(void)
 	fx.c3 = show_color_c[2];
 
 	fx.sink = 0;
-	fx.align = DD_OFFSET;
+	fx.align = RENDER_ALIGN_OFFSET;
 	fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = FX_ITEMLIGHT;
-	dd_copysprite_fx(&fx, dotx(DOT_COL) + 30, doty(DOT_COL));
+	render_sprite_fx(&fx, dotx(DOT_COL) + 30, doty(DOT_COL));
 }
 
 int get_color(int x, int y)

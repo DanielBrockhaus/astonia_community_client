@@ -112,7 +112,7 @@ static inline unsigned int hashfunc_text(const char *text, int color, int flags)
 	return hash % MAX_TEXHASH;
 }
 
-SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color, int flags);
+SDL_Texture *sdl_maketext(const char *text, struct renderfont *font, uint32_t color, int flags);
 
 static void not_busy_or_panic(struct sdl_texture *st)
 {
@@ -464,7 +464,7 @@ int sdl_tx_load(int sprite, int sink, int freeze, int scale, int cr, int cg, int
 	// build
 	if (text) {
 		int w, h;
-		sdlt[stx].tex = sdl_maketext(text, (struct ddfont *)text_font, text_color, text_flags);
+		sdlt[stx].tex = sdl_maketext(text, (struct renderfont *)text_font, text_color, text_flags);
 		sdlt[stx].flags = SF_USED | SF_TEXT | SF_DIDALLOC | SF_DIDMAKE | SF_DIDTEX;
 		sdlt[stx].text_color = text_color;
 		sdlt[stx].text_flags = text_flags;

@@ -174,5 +174,5 @@ DLL_EXPORT int doty(int didx);
 DLL_EXPORT int butx(int bidx);
 DLL_EXPORT int buty(int bidx);
 
-void dd_set_offset(int x, int y);
+void render_set_offset(int x, int y);
 char *client_version(void);

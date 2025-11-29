@@ -26,9 +26,10 @@ int __textdisplay_sy;
 static void dx_drawtext_gold(int x, int y, unsigned short int color, int amount)
 {
 	if (amount > 99) {
-		dd_drawtext_fmt(x, y, color, DD_CENTER | DD_FRAME | DD_SMALL, "%d.%02dG", amount / 100, amount % 100);
+		render_text_fmt(x, y, color, RENDER_ALIGN_CENTER | RENDER_TEXT_FRAMED | RENDER_TEXT_SMALL, "%d.%02dG",
+		    amount / 100, amount % 100);
 	} else {
-		dd_drawtext_fmt(x, y, color, DD_CENTER | DD_FRAME | DD_SMALL, "%ds", amount);
+		render_text_fmt(x, y, color, RENDER_ALIGN_CENTER | RENDER_TEXT_FRAMED | RENDER_TEXT_SMALL, "%ds", amount);
 	}
 }
 
@@ -46,7 +47,7 @@ void display_wear(void)
 	unsigned int sprite;
 	unsigned short c1, c2, c3, shine;
 	unsigned char scale, cr, cg, cb, light, sat;
-	DDFX fx;
+	RenderFX fx;
 
 	for (b = BUT_WEA_BEG; b <= BUT_WEA_END; b++) {
 		int i = b - BUT_WEA_BEG;
@@ -54,9 +55,9 @@ void display_wear(void)
 		int y = buty(b);
 		int yt = y + 23;
 
-		dd_copysprite(opt_sprite(SPR_ITPAD), x, y, DDFX_NLIGHT, DD_CENTER);
+		render_sprite(opt_sprite(SPR_ITPAD), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		if (i == weasel) {
-			dd_copysprite(opt_sprite(SPR_ITSEL), x, y, DDFX_NLIGHT, DD_CENTER);
+			render_sprite(opt_sprite(SPR_ITSEL), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		}
 		if (item[weatab[i]]) {
 			bzero(&fx, sizeof(fx));
@@ -75,58 +76,58 @@ void display_wear(void)
 			fx.shine = shine;
 			fx.scale = scale;
 			fx.sink = 0;
-			fx.align = DD_CENTER;
+			fx.align = RENDER_ALIGN_CENTER;
 			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = i == weasel ? FX_ITEMBRIGHT : FX_ITEMLIGHT;
 
-			dd_copysprite_fx(&fx, x, y);
+			render_sprite_fx(&fx, x, y);
 		}
 
 		if (butsel >= BUT_WEA_BEG && butsel <= BUT_WEA_END && !vk_item && capbut == -1) {
-			dd_drawtext(x, yt, textcolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, textcolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 
 		if ((cflags & IF_WNRRING) && i == 0) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNRHAND) && i == 1) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNLHAND) && i == 2 && !(cflags & IF_WNTWOHANDED)) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNTWOHANDED) && i == 2) {
-			dd_drawtext(x, yt, redcolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, redcolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNLRING) && i == 3) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNNECK) && i == 4) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNHEAD) && i == 5) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNCLOAK) && i == 6) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNBODY) && i == 7) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNBELT) && i == 8) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNARMS) && i == 9) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNLEGS) && i == 10) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 		if ((cflags & IF_WNFEET) && i == 11) {
-			dd_drawtext(x, yt, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, weaname[i]);
+			render_text(x, yt, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, weaname[i]);
 		}
 
 		if (i == 2 && item[weatab[1]] && (item_flags[weatab[1]] & IF_WNTWOHANDED)) {
-			dd_copysprite(5, x, y, DDFX_NLIGHT, DD_CENTER);
+			render_sprite(5, x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		}
 
 		if (con_cnt && con_type == 2 && itemprice[weatab[i]]) {
@@ -135,7 +136,7 @@ void display_wear(void)
 	}
 
 	dx_copysprite_emerald(butx(BUT_WEA_LCK), buty(BUT_WEA_LCK), 2 - gear_lock, 2);
-	dd_drawtext(butx(BUT_WEA_LCK) + 6, buty(BUT_WEA_LCK) - 4, textcolor, DD_SMALL | DD_FRAME,
+	render_text(butx(BUT_WEA_LCK) + 6, buty(BUT_WEA_LCK) - 4, textcolor, RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED,
 	    gear_lock ? "Gear locked" : "Gear free");
 }
 
@@ -145,16 +146,16 @@ void display_look(void)
 	unsigned int sprite;
 	unsigned short c1, c2, c3, shine;
 	unsigned char scale, cr, cg, cb, light, sat;
-	DDFX fx;
+	RenderFX fx;
 
-	dd_copysprite(opt_sprite(994), dotx(DOT_LOK), doty(DOT_LOK), DDFX_NLIGHT, DD_NORMAL);
+	render_sprite(opt_sprite(994), dotx(DOT_LOK), doty(DOT_LOK), RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 
 	for (b = BUT_WEA_BEG; b <= BUT_WEA_END; b++) {
 		int i = b - BUT_WEA_BEG;
 		int x = dotx(DOT_LOK) + but[b].x - dotx(DOT_WEA) + 30;
 		int y = doty(DOT_LOK) + 20;
 
-		dd_copysprite(opt_sprite(SPR_ITPAD), x, y, DDFX_NLIGHT, DD_CENTER);
+		render_sprite(opt_sprite(SPR_ITPAD), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		if (lookinv[weatab[i]]) {
 			bzero(&fx, sizeof(fx));
 
@@ -172,13 +173,13 @@ void display_look(void)
 			fx.sat = sat;
 			fx.scale = scale;
 			fx.sink = 0;
-			fx.align = DD_CENTER;
+			fx.align = RENDER_ALIGN_CENTER;
 			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = FX_ITEMLIGHT;
-			dd_copysprite_fx(&fx, x, y);
+			render_sprite_fx(&fx, x, y);
 		}
 	}
-	dd_drawtext(dotx(DOT_LOK) + 70, doty(DOT_LOK) + 50, 0xffff, DD_LEFT, look_name);
-	dd_drawtext_break(dotx(DOT_LOK) + 70, doty(DOT_LOK) + 60, dotx(DOT_LOK) + 270, 0xffff, DD_LEFT, look_desc);
+	render_text(dotx(DOT_LOK) + 70, doty(DOT_LOK) + 50, 0xffff, RENDER_TEXT_LEFT, look_name);
+	render_text_break(dotx(DOT_LOK) + 70, doty(DOT_LOK) + 60, dotx(DOT_LOK) + 270, 0xffff, RENDER_TEXT_LEFT, look_desc);
 
 	{
 		static int look_anim = 4, look_step = 0, look_dir = 0;
@@ -220,9 +221,9 @@ void display_look(void)
 			fx.c3 = l_c3;
 		}
 		fx.sink = 0;
-		fx.align = DD_OFFSET;
+		fx.align = RENDER_ALIGN_OFFSET;
 		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = FX_ITEMLIGHT;
-		dd_copysprite_fx(&fx, dotx(DOT_LOK) + 40, doty(DOT_LOK) + 110);
+		render_sprite_fx(&fx, dotx(DOT_LOK) + 40, doty(DOT_LOK) + 110);
 	}
 }
 
@@ -233,7 +234,7 @@ void display_inventory(void)
 	unsigned int sprite;
 	unsigned short c1, c2, c3, shine;
 	unsigned char scale, cr, cg, cb, light, sat;
-	DDFX fx;
+	RenderFX fx;
 
 	// fkey[0]=fkey[1]=fkey[2]=fkey[3]=0;
 
@@ -247,9 +248,9 @@ void display_inventory(void)
 		}
 		int yt = y + 12;
 
-		dd_copysprite(opt_sprite(SPR_ITPAD), x, y, DDFX_NLIGHT, DD_CENTER);
+		render_sprite(opt_sprite(SPR_ITPAD), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		if (i == invsel) {
-			dd_copysprite(opt_sprite(SPR_ITSEL), x, y, DDFX_NLIGHT, DD_CENTER);
+			render_sprite(opt_sprite(SPR_ITSEL), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		}
 		if (item[i]) {
 			bzero(&fx, sizeof(fx));
@@ -267,16 +268,16 @@ void display_inventory(void)
 			fx.sat = sat;
 			fx.scale = scale;
 			fx.sink = 0;
-			fx.align = DD_CENTER;
+			fx.align = RENDER_ALIGN_CENTER;
 			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = (i == invsel) ? FX_ITEMBRIGHT : FX_ITEMLIGHT;
-			dd_copysprite_fx(&fx, x, y);
+			render_sprite_fx(&fx, x, y);
 			if ((sprite = additional_sprite(item[i], tick)) != 0) {
 				fx.sprite = sprite;
-				dd_copysprite_fx(&fx, x, y);
+				render_sprite_fx(&fx, x, y);
 			}
 		}
 		if (fkeyitem[c] == i) {
-			dd_drawtext(x, y - 18, textcolor, DD_SMALL | DD_CENTER | DD_FRAME, fstr[c]);
+			render_text(x, y - 18, textcolor, RENDER_TEXT_SMALL | RENDER_ALIGN_CENTER | RENDER_TEXT_FRAMED, fstr[c]);
 		}
 		if (con_cnt && con_type == 2 && itemprice[i]) {
 			dx_drawtext_gold(x, yt, textcolor, itemprice[i]);
@@ -290,13 +291,15 @@ void display_container(void)
 	unsigned int sprite;
 	unsigned short c1, c2, c3, shine;
 	unsigned char scale, cr, cg, cb, light, sat;
-	DDFX fx;
+	RenderFX fx;
 
-	dd_copysprite(opt_sprite(SPR_TEXTF), dot[DOT_CON].x - 20, dot[DOT_CON].y - 55, DDFX_NLIGHT, DD_NORMAL);
+	render_sprite(
+	    opt_sprite(SPR_TEXTF), dot[DOT_CON].x - 20, dot[DOT_CON].y - 55, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 	if (con_type == 1) {
-		dd_drawtext(dot[DOT_CON].x, dot[DOT_CON].y - 50 + 2, textcolor, DD_LEFT | DD_LARGE, con_name);
+		render_text(dot[DOT_CON].x, dot[DOT_CON].y - 50 + 2, textcolor, RENDER_TEXT_LEFT | RENDER_TEXT_LARGE, con_name);
 	} else {
-		dd_drawtext_fmt(dot[DOT_CON].x, dot[DOT_CON].y - 50 + 2, textcolor, DD_LEFT | DD_LARGE, "%s's Shop", con_name);
+		render_text_fmt(dot[DOT_CON].x, dot[DOT_CON].y - 50 + 2, textcolor, RENDER_TEXT_LEFT | RENDER_TEXT_LARGE,
+		    "%s's Shop", con_name);
 	}
 
 	for (b = BUT_CON_BEG; b <= BUT_CON_END; b++) {
@@ -306,9 +309,9 @@ void display_container(void)
 		int yt = y + 12;
 		unsigned short int color;
 
-		dd_copysprite(opt_sprite(SPR_ITPAD), x, y, DDFX_NLIGHT, DD_CENTER);
+		render_sprite(opt_sprite(SPR_ITPAD), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		if (i == consel) {
-			dd_copysprite(opt_sprite(SPR_ITSEL), x, y, DDFX_NLIGHT, DD_CENTER);
+			render_sprite(opt_sprite(SPR_ITSEL), x, y, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 		}
 		if (i >= con_cnt) {
 			continue;
@@ -329,9 +332,9 @@ void display_container(void)
 			fx.sat = sat;
 			fx.scale = scale;
 			fx.sink = 0;
-			fx.align = DD_CENTER;
+			fx.align = RENDER_ALIGN_CENTER;
 			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = i == consel ? FX_ITEMBRIGHT : FX_ITEMLIGHT;
-			dd_copysprite_fx(&fx, x, y);
+			render_sprite_fx(&fx, x, y);
 		}
 
 		if (con_type == 2 && price[i]) {
@@ -358,8 +361,9 @@ void display_gold(void)
 	y = but[BUT_GLD].y;
 
 	if (!(game_options & GO_SMALLBOT)) {
-		dd_copysprite(SPR_GOLD_BEG + 7, x, y - 10,
-		    lcmd == CMD_TAKE_GOLD || lcmd == CMD_DROP_GOLD ? DDFX_BRIGHT : DDFX_NLIGHT, DD_CENTER);
+		render_sprite(SPR_GOLD_BEG + 7, x, y - 10,
+		    lcmd == CMD_TAKE_GOLD || lcmd == CMD_DROP_GOLD ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT,
+		    RENDER_ALIGN_CENTER);
 	}
 
 	if (capbut == BUT_GLD) {
@@ -376,13 +380,13 @@ void display_citem(void)
 	unsigned int sprite;
 	unsigned short c1, c2, c3, shine;
 	unsigned char scale, cr, cg, cb, light, sat;
-	DDFX fx;
+	RenderFX fx;
 
 	// trashcan
 	if (vk_item || csprite) {
 		x = but[BUT_JNK].x;
 		y = but[BUT_JNK].y;
-		dd_copysprite(25, x, y, lcmd == CMD_JUNK_ITEM ? DDFX_BRIGHT : DDFX_NLIGHT, DD_CENTER);
+		render_sprite(25, x, y, lcmd == CMD_JUNK_ITEM ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_CENTER);
 	}
 
 	// citem
@@ -419,37 +423,37 @@ void display_citem(void)
 	fx.sat = sat;
 	fx.scale = scale;
 	fx.sink = 0;
-	fx.align = DD_CENTER;
+	fx.align = RENDER_ALIGN_CENTER;
 	fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = FX_ITEMLIGHT;
-	dd_push_clip();
-	dd_more_clip(0, 0, XRES, YRES);
-	dd_copysprite_fx(&fx, x, y);
+	render_push_clip();
+	render_more_clip(0, 0, XRES, YRES);
+	render_sprite_fx(&fx, x, y);
 	if ((sprite = additional_sprite(csprite, tick)) != 0) {
 		fx.sprite = sprite;
-		dd_copysprite_fx(&fx, x, y);
+		render_sprite_fx(&fx, x, y);
 	}
 
 	if (cprice) {
 		dx_drawtext_gold(x, y + 5 + 12, textcolor, cprice);
 	}
-	dd_pop_clip();
+	render_pop_clip();
 }
 
 void display_scrollbars(void)
 {
-	dd_copysprite(SPR_SCRUP, but[BUT_SCL_UP].x, but[BUT_SCL_UP].y, butsel == BUT_SCL_UP ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
-	dd_copysprite(SPR_SCRLT, but[BUT_SCL_TR].x, but[BUT_SCL_TR].y, butsel == BUT_SCL_TR ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
-	dd_copysprite(SPR_SCRDW, but[BUT_SCL_DW].x, but[BUT_SCL_DW].y, butsel == BUT_SCL_DW ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
+	render_sprite(SPR_SCRUP, but[BUT_SCL_UP].x, but[BUT_SCL_UP].y, butsel == BUT_SCL_UP ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
+	render_sprite(SPR_SCRLT, but[BUT_SCL_TR].x, but[BUT_SCL_TR].y, butsel == BUT_SCL_TR ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
+	render_sprite(SPR_SCRDW, but[BUT_SCL_DW].x, but[BUT_SCL_DW].y, butsel == BUT_SCL_DW ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
 
-	dd_copysprite(SPR_SCRUP, but[BUT_SCR_UP].x, but[BUT_SCR_UP].y, butsel == BUT_SCR_UP ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
-	dd_copysprite(SPR_SCRRT, but[BUT_SCR_TR].x, but[BUT_SCR_TR].y, butsel == BUT_SCR_TR ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
-	dd_copysprite(SPR_SCRDW, but[BUT_SCR_DW].x, but[BUT_SCR_DW].y, butsel == BUT_SCR_DW ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
-	    DD_OFFSET);
+	render_sprite(SPR_SCRUP, but[BUT_SCR_UP].x, but[BUT_SCR_UP].y, butsel == BUT_SCR_UP ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
+	render_sprite(SPR_SCRRT, but[BUT_SCR_TR].x, but[BUT_SCR_TR].y, butsel == BUT_SCR_TR ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
+	render_sprite(SPR_SCRDW, but[BUT_SCR_DW].x, but[BUT_SCR_DW].y, butsel == BUT_SCR_DW ? FX_ITEMBRIGHT : FX_ITEMLIGHT,
+	    RENDER_ALIGN_OFFSET);
 }
 
 void display_skill(void)
@@ -491,8 +495,8 @@ void display_skill(void)
 		}
 
 		if (skltab[i].v == STV_JUSTAVALUE) {
-			dd_drawtext(bsx, yt, textcolor, DD_LARGE | DD_LEFT, skltab[i].name);
-			dd_drawtext_fmt(bex, yt, textcolor, DD_LARGE | DD_RIGHT, "%d", skltab[i].curr);
+			render_text(bsx, yt, textcolor, RENDER_TEXT_LARGE | RENDER_TEXT_LEFT, skltab[i].name);
+			render_text_fmt(bex, yt, textcolor, RENDER_TEXT_LARGE | RENDER_TEXT_RIGHT, "%d", skltab[i].curr);
 			continue;
 		}
 
@@ -502,9 +506,9 @@ void display_skill(void)
 			barsize = 0;
 		}
 		if (barsize > 0) {
-			dd_rect(bsx, bsy, bsx + barsize, bsy + 1, bluecolor);
+			render_rect(bsx, bsy, bsx + barsize, bsy + 1, bluecolor);
 		} else if (barsize < 0) {
-			dd_rect(bsx, bsy, bex + barsize, bsy + 1, redcolor);
+			render_rect(bsx, bsy, bex + barsize, bsy + 1, redcolor);
 		}
 
 		switch (skltab[i].v) {
@@ -541,8 +545,8 @@ void display_skill(void)
 			break;
 		}
 
-		dd_drawtext(bsx, yt, textcolor, DD_LARGE | DD_LEFT, skltab[i].name);
-		dd_drawtext(bex, yt, textcolor, DD_LARGE | DD_RIGHT, buf);
+		render_text(bsx, yt, textcolor, RENDER_TEXT_LARGE | RENDER_TEXT_LEFT, skltab[i].name);
+		render_text(bex, yt, textcolor, RENDER_TEXT_LARGE | RENDER_TEXT_RIGHT, buf);
 	}
 }
 
@@ -584,7 +588,8 @@ void display_keys(void)
 			sprintf(buf, "%c %s", keytab[i].keycode, keytab[i].name);
 		}
 
-		dd_drawtext(dotx(DOT_BOT) + x, doty(DOT_BOT) - 6, col, DD_LEFT | DD_SMALL | DD_FRAME, buf);
+		render_text(
+		    dotx(DOT_BOT) + x, doty(DOT_BOT) - 6, col, RENDER_TEXT_LEFT | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, buf);
 	}
 }
 
@@ -597,12 +602,12 @@ void display_tutor(void)
 		return;
 	}
 
-	dd_rect(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(24, 22, 16));
+	render_rect(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(24, 22, 16));
 
-	dd_line(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT), IRGB(12, 10, 4));
-	dd_line(dotx(DOT_TUT) + 410, doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(12, 10, 4));
-	dd_line(dotx(DOT_TUT), doty(DOT_TUT) + 90, dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(12, 10, 4));
-	dd_line(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT), doty(DOT_TUT) + 90, IRGB(12, 10, 4));
+	render_line(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT), IRGB(12, 10, 4));
+	render_line(dotx(DOT_TUT) + 410, doty(DOT_TUT), dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(12, 10, 4));
+	render_line(dotx(DOT_TUT), doty(DOT_TUT) + 90, dotx(DOT_TUT) + 410, doty(DOT_TUT) + 90, IRGB(12, 10, 4));
+	render_line(dotx(DOT_TUT), doty(DOT_TUT), dotx(DOT_TUT), doty(DOT_TUT) + 90, IRGB(12, 10, 4));
 
 	int x = dotx(DOT_TUT) + 6;
 	int y = doty(DOT_TUT) + 4;
@@ -627,14 +632,14 @@ void display_tutor(void)
 			buf[n++] = *ptr++;
 		}
 		buf[n] = 0;
-		if (x + dd_textlength(DD_LEFT | DD_LARGE, buf) >= mx) {
+		if (x + render_text_length(RENDER_TEXT_LEFT | RENDER_TEXT_LARGE, buf) >= mx) {
 			x = dotx(DOT_TUT) + 6;
 			y += 10;
 			if (y >= my) {
 				break;
 			}
 		}
-		x = dd_drawtext(x, y, IRGB(12, 10, 4), DD_LEFT | DD_LARGE, buf) + 3;
+		x = render_text(x, y, IRGB(12, 10, 4), RENDER_TEXT_LEFT | RENDER_TEXT_LARGE, buf) + 3;
 	}
 }
 
@@ -659,7 +664,7 @@ void display_screen(void)
 	int h1, h2, m1, m2;
 	static int rh1 = 0, rh2 = 0, rm1 = 0, rm2 = 0;
 
-	dd_copysprite(opt_sprite(999), dotx(DOT_TOP), doty(DOT_TOP), DDFX_NLIGHT, DD_NORMAL);
+	render_sprite(opt_sprite(999), dotx(DOT_TOP), doty(DOT_TOP), RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 
 	trans_date(realtime, &h, &m);
 
@@ -696,17 +701,21 @@ void display_screen(void)
 		rm2 = 0;
 	}
 
-	dd_copysprite(200 + rh1, dotx(DOT_TOP) + 730 + 0 * 10 - 2, doty(DOT_TOP) + 5 + 3, DDFX_NLIGHT, DD_NORMAL);
-	dd_copysprite(200 + rh2, dotx(DOT_TOP) + 730 + 1 * 10 - 2, doty(DOT_TOP) + 5 + 3, DDFX_NLIGHT, DD_NORMAL);
-	dd_copysprite(200 + rm1, dotx(DOT_TOP) + 734 + 2 * 10 - 2, doty(DOT_TOP) + 5 + 3, DDFX_NLIGHT, DD_NORMAL);
-	dd_copysprite(200 + rm2, dotx(DOT_TOP) + 734 + 3 * 10 - 2, doty(DOT_TOP) + 5 + 3, DDFX_NLIGHT, DD_NORMAL);
+	render_sprite(
+	    200 + rh1, dotx(DOT_TOP) + 730 + 0 * 10 - 2, doty(DOT_TOP) + 5 + 3, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+	render_sprite(
+	    200 + rh2, dotx(DOT_TOP) + 730 + 1 * 10 - 2, doty(DOT_TOP) + 5 + 3, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+	render_sprite(
+	    200 + rm1, dotx(DOT_TOP) + 734 + 2 * 10 - 2, doty(DOT_TOP) + 5 + 3, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+	render_sprite(
+	    200 + rm2, dotx(DOT_TOP) + 734 + 3 * 10 - 2, doty(DOT_TOP) + 5 + 3, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 
 	sprintf(hover_time_text, "%02d:%02d Astonia Standard Time", h, m);
 
 	if (game_options & GO_SMALLBOT) {
-		dd_copysprite(opt_sprite(991), dotx(DOT_BOT), doty(DOT_BOT), DDFX_NLIGHT, DD_NORMAL);
+		render_sprite(opt_sprite(991), dotx(DOT_BOT), doty(DOT_BOT), RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 	} else {
-		dd_copysprite(opt_sprite(998), dotx(DOT_BOT), doty(DOT_BOT), DDFX_NLIGHT, DD_NORMAL);
+		render_sprite(opt_sprite(998), dotx(DOT_BOT), doty(DOT_BOT), RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 	}
 }
 
@@ -714,9 +723,9 @@ void display_text(void)
 {
 	int link;
 
-	dd_display_text();
+	render_display_text();
 
-	if ((link = dd_scantext(mousex, mousey, hitsel))) {
+	if ((link = render_scantext(mousex, mousey, hitsel))) {
 		hittype = link;
 	} else {
 		hitsel[0] = 0;
@@ -744,13 +753,16 @@ void display_mode(void)
 	dx_copysprite_emerald(but[BUT_MOD_WALK1].x, but[BUT_MOD_WALK1].y, 4, sel == 1 ? 2 : pspeed == 1 ? 1 : 0);
 	dx_copysprite_emerald(but[BUT_MOD_WALK2].x, but[BUT_MOD_WALK2].y, 4, sel == 2 ? 2 : pspeed == 2 ? 1 : 0);
 
-	dd_drawtext(but[BUT_MOD_WALK0].x, but[BUT_MOD_WALK0].y + 7, bluecolor, DD_SMALL | DD_FRAME | DD_CENTER, "F6");
-	dd_drawtext(but[BUT_MOD_WALK1].x, but[BUT_MOD_WALK1].y + 7, bluecolor, DD_SMALL | DD_FRAME | DD_CENTER, "F5");
-	dd_drawtext(but[BUT_MOD_WALK2].x, but[BUT_MOD_WALK2].y + 7, bluecolor, DD_SMALL | DD_FRAME | DD_CENTER, "F7");
+	render_text(but[BUT_MOD_WALK0].x, but[BUT_MOD_WALK0].y + 7, bluecolor,
+	    RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "F6");
+	render_text(but[BUT_MOD_WALK1].x, but[BUT_MOD_WALK1].y + 7, bluecolor,
+	    RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "F5");
+	render_text(but[BUT_MOD_WALK2].x, but[BUT_MOD_WALK2].y + 7, bluecolor,
+	    RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "F7");
 
 	if (*speedtext[sel]) {
-		dd_drawtext(
-		    but[BUT_MOD_WALK0].x, but[BUT_MOD_WALK0].y - 13, col, DD_SMALL | DD_CENTER | DD_FRAME, speedtext[sel]);
+		render_text(but[BUT_MOD_WALK0].x, but[BUT_MOD_WALK0].y - 13, col,
+		    RENDER_TEXT_SMALL | RENDER_ALIGN_CENTER | RENDER_TEXT_FRAMED, speedtext[sel]);
 	}
 }
 
@@ -774,38 +786,41 @@ void display_selfspells(void)
 		switch (ceffect[nr].generic.type) {
 		case 9: {
 			int step = 50 - 50 * (ceffect[nr].bless.stop - tick) / (ceffect[nr].bless.stop - ceffect[nr].bless.start);
-			dd_push_clip();
-			dd_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
+			render_push_clip();
+			render_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
 			if (ceffect[nr].bless.stop - tick < 24 * 30 && (tick & 4)) {
-				dd_copysprite(997, dotx(DOT_SSP) + 2 * 10, doty(DOT_SSP) + step, DDFX_BRIGHT, DD_NORMAL);
+				render_sprite(997, dotx(DOT_SSP) + 2 * 10, doty(DOT_SSP) + step, RENDERFX_BRIGHT, RENDER_ALIGN_NORMAL);
 			} else {
-				dd_copysprite(997, dotx(DOT_SSP) + 2 * 10, doty(DOT_SSP) + step, DDFX_NLIGHT, DD_NORMAL);
+				render_sprite(
+				    997, dotx(DOT_SSP) + 2 * 10, doty(DOT_SSP) + step, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 			}
-			dd_pop_clip();
+			render_pop_clip();
 			sprintf(hover_bless_text, "Bless: %ds to go", (ceffect[nr].bless.stop - tick) / 24);
 			break;
 		}
 		case 11: {
 			int step =
 			    50 - 50 * (ceffect[nr].freeze.stop - tick) / (ceffect[nr].freeze.stop - ceffect[nr].freeze.start);
-			dd_push_clip();
-			dd_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
-			dd_copysprite(997, dotx(DOT_SSP) + 1 * 10, doty(DOT_SSP) + step, DDFX_NLIGHT, DD_NORMAL);
-			dd_pop_clip();
+			render_push_clip();
+			render_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
+			render_sprite(
+			    997, dotx(DOT_SSP) + 1 * 10, doty(DOT_SSP) + step, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+			render_pop_clip();
 			sprintf(hover_freeze_text, "Freeze: %ds to go", (ceffect[nr].freeze.stop - tick) / 24);
 			break;
 		}
 		case 14: {
 			int step =
 			    50 - 50 * (ceffect[nr].potion.stop - tick) / (ceffect[nr].potion.stop - ceffect[nr].potion.start);
-			dd_push_clip();
-			dd_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
+			render_push_clip();
+			render_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
 			if (step >= 40 && (tick & 4)) {
-				dd_copysprite(997, dotx(DOT_SSP) + 0 * 10, doty(DOT_SSP) + step, DDFX_BRIGHT, DD_NORMAL);
+				render_sprite(997, dotx(DOT_SSP) + 0 * 10, doty(DOT_SSP) + step, RENDERFX_BRIGHT, RENDER_ALIGN_NORMAL);
 			} else {
-				dd_copysprite(997, dotx(DOT_SSP) + 0 * 10, doty(DOT_SSP) + step, DDFX_NLIGHT, DD_NORMAL);
+				render_sprite(
+				    997, dotx(DOT_SSP) + 0 * 10, doty(DOT_SSP) + step, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
 			}
-			dd_pop_clip();
+			render_pop_clip();
 			sprintf(hover_potion_text, "Potion: %ds to go", (ceffect[nr].potion.stop - tick) / 24);
 			break;
 		}
@@ -838,10 +853,11 @@ void display_exp(void)
 			last_exp = expe;
 		}
 
-		dd_push_clip();
-		dd_more_clip(0, 0, dotx(DOT_TOP) + 31 + 100 - (int)(100ll * step / total), doty(DOT_TOP) + 8 + 7);
-		dd_copysprite(996, dotx(DOT_TOP) + 31, doty(DOT_TOP) + 7, exp_ticker ? DDFX_BRIGHT : DDFX_NLIGHT, DD_NORMAL);
-		dd_pop_clip();
+		render_push_clip();
+		render_more_clip(0, 0, dotx(DOT_TOP) + 31 + 100 - (int)(100ll * step / total), doty(DOT_TOP) + 8 + 7);
+		render_sprite(996, dotx(DOT_TOP) + 31, doty(DOT_TOP) + 7, exp_ticker ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT,
+		    RENDER_ALIGN_NORMAL);
+		render_pop_clip();
 
 		if (exp_ticker) {
 			exp_ticker--;
@@ -913,10 +929,10 @@ void display_military(void)
 
 	if (mil_exp && total) {
 		if (rank < *game_rankcount - 1) {
-			dd_push_clip();
-			dd_more_clip(0, 0, dotx(DOT_TOP) + 31 + 100 * step / total, doty(DOT_TOP) + 8 + 24);
-			dd_copysprite(993, dotx(DOT_TOP) + 31, doty(DOT_TOP) + 24, DDFX_NLIGHT, DD_NORMAL);
-			dd_pop_clip();
+			render_push_clip();
+			render_more_clip(0, 0, dotx(DOT_TOP) + 31 + 100 * step / total, doty(DOT_TOP) + 8 + 24);
+			render_sprite(993, dotx(DOT_TOP) + 31, doty(DOT_TOP) + 24, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+			render_pop_clip();
 
 			sprintf(hover_rank_text, "Rank: '%s' to '%s'", game_rankname[rank], game_rankname[rank + 1]);
 		} else {
@@ -936,10 +952,10 @@ void display_rage(void)
 	}
 
 	step = 50 - 50 * rage / value[0][V_RAGE];
-	dd_push_clip();
-	dd_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
-	dd_copysprite(997, dotx(DOT_SSP) + 3 * 10, doty(DOT_SSP) + step, DDFX_NLIGHT, DD_NORMAL);
-	dd_pop_clip();
+	render_push_clip();
+	render_more_clip(0, 0, 800, doty(DOT_SSP) + 119 - 68);
+	render_sprite(997, dotx(DOT_SSP) + 3 * 10, doty(DOT_SSP) + step, RENDERFX_NORMAL_LIGHT, RENDER_ALIGN_NORMAL);
+	render_pop_clip();
 
 	sprintf(hover_rage_text, "Rage: %d%%", 100 * rage / value[0][V_RAGE]);
 }
@@ -958,81 +974,81 @@ void display_game_special(void)
 	// GUI there's no point in updating them now
 	// so: Make a new tutorial. Eventually.
 	case 1:
-		dd_copysprite(50473, 343, 540, 14, 0);
+		render_sprite(50473, 343, 540, 14, 0);
 		break;
 	case 2:
-		dd_copysprite(50473, 423, 167, 14, 0);
+		render_sprite(50473, 423, 167, 14, 0);
 		break;
 	case 3:
 		dx = (tick - display_time) * 450 / 120;
 		if (dx < 450) {
-			dd_copysprite(50475, 175 + dx, 60, 14, 0);
+			render_sprite(50475, 175 + dx, 60, 14, 0);
 		}
 		break;
 	case 4:
-		dd_copysprite(50475, 218, 60, 14, 0);
+		render_sprite(50475, 218, 60, 14, 0);
 		break;
 	case 5:
-		dd_copysprite(50475, 257, 60, 14, 0);
+		render_sprite(50475, 257, 60, 14, 0);
 		break;
 	case 6:
-		dd_copysprite(50475, 23, 45, 14, 0);
+		render_sprite(50475, 23, 45, 14, 0);
 		break;
 	case 7:
-		dd_copysprite(50475, 75, 47, 14, 0);
+		render_sprite(50475, 75, 47, 14, 0);
 		break;
 	case 8:
-		dd_copysprite(50475, 763, 62, 14, 0);
+		render_sprite(50475, 763, 62, 14, 0);
 		break;
 
 	case 9:
 		dx = (tick - display_time) * 150 / 120;
 		if (dx < 150) {
-			dd_copysprite(50474, 188, 447 + dx, 14, 0);
+			render_sprite(50474, 188, 447 + dx, 14, 0);
 		}
 		break;
 
 	case 10:
-		dd_copysprite(50474, 205, 459, 14, 0);
+		render_sprite(50474, 205, 459, 14, 0);
 		break;
 
 	case 11:
 		dx = (tick - display_time) * 150 / 120;
 		if (dx < 150) {
-			dd_copysprite(50476, 200, 440 + dx, 14, 0);
+			render_sprite(50476, 200, 440 + dx, 14, 0);
 		}
 		break;
 
 	case 12:
 		dx = (tick - display_time) * 150 / 120;
 		if (dx < 150) {
-			dd_copysprite(50476, 618, 445 + dx, 14, 0);
+			render_sprite(50476, 618, 445 + dx, 14, 0);
 		}
 		break;
 
 	case 13:
-		dd_copysprite(50476, 625, 456, 14, 0);
+		render_sprite(50476, 625, 456, 14, 0);
 		break;
 	case 14:
-		dd_copysprite(50476, 700, 456, 14, 0);
+		render_sprite(50476, 700, 456, 14, 0);
 		break;
 	case 15:
-		dd_copysprite(50476, 741, 456, 14, 0);
+		render_sprite(50476, 741, 456, 14, 0);
 		break;
 
 	case 16:
-		dd_copysprite(50476, 353, 203, 14, 0);
+		render_sprite(50476, 353, 203, 14, 0);
 		break;
 
 	case 17:
-		dd_copysprite(50473, 722, 382, 14, 0);
-		dd_copysprite(50475, 257, 60, 14, 0);
+		render_sprite(50473, 722, 382, 14, 0);
+		render_sprite(50475, 257, 60, 14, 0);
 		break;
 
 	// TODO: this is used to display the maps in earth underground
 	// needs testing.
 	default:
-		dd_copysprite(display_gfx, 550, 210, 14, 0);
+		render_sprite(display_gfx, 550, 210, 14, 0);
 		break;
 	}
 }
@@ -1181,7 +1197,7 @@ void display_action(void)
 {
 	static int hoover_start = 0, hoover_sel = 0, hoover_start2 = 0;
 	char buf[4];
-	DDFX fx;
+	RenderFX fx;
 
 	if (!context_key_enabled()) {
 		hoover_sel = 0;
@@ -1206,34 +1222,35 @@ void display_action(void)
 				continue;
 			}
 			fx.sprite = 800 + i;
-			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = (i == actsel || i == action_ovr) ? DDFX_BRIGHT : DDFX_NLIGHT;
-			dd_copysprite_fx(&fx, butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i));
+			fx.ml = fx.ll = fx.rl = fx.ul = fx.dl =
+			    (i == actsel || i == action_ovr) ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
+			render_sprite_fx(&fx, butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i));
 			if (i == actsel) {
 				if (act_lck) { // non-keybinding mode
 					if (hoover_start > tick) { // display just the name first
-						dd_drawtext(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - 30, IRGB(31, 31, 31),
-						    DD_FRAME | DD_CENTER, action_text[i]);
+						render_text(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - 30, IRGB(31, 31, 31),
+						    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, action_text[i]);
 					} else { // display name and desc after hovering for a short while
-						int y = 40 + dd_drawtext_break_length(0, 0, 120, IRGB(31, 31, 31), 0, action_desc[i]);
-						dd_shaded_rect(butx(BUT_ACT_BEG + i) - 64, buty(BUT_ACT_BEG + i) - y - 4,
+						int y = 40 + render_text_break_length(0, 0, 120, IRGB(31, 31, 31), 0, action_desc[i]);
+						render_shaded_rect(butx(BUT_ACT_BEG + i) - 64, buty(BUT_ACT_BEG + i) - y - 4,
 						    butx(BUT_ACT_BEG + i) + 64, buty(BUT_ACT_BEG + i) - 15, 0, 130);
-						dd_drawtext(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
-						    DD_BIG | DD_CENTER, action_text[i]);
-						dd_drawtext_break(butx(BUT_ACT_BEG + i) - 60, buty(BUT_ACT_BEG + i) - y + 15,
+						render_text(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
+						    RENDER_TEXT_BIG | RENDER_ALIGN_CENTER, action_text[i]);
+						render_text_break(butx(BUT_ACT_BEG + i) - 60, buty(BUT_ACT_BEG + i) - y + 15,
 						    butx(BUT_ACT_BEG + i) + 60, IRGB(31, 31, 31), 0, action_desc[i]);
 					}
 					// display key-bindings
 					if (action_row[0][i] > ' ') {
 						buf[0] = action_slot2key(i);
 						buf[1] = 0;
-						dd_drawtext(butx(BUT_ACT_BEG + i) - 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
-						    DD_FRAME | DD_CENTER, buf);
+						render_text(butx(BUT_ACT_BEG + i) - 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
+						    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, buf);
 					}
 					if (action_row[1][i] > ' ') {
 						buf[0] = action_slot2key(i + 100);
 						buf[1] = 0;
-						dd_drawtext(butx(BUT_ACT_BEG + i) + 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
-						    DD_FRAME | DD_CENTER, buf);
+						render_text(butx(BUT_ACT_BEG + i) + 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
+						    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, buf);
 					}
 				} else { // keybinding mode
 					int row = get_action_key_row(i);
@@ -1241,59 +1258,62 @@ void display_action(void)
 					if (row == 0 && action_row[0][i] > ' ') {
 						buf[0] = action_slot2key(i);
 						buf[1] = 0;
-						dd_drawtext(butx(BUT_ACT_BEG + i) - 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
-						    DD_FRAME | DD_CENTER, buf);
+						render_text(butx(BUT_ACT_BEG + i) - 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
+						    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, buf);
 					}
 					if (row == 1 && action_row[1][i] > ' ') {
 						buf[0] = action_slot2key(i + 100);
 						buf[1] = 0;
-						dd_drawtext(butx(BUT_ACT_BEG + i) + 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
-						    DD_FRAME | DD_CENTER, buf);
+						render_text(butx(BUT_ACT_BEG + i) + 8, buty(BUT_ACT_BEG + i) - 11, IRGB(31, 31, 31),
+						    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, buf);
 					}
 					int y = 30;
 					if (action_row[0][i] > ' ' && action_row[1][i] > ' ') {
 						if (row == 0) {
-							dd_drawtext(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
-							    DD_FRAME | DD_CENTER, "(Aimed at character version)");
+							render_text(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
+							    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "(Aimed at character version)");
 						} else if (action_skill[i] == V_BLESS || action_skill[i] == V_HEAL) {
-							dd_drawtext(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
-							    DD_FRAME | DD_CENTER, "(Aimed at self version)");
+							render_text(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
+							    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "(Aimed at self version)");
 						} else {
-							dd_drawtext(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
-							    DD_FRAME | DD_CENTER, "(Aimed at map tile version)");
+							render_text(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
+							    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "(Aimed at map tile version)");
 						}
 						y += 10;
 					}
-					dd_drawtext_fmt(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
-					    DD_FRAME | DD_CENTER, "Press key to assign to %s", action_text[i]);
+					render_text_fmt(butx(BUT_ACT_BEG + i), buty(BUT_ACT_BEG + i) - y, IRGB(31, 31, 31),
+					    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "Press key to assign to %s", action_text[i]);
 				}
 			}
 		}
 
 		fx.sprite = 853;
-		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_OPN ? DDFX_BRIGHT : DDFX_NLIGHT;
-		dd_copysprite_fx(&fx, butx(BUT_ACT_OPN), buty(BUT_ACT_OPN));
+		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_OPN ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
+		render_sprite_fx(&fx, butx(BUT_ACT_OPN), buty(BUT_ACT_OPN));
 		if (butsel == BUT_ACT_OPN) {
-			dd_drawtext(butx(BUT_ACT_OPN) - 8, buty(BUT_ACT_OPN) - 11, IRGB(31, 31, 31), DD_FRAME | DD_CENTER, "-");
-			dd_drawtext(butx(BUT_ACT_OPN) + 8, buty(BUT_ACT_OPN) - 11, IRGB(31, 31, 31), DD_FRAME | DD_CENTER, "=");
-			dd_drawtext(butx(BUT_ACT_OPN), buty(BUT_ACT_OPN) - 30, IRGB(31, 31, 31), DD_FRAME | DD_CENTER, "Hide/Show");
+			render_text(butx(BUT_ACT_OPN) - 8, buty(BUT_ACT_OPN) - 11, IRGB(31, 31, 31),
+			    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "-");
+			render_text(butx(BUT_ACT_OPN) + 8, buty(BUT_ACT_OPN) - 11, IRGB(31, 31, 31),
+			    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "=");
+			render_text(butx(BUT_ACT_OPN), buty(BUT_ACT_OPN) - 30, IRGB(31, 31, 31),
+			    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, "Hide/Show");
 		}
 
 		fx.sprite = 851 - act_lck;
-		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_LCK ? DDFX_BRIGHT : DDFX_NLIGHT;
-		dd_copysprite_fx(&fx, butx(BUT_ACT_LCK), buty(BUT_ACT_LCK));
+		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_LCK ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
+		render_sprite_fx(&fx, butx(BUT_ACT_LCK), buty(BUT_ACT_LCK));
 		if (butsel == BUT_ACT_LCK) {
 			if (hoover_start2 > tick) { // display just the name first
-				dd_drawtext(butx(BUT_ACT_LCK), buty(BUT_ACT_LCK) - 30, IRGB(31, 31, 31), DD_FRAME | DD_CENTER,
-				    act_lck ? "Assign Keys" : "Lock Keys");
+				render_text(butx(BUT_ACT_LCK), buty(BUT_ACT_LCK) - 30, IRGB(31, 31, 31),
+				    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER, act_lck ? "Assign Keys" : "Lock Keys");
 			} else { // display name and desc after hovering for a short while
 				int y = 40 +
-				        dd_drawtext_break_length(0, 0, 120, IRGB(31, 31, 31), 0, act_lck ? locked_desc : unlocked_desc);
-				dd_shaded_rect(butx(BUT_ACT_LCK) - 64, buty(BUT_ACT_LCK) - y - 4, butx(BUT_ACT_LCK) + 64,
+				        render_text_break_length(0, 0, 120, IRGB(31, 31, 31), 0, act_lck ? locked_desc : unlocked_desc);
+				render_shaded_rect(butx(BUT_ACT_LCK) - 64, buty(BUT_ACT_LCK) - y - 4, butx(BUT_ACT_LCK) + 64,
 				    buty(BUT_ACT_LCK) - 15, 0, 130);
-				dd_drawtext(butx(BUT_ACT_LCK), buty(BUT_ACT_LCK) - y, IRGB(31, 31, 31), DD_FRAME | DD_CENTER | DD_BIG,
-				    act_lck ? "Assign Keys" : "Lock Keys");
-				dd_drawtext_break(butx(BUT_ACT_LCK) - 60, buty(BUT_ACT_LCK) - y + 15, butx(BUT_ACT_LCK) + 60,
+				render_text(butx(BUT_ACT_LCK), buty(BUT_ACT_LCK) - y, IRGB(31, 31, 31),
+				    RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER | RENDER_TEXT_BIG, act_lck ? "Assign Keys" : "Lock Keys");
+				render_text_break(butx(BUT_ACT_LCK) - 60, buty(BUT_ACT_LCK) - y + 15, butx(BUT_ACT_LCK) + 60,
 				    IRGB(31, 31, 31), 0, act_lck ? locked_desc : unlocked_desc);
 			}
 		} else {
@@ -1301,8 +1321,8 @@ void display_action(void)
 		}
 	} else {
 		fx.sprite = 852;
-		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_OPN ? DDFX_BRIGHT : DDFX_NLIGHT;
-		dd_copysprite_fx(&fx, butx(BUT_ACT_OPN), buty(BUT_ACT_OPN));
+		fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = butsel == BUT_ACT_OPN ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
+		render_sprite_fx(&fx, butx(BUT_ACT_OPN), buty(BUT_ACT_OPN));
 	}
 }
 
@@ -1320,12 +1340,12 @@ void display_action_open(void)
 static void display_bar(int sx, int sy, int perc, unsigned short color, int xs, int ys)
 {
 	perc = perc * ys / 100;
-	dd_shaded_rect(sx - 1, sy - 1, sx + xs + 1, sy + ys + 1, 0, 120);
+	render_shaded_rect(sx - 1, sy - 1, sx + xs + 1, sy + ys + 1, 0, 120);
 	if (perc < 100) {
-		dd_shaded_rect(sx, sy, sx + xs, sy + ys - perc, IRGB(0, 0, 0), 95);
+		render_shaded_rect(sx, sy, sx + xs, sy + ys - perc, IRGB(0, 0, 0), 95);
 	}
 	if (perc > 0) {
-		dd_shaded_rect(sx, sy + ys - perc, sx + xs, sy + ys, color, 95);
+		render_shaded_rect(sx, sy + ys - perc, sx + xs, sy + ys, color, 95);
 	}
 }
 
@@ -1378,9 +1398,9 @@ void display_selfbars(void)
 				int j;
 				j = i * ys / 100;
 				if (i < endup) {
-					dd_line(x + xs * 2 + xd * 2, y + ys - j, x + xs * 3 + xd * 2, y + ys - j, 0x0000);
+					render_line(x + xs * 2 + xd * 2, y + ys - j, x + xs * 3 + xd * 2, y + ys - j, 0x0000);
 				} else {
-					dd_line(x + xs * 2 + xd * 2, y + ys - j, x + xs * 3 + xd * 2, y + ys - j, 0xffff);
+					render_line(x + xs * 2 + xd * 2, y + ys - j, x + xs * 3 + xd * 2, y + ys - j, 0xffff);
 				}
 			}
 		}

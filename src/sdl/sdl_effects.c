@@ -15,7 +15,7 @@
 #include "sdl/sdl.h"
 #include "sdl/sdl_private.h"
 
-#define DDFX_MAX_FREEZE 8
+#define RENDERFX_MAX_FREEZE 8
 
 #define REDCOL   (0.40)
 #define GREENCOL (0.70)
@@ -77,9 +77,9 @@ uint32_t sdl_freeze(int freeze, uint32_t irgb)
 	b = IGET_B(irgb);
 	a = IGET_A(irgb);
 
-	r = min(255, r + 255 * freeze / (3 * DDFX_MAX_FREEZE - 1));
-	g = min(255, g + 255 * freeze / (3 * DDFX_MAX_FREEZE - 1));
-	b = min(255, b + 255 * 3 * freeze / (3 * DDFX_MAX_FREEZE - 1));
+	r = min(255, r + 255 * freeze / (3 * RENDERFX_MAX_FREEZE - 1));
+	g = min(255, g + 255 * freeze / (3 * RENDERFX_MAX_FREEZE - 1));
+	b = min(255, b + 255 * 3 * freeze / (3 * RENDERFX_MAX_FREEZE - 1));
 
 	return IRGBA(r, g, b, a);
 }

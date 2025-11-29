@@ -11,8 +11,8 @@
 #define SKLWIDTH   145
 #define LINEHEIGHT 10
 
-#define FX_ITEMLIGHT  DDFX_NLIGHT
-#define FX_ITEMBRIGHT DDFX_BRIGHT
+#define FX_ITEMLIGHT  RENDERFX_NORMAL_LIGHT
+#define FX_ITEMBRIGHT RENDERFX_BRIGHT
 #define DOTF_TOPOFF   (1 << 0) // dot moves with top bar
 
 #define BUT_MAP       0

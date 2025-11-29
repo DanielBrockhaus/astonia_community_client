@@ -1,9 +1,9 @@
 /*
  * Part of Astonia Client (c) Daniel Brockhaus. Please read license.txt.
  *
- * Display Helper
+ * Rendering System
  *
- * System independent graphics functions. Currently calling SDL2 via sdl.c
+ * SDL2-based rendering abstraction layer providing system-independent graphics functions
  *
  */
 
@@ -21,22 +21,33 @@
 #include "client/client.h"
 #include "sdl/sdl.h"
 
-DDFONT *fonta_shaded = NULL;
-DDFONT *fonta_framed = NULL;
+RenderFont *fonta_shaded = NULL;
+RenderFont *fonta_framed = NULL;
 
-DDFONT *fontb_shaded = NULL;
-DDFONT *fontb_framed = NULL;
+RenderFont *fontb_shaded = NULL;
+RenderFont *fontb_framed = NULL;
 
-DDFONT *fontc_shaded = NULL;
-DDFONT *fontc_framed = NULL;
+RenderFont *fontc_shaded = NULL;
+RenderFont *fontc_framed = NULL;
 
+// Global rendering offset for window scaling and positioning
 int x_offset, y_offset;
+
+// Clipping rectangle bounds (screen coordinates)
 static int clipsx, clipsy, clipex, clipey;
+
+// Clipping stack for nested rendering regions (max depth: 32)
 static int clipstore[32][4], clippos = 0;
 
-void dd_dump(FILE *fp)
+/**
+ * Dump rendering system state to file for debugging.
+ * Used by the crash handler to report rendering state when errors occur.
+ *
+ * @param fp File pointer to write debug information to
+ */
+void render_dump(FILE *fp)
 {
-	fprintf(fp, "DD datadump:\n");
+	fprintf(fp, "Rendering System Data Dump:\n");
 
 	fprintf(fp, "x_offset: %d\n", x_offset);
 	fprintf(fp, "y_offset: %d\n", y_offset);
@@ -49,7 +60,14 @@ void dd_dump(FILE *fp)
 	fprintf(fp, "\n");
 }
 
-DLL_EXPORT void dd_push_clip(void)
+/**
+ * Push current clipping rectangle onto the stack.
+ * Allows nested UI components to temporarily restrict rendering regions.
+ * Maximum stack depth is 32 levels.
+ *
+ * Must be balanced with render_pop_clip() calls.
+ */
+DLL_EXPORT void render_push_clip(void)
 {
 	if (clippos >= 32) {
 		return;
@@ -62,7 +80,13 @@ DLL_EXPORT void dd_push_clip(void)
 	clippos++;
 }
 
-DLL_EXPORT void dd_pop_clip(void)
+/**
+ * Pop clipping rectangle from the stack.
+ * Restores the previous clipping region after rendering a nested UI component.
+ *
+ * Must be balanced with render_push_clip() calls.
+ */
+DLL_EXPORT void render_pop_clip(void)
 {
 	if (clippos == 0) {
 		return;
@@ -75,7 +99,16 @@ DLL_EXPORT void dd_pop_clip(void)
 	clipey = clipstore[clippos][3];
 }
 
-DLL_EXPORT void dd_more_clip(int sx, int sy, int ex, int ey)
+/**
+ * Restrict the clipping rectangle further by intersecting with new bounds.
+ * The resulting clip rect is the intersection of the current rect and the new rect.
+ *
+ * @param sx Start X coordinate for new clipping bounds
+ * @param sy Start Y coordinate for new clipping bounds
+ * @param ex End X coordinate for new clipping bounds
+ * @param ey End Y coordinate for new clipping bounds
+ */
+DLL_EXPORT void render_more_clip(int sx, int sy, int ex, int ey)
 {
 	if (sx > clipsx) {
 		clipsx = sx;
@@ -91,7 +124,16 @@ DLL_EXPORT void dd_more_clip(int sx, int sy, int ex, int ey)
 	}
 }
 
-void dd_set_clip(int sx, int sy, int ex, int ey)
+/**
+ * Set the clipping rectangle to specific bounds.
+ * All rendering operations will be clipped to this rectangle.
+ *
+ * @param sx Start X coordinate for clipping bounds
+ * @param sy Start Y coordinate for clipping bounds
+ * @param ex End X coordinate for clipping bounds
+ * @param ey End Y coordinate for clipping bounds
+ */
+void render_set_clip(int sx, int sy, int ex, int ey)
 {
 	clipsx = sx;
 	clipsy = sy;
@@ -99,7 +141,14 @@ void dd_set_clip(int sx, int sy, int ex, int ey)
 	clipey = ey;
 }
 
-int dd_init(void)
+/**
+ * Initialize the rendering system.
+ * Sets up clipping to full screen resolution, creates font textures,
+ * and initializes the chat window text system.
+ *
+ * @return 0 on success
+ */
+int render_init(void)
 {
 	// set the clipping to the maximum possible
 	clippos = 0;
@@ -108,127 +157,204 @@ int dd_init(void)
 	clipex = XRES;
 	clipey = YRES;
 
-	dd_create_font();
-	dd_init_text();
+	render_create_font();
+	render_init_text();
 
 	return 0;
 }
 
-int dd_exit(void)
+/**
+ * Cleanup and shutdown the rendering system.
+ * Called during application exit.
+ *
+ * @return 0 on success
+ */
+int render_exit(void)
 {
 	return 0;
 }
 
-DLL_EXPORT int dd_copysprite_fx(DDFX *ddfx, int scrx, int scry)
+/**
+ * Render a sprite with full effects support.
+ * This is the primary sprite rendering function supporting lighting, scaling,
+ * color manipulation, alpha blending, animation freeze frames, and custom clipping.
+ *
+ * @param fx Pointer to RenderFX structure containing all rendering parameters
+ * @param scrx Screen X coordinate for sprite position
+ * @param scry Screen Y coordinate for sprite position
+ * @return 1 on success, 0 if sprite could not be loaded
+ */
+DLL_EXPORT int render_sprite_fx(RenderFX *fx, int scrx, int scry)
 {
 	int stx;
 
 	// cppcheck-suppress nullPointerRedundantCheck
-	PARANOIA(if (!ddfx) paranoia("dd_copysprite_fx: ddfx=NULL");)
+	PARANOIA(if (!fx) paranoia("render_sprite_fx: fx=NULL");)
 	// cppcheck-suppress nullPointerRedundantCheck
-	PARANOIA(if (ddfx->light < 0 || ddfx->light > 16) paranoia("dd_copysprite_fx: ddfx->light=%d", ddfx->light);)
+	PARANOIA(if (fx->light < 0 || fx->light > 16) paranoia("render_sprite_fx: fx->light=%d", fx->light);)
 	// cppcheck-suppress nullPointerRedundantCheck
-	PARANOIA(if (ddfx->freeze < 0 || ddfx->freeze >= DDFX_MAX_FREEZE)
-	        paranoia("dd_copysprite_fx: ddfx->freeze=%d", ddfx->freeze);)
+	PARANOIA(if (fx->freeze < 0 || fx->freeze >= RENDERFX_MAX_FREEZE)
+	        paranoia("render_sprite_fx: fx->freeze=%d", fx->freeze);)
 
-	stx = sdl_tx_load(ddfx->sprite, ddfx->sink, ddfx->freeze, ddfx->scale, ddfx->cr, ddfx->cg, ddfx->cb, ddfx->clight,
-	    ddfx->sat, ddfx->c1, ddfx->c2, ddfx->c3, ddfx->shine, ddfx->ml, ddfx->ll, ddfx->rl, ddfx->ul, ddfx->dl, NULL, 0,
-	    0, NULL, 0, 0, 0);
+	stx = sdl_tx_load(fx->sprite, fx->sink, fx->freeze, fx->scale, fx->cr, fx->cg, fx->cb, fx->clight, fx->sat, fx->c1,
+	    fx->c2, fx->c3, fx->shine, fx->ml, fx->ll, fx->rl, fx->ul, fx->dl, NULL, 0, 0, NULL, 0, 0, 0);
 
 	if (stx == -1) {
 		return 0;
 	}
 
 	// shift position according to align
-	if (ddfx->align == DD_OFFSET) {
+	if (fx->align == RENDER_ALIGN_OFFSET) {
 		scrx += sdlt_xoff(stx);
 		scry += sdlt_yoff(stx);
-	} else if (ddfx->align == DD_CENTER) {
+	} else if (fx->align == RENDER_ALIGN_CENTER) {
 		scrx -= sdlt_xres(stx) / 2;
 		scry -= sdlt_yres(stx) / 2;
 	}
 
 	// add the additional cliprect
-	if (ddfx->clipsx != ddfx->clipex || ddfx->clipsy != ddfx->clipey) {
-		dd_push_clip();
-		if (ddfx->clipsx != ddfx->clipex) {
-			dd_more_clip(scrx - sdlt_xoff(stx) + ddfx->clipsx, clipsy, scrx - sdlt_xoff(stx) + ddfx->clipex, clipey);
+	if (fx->clipsx != fx->clipex || fx->clipsy != fx->clipey) {
+		render_push_clip();
+		if (fx->clipsx != fx->clipex) {
+			render_more_clip(scrx - sdlt_xoff(stx) + fx->clipsx, clipsy, scrx - sdlt_xoff(stx) + fx->clipex, clipey);
 		}
-		if (ddfx->clipsy != ddfx->clipey) {
-			dd_more_clip(clipsx, scry - sdlt_yoff(stx) + ddfx->clipsy, clipex, scry - sdlt_yoff(stx) + ddfx->clipey);
+		if (fx->clipsy != fx->clipey) {
+			render_more_clip(clipsx, scry - sdlt_yoff(stx) + fx->clipsy, clipex, scry - sdlt_yoff(stx) + fx->clipey);
 		}
 	}
 
 	// blit it
-	if (ddfx->alpha) {
-		sdl_tex_alpha(stx, ddfx->alpha);
+	if (fx->alpha) {
+		sdl_tex_alpha(stx, fx->alpha);
 	}
 	sdl_blit(stx, scrx, scry, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
-	if (ddfx->alpha) {
+	if (fx->alpha) {
 		sdl_tex_alpha(stx, 255);
 	}
 
 	// remove additional cliprect
-	if (ddfx->clipsx != ddfx->clipex || ddfx->clipsy != ddfx->clipey) {
-		dd_pop_clip();
+	if (fx->clipsx != fx->clipex || fx->clipsy != fx->clipey) {
+		render_pop_clip();
 	}
 
 	return 1;
 }
 
-void dd_copysprite_callfx(int sprite, int scrx, int scry, int light, int ml, int align)
+/**
+ * Render a sprite with basic effects (internal helper function).
+ * Simplified version of render_sprite_fx() for internal use with minimal parameters.
+ *
+ * @param sprite Sprite number to render
+ * @param scrx Screen X coordinate
+ * @param scry Screen Y coordinate
+ * @param light Lighting level (unused if >= 1000)
+ * @param ml Multi-directional lighting value
+ * @param align Alignment mode (RENDER_ALIGN_OFFSET, RENDER_ALIGN_CENTER, RENDER_ALIGN_NORMAL)
+ */
+void render_sprite_callfx(int sprite, int scrx, int scry, int light, int ml, int align)
 {
-	DDFX ddfx;
+	RenderFX fx;
 
-	bzero(&ddfx, sizeof(DDFX));
+	bzero(&fx, sizeof(RenderFX));
 
-	ddfx.sprite = sprite;
+	fx.sprite = sprite;
 	if (light < 1000) {
-		ddfx.light = DDFX_NLIGHT;
+		fx.light = RENDERFX_NORMAL_LIGHT;
 	}
-	ddfx.align = align;
+	fx.align = align;
 
-	ddfx.ml = ddfx.ll = ddfx.rl = ddfx.ul = ddfx.dl = ml;
-	ddfx.sink = 0;
-	ddfx.scale = 100;
-	ddfx.cr = ddfx.cg = ddfx.cb = ddfx.clight = ddfx.sat = 0;
-	ddfx.c1 = ddfx.c2 = ddfx.c3 = ddfx.shine = 0;
+	fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = ml;
+	fx.sink = 0;
+	fx.scale = 100;
+	fx.cr = fx.cg = fx.cb = fx.clight = fx.sat = 0;
+	fx.c1 = fx.c2 = fx.c3 = fx.shine = 0;
 
-	dd_copysprite_fx(&ddfx, scrx, scry);
+	render_sprite_fx(&fx, scrx, scry);
 }
 
-DLL_EXPORT void dd_copysprite(int sprite, int scrx, int scry, int light, int align)
+/**
+ * Render a sprite with simple lighting.
+ * Simplified sprite rendering with basic lighting support.
+ * This is the most commonly used sprite rendering function in the codebase.
+ *
+ * @param sprite Sprite number to render
+ * @param scrx Screen X coordinate
+ * @param scry Screen Y coordinate
+ * @param light Lighting value (applied to all directions)
+ * @param align Alignment mode (RENDER_ALIGN_OFFSET, RENDER_ALIGN_CENTER, RENDER_ALIGN_NORMAL)
+ */
+DLL_EXPORT void render_sprite(int sprite, int scrx, int scry, int light, int align)
 {
-	DDFX ddfx;
+	RenderFX fx;
 
-	bzero(&ddfx, sizeof(DDFX));
+	bzero(&fx, sizeof(RenderFX));
 
-	ddfx.sprite = sprite;
-	ddfx.light = DDFX_NLIGHT;
-	ddfx.align = align;
+	fx.sprite = sprite;
+	fx.light = RENDERFX_NORMAL_LIGHT;
+	fx.align = align;
 
-	ddfx.ml = ddfx.ll = ddfx.rl = ddfx.ul = ddfx.dl = light;
-	ddfx.scale = 100;
+	fx.ml = fx.ll = fx.rl = fx.ul = fx.dl = light;
+	fx.scale = 100;
 
-	dd_copysprite_fx(&ddfx, scrx, scry);
+	render_sprite_fx(&fx, scrx, scry);
 }
 
-DLL_EXPORT void dd_rect(int sx, int sy, int ex, int ey, unsigned short int color)
+/**
+ * Draw a filled rectangle.
+ * Renders a solid colored rectangle with clipping support.
+ *
+ * @param sx Start X coordinate
+ * @param sy Start Y coordinate
+ * @param ex End X coordinate
+ * @param ey End Y coordinate
+ * @param color RGB color value (16-bit IRGB format)
+ */
+DLL_EXPORT void render_rect(int sx, int sy, int ex, int ey, unsigned short int color)
 {
 	sdl_rect(sx, sy, ex, ey, color, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
 }
 
-void dd_shaded_rect(int sx, int sy, int ex, int ey, unsigned short color, unsigned short alpha)
+/**
+ * Draw a filled rectangle with alpha blending.
+ * Renders a semi-transparent colored rectangle.
+ *
+ * @param sx Start X coordinate
+ * @param sy Start Y coordinate
+ * @param ex End X coordinate
+ * @param ey End Y coordinate
+ * @param color RGB color value (16-bit IRGB format)
+ * @param alpha Alpha transparency value (0-255)
+ */
+void render_shaded_rect(int sx, int sy, int ex, int ey, unsigned short color, unsigned short alpha)
 {
 	sdl_shaded_rect(sx, sy, ex, ey, color, alpha, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
 }
 
-DLL_EXPORT void dd_line(int fx, int fy, int tx, int ty, unsigned short col)
+/**
+ * Draw a line between two points.
+ * Renders a 1-pixel wide line with clipping support.
+ *
+ * @param fx From X coordinate
+ * @param fy From Y coordinate
+ * @param tx To X coordinate
+ * @param ty To Y coordinate
+ * @param col Line color (16-bit IRGB format)
+ */
+DLL_EXPORT void render_line(int fx, int fy, int tx, int ty, unsigned short col)
 {
 	sdl_line(fx, fy, tx, ty, col, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
 }
 
-void dd_display_strike(int fx, int fy, int tx, int ty)
+/**
+ * Render a lightning strike effect between two points.
+ * Used for spell effects and combat visuals.
+ *
+ * @param fx From X coordinate
+ * @param fy From Y coordinate
+ * @param tx To X coordinate
+ * @param ty To Y coordinate
+ */
+void render_display_strike(int fx, int fy, int tx, int ty)
 {
 	int mx, my;
 	int dx, dy, d, l;
@@ -244,20 +370,20 @@ void dd_display_strike(int fx, int fy, int tx, int ty)
 		for (d = -4; d < 5; d++) {
 			l = (4 - abs(d)) * 4;
 			col = IRGB(l, l, 31);
-			dd_line(fx, fy, mx, my + d, col);
-			dd_line(mx, my + d, tx, ty, col);
+			render_line(fx, fy, mx, my + d, col);
+			render_line(mx, my + d, tx, ty, col);
 		}
 	} else {
 		for (d = -4; d < 5; d++) {
 			l = (4 - abs(d)) * 4;
 			col = IRGB(l, l, 31);
-			dd_line(fx, fy, mx + d, my, col);
-			dd_line(mx + d, my, tx, ty, col);
+			render_line(fx, fy, mx + d, my, col);
+			render_line(mx + d, my, tx, ty, col);
 		}
 	}
 }
 
-void dd_draw_curve(int cx, int cy, int nr, int size, unsigned short col)
+void render_draw_curve(int cx, int cy, int nr, int size, unsigned short col)
 {
 	int n, x, y;
 
@@ -284,7 +410,16 @@ void dd_draw_curve(int cx, int cy, int nr, int size, unsigned short col)
 	}
 }
 
-void dd_display_pulseback(int fx, int fy, int tx, int ty)
+/**
+ * Render a green pulseback lightning effect between two points.
+ * Used for healing/buff spell effects.
+ *
+ * @param fx From X coordinate
+ * @param fy From Y coordinate
+ * @param tx To X coordinate
+ * @param ty To Y coordinate
+ */
+void render_display_pulseback(int fx, int fy, int tx, int ty)
 {
 	int mx, my;
 	int dx, dy, d, l;
@@ -300,91 +435,110 @@ void dd_display_pulseback(int fx, int fy, int tx, int ty)
 		for (d = -4; d < 5; d++) {
 			l = (4 - abs(d)) * 4;
 			col = IRGB(l, 31, l);
-			dd_line(fx, fy, mx, my + d, col);
-			dd_line(mx, my + d, tx, ty, col);
+			render_line(fx, fy, mx, my + d, col);
+			render_line(mx, my + d, tx, ty, col);
 		}
 	} else {
 		for (d = -4; d < 5; d++) {
 			l = (4 - abs(d)) * 4;
 			col = IRGB(l, 31, l);
-			dd_line(fx, fy, mx + d, my, col);
-			dd_line(mx + d, my, tx, ty, col);
+			render_line(fx, fy, mx + d, my, col);
+			render_line(mx + d, my, tx, ty, col);
 		}
 	}
 }
 
 // text
 
-DLL_EXPORT int dd_textlength(int flags, const char *text)
+/**
+ * Calculate the pixel width of text.
+ * Stops at text terminator character.
+ *
+ * @param flags Font and style flags (RENDER_TEXT_SMALL, RENDER_TEXT_BIG, etc.)
+ * @param text Text string to measure
+ * @return Width in pixels
+ */
+DLL_EXPORT int render_text_length(int flags, const char *text)
 {
-	DDFONT *font;
+	RenderFont *font;
 	int x;
 	const char *c;
 
-	if (flags & DD_SMALL) {
+	if (flags & RENDER_TEXT_SMALL) {
 		font = fontb;
-	} else if (flags & DD_BIG) {
+	} else if (flags & RENDER_TEXT_BIG) {
 		font = fontc;
 	} else {
 		font = fonta;
 	}
 
-	for (x = 0, c = text; *c && *c != DDT; c++) {
+	for (x = 0, c = text; *c && *c != RENDER_TEXT_TERMINATOR; c++) {
 		x += font[*c].dim;
 	}
 
 	return x;
 }
 
-int dd_textlen(int flags, const char *text, int n)
+int render_text_len(int flags, const char *text, int n)
 {
-	DDFONT *font;
+	RenderFont *font;
 	int x;
 	const char *c;
 
 	if (n < 0) {
-		return dd_textlength(flags, text);
+		return render_text_length(flags, text);
 	}
 
-	if (flags & DD_SMALL) {
+	if (flags & RENDER_TEXT_SMALL) {
 		font = fontb;
-	} else if (flags & DD_BIG) {
+	} else if (flags & RENDER_TEXT_BIG) {
 		font = fontc;
 	} else {
 		font = fonta;
 	}
 
-	for (x = 0, c = text; *c && *c != DDT && n; c++, n--) {
+	for (x = 0, c = text; *c && *c != RENDER_TEXT_TERMINATOR && n; c++, n--) {
 		x += font[*c].dim;
 	}
 
 	return x;
 }
 
-DLL_EXPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text)
+/**
+ * Render text at specified position.
+ * Supports multiple fonts, alignment, shadows, and outlines.
+ *
+ * @param sx Start X coordinate
+ * @param sy Start Y coordinate
+ * @param color Text color (16-bit IRGB format)
+ * @param flags Font and style flags (combine with bitwise OR)
+ * @param text Text string to render
+ * @return Final X coordinate after rendering
+ */
+DLL_EXPORT int render_text(int sx, int sy, unsigned short int color, int flags, const char *text)
 {
-	DDFONT *font;
+	RenderFont *font;
 
-	if (flags & DD__SHADEFONT) {
-		if (flags & DD_SMALL) {
+	if (flags & RENDER__SHADED_FONT) {
+		if (flags & RENDER_TEXT_SMALL) {
 			font = fontb_shaded;
-		} else if (flags & DD_BIG) {
+		} else if (flags & RENDER_TEXT_BIG) {
 			font = fontc_shaded;
 		} else {
 			font = fonta_shaded;
 		}
-	} else if (flags & DD__FRAMEFONT) {
-		if (flags & DD_SMALL) {
+	} else if (flags & RENDER__FRAMED_FONT) {
+		if (flags & RENDER_TEXT_SMALL) {
 			font = fontb_framed;
-		} else if (flags & DD_BIG) {
+		} else if (flags & RENDER_TEXT_BIG) {
 			font = fontc_framed;
 		} else {
 			font = fonta_framed;
 		}
 	} else {
-		if (flags & DD_SMALL) {
+		if (flags & RENDER_TEXT_SMALL) {
 			font = fontb;
-		} else if (flags & DD_BIG) {
+		} else if (flags & RENDER_TEXT_BIG) {
 			font = fontc;
 		} else {
 			font = fonta;
@@ -394,16 +548,28 @@ DLL_EXPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, 
 		return 42;
 	}
 
-	if (flags & DD_SHADE) {
-		dd_drawtext(sx - 1, sy - 1, IRGB(0, 0, 0),
-		    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__SHADEFONT, text);
-	} else if (flags & DD_FRAME) {
+	if (flags & RENDER_TEXT_SHADED) {
+		render_text(sx - 1, sy - 1, IRGB(0, 0, 0),
+		    RENDER_TEXT_LEFT |
+		        (flags & (RENDER_TEXT_SMALL | RENDER_TEXT_BIG | RENDER_ALIGN_CENTER | RENDER_TEXT_RIGHT |
+		                     RENDER_TEXT_NOCACHE)) |
+		        RENDER__SHADED_FONT,
+		    text);
+	} else if (flags & RENDER_TEXT_FRAMED) {
 		if (flags & 512) {
-			dd_drawtext(sx - 1, sy - 1, IRGB(31, 31, 31),
-			    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__FRAMEFONT, text);
+			render_text(sx - 1, sy - 1, IRGB(31, 31, 31),
+			    RENDER_TEXT_LEFT |
+			        (flags & (RENDER_TEXT_SMALL | RENDER_TEXT_BIG | RENDER_ALIGN_CENTER | RENDER_TEXT_RIGHT |
+			                     RENDER_TEXT_NOCACHE)) |
+			        RENDER__FRAMED_FONT,
+			    text);
 		} else {
-			dd_drawtext(sx - 1, sy - 1, IRGB(0, 0, 0),
-			    DD_LEFT | (flags & (DD_SMALL | DD_BIG | DD_CENTER | DD_RIGHT | DD_NOCACHE)) | DD__FRAMEFONT, text);
+			render_text(sx - 1, sy - 1, IRGB(0, 0, 0),
+			    RENDER_TEXT_LEFT |
+			        (flags & (RENDER_TEXT_SMALL | RENDER_TEXT_BIG | RENDER_ALIGN_CENTER | RENDER_TEXT_RIGHT |
+			                     RENDER_TEXT_NOCACHE)) |
+			        RENDER__FRAMED_FONT,
+			    text);
 		}
 	}
 
@@ -412,7 +578,19 @@ DLL_EXPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, 
 	return sx;
 }
 
-DLL_EXPORT int dd_drawtext_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr)
+/**
+ * Render text with word wrapping.
+ * Automatically wraps text at word boundaries when reaching breakx.
+ *
+ * @param x Start X coordinate
+ * @param y Start Y coordinate
+ * @param breakx X coordinate to wrap at
+ * @param color Text color (16-bit IRGB format)
+ * @param flags Font and style flags
+ * @param ptr Text string to render
+ * @return Final Y coordinate after rendering
+ */
+DLL_EXPORT int render_text_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr)
 {
 	char buf[256];
 	int xp, n;
@@ -429,18 +607,18 @@ DLL_EXPORT int dd_drawtext_break(int x, int y, int breakx, unsigned short color,
 			;
 		buf[n] = 0;
 
-		size = dd_textlength(flags, buf);
+		size = render_text_length(flags, buf);
 		if (xp + size > breakx) {
 			xp = x;
 			y += 10;
 		}
-		dd_drawtext(xp, y, color, flags, buf);
+		render_text(xp, y, color, flags, buf);
 		xp += size + 4;
 	}
 	return y + 10;
 }
 
-DLL_EXPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags, const char *ptr)
+DLL_EXPORT int render_text_nl(int x, int y, int unsigned short color, int flags, const char *ptr)
 {
 	char buf[256];
 	int n;
@@ -453,8 +631,8 @@ DLL_EXPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags,
 		for (n = 0; n < 256 && *ptr && *ptr != '\n'; buf[n++] = *ptr++)
 			;
 		buf[n] = 0;
-		dd_drawtext(x, y, color, flags, buf);
-		if (flags & DD_BIG) {
+		render_text(x, y, color, flags, buf);
+		if (flags & RENDER_TEXT_BIG) {
 			y += 12;
 		} else {
 			y += 10;
@@ -463,7 +641,7 @@ DLL_EXPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags,
 	return y + 10;
 }
 
-DLL_EXPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr)
+DLL_EXPORT int render_text_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr)
 {
 	char buf[256];
 	int xp, n;
@@ -480,7 +658,7 @@ DLL_EXPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short
 			;
 		buf[n] = 0;
 
-		size = dd_textlength(flags, buf);
+		size = render_text_length(flags, buf);
 		if (xp + size > breakx) {
 			xp = x;
 			y += 10;
@@ -490,12 +668,31 @@ DLL_EXPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short
 	return y + 10;
 }
 
-DLL_EXPORT void dd_pixel(int x, int y, unsigned short col)
+/**
+ * Draw a single pixel.
+ *
+ * @param x X coordinate
+ * @param y Y coordinate
+ * @param col Pixel color (16-bit IRGB format)
+ */
+DLL_EXPORT void render_pixel(int x, int y, unsigned short col)
 {
 	sdl_pixel(x, y, col, x_offset, y_offset);
 }
 
-DLL_EXPORT int dd_drawtext_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...)
+/**
+ * Render formatted text (printf-style) at specified position.
+ * Supports all render_text() features with printf-style formatting.
+ *
+ * @param sx Start X coordinate
+ * @param sy Start Y coordinate
+ * @param color Text color (16-bit IRGB format)
+ * @param flags Font and style flags
+ * @param format Printf-style format string
+ * @param ... Format arguments
+ * @return Final X coordinate after rendering
+ */
+DLL_EXPORT int render_text_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...)
 {
 	char buf[1024];
 	va_list va;
@@ -504,10 +701,10 @@ DLL_EXPORT int dd_drawtext_fmt(int sx, int sy, unsigned short int color, int fla
 	vsprintf(buf, format, va);
 	va_end(va);
 
-	return dd_drawtext(sx, sy, color, flags, buf);
+	return render_text(sx, sy, color, flags, buf);
 }
 
-DLL_EXPORT int dd_drawtext_break_fmt(
+DLL_EXPORT int render_text_break_fmt(
     int sx, int sy, int breakx, unsigned short int color, int flags, const char *format, ...)
 {
 	char buf[1024];
@@ -517,7 +714,7 @@ DLL_EXPORT int dd_drawtext_break_fmt(
 	vsprintf(buf, format, va);
 	va_end(va);
 
-	return dd_drawtext_break(sx, sy, breakx, color, flags, buf);
+	return render_text_break(sx, sy, breakx, color, flags, buf);
 }
 
 static int bless_init = 0;
@@ -525,7 +722,7 @@ static int bless_sin[36];
 static int bless_cos[36];
 static int bless_hight[200];
 
-void dd_draw_bless_pix(int x, int y, int nr, int color, int front)
+void render_draw_bless_pix(int x, int y, int nr, int color, int front)
 {
 	int sy;
 
@@ -547,7 +744,7 @@ void dd_draw_bless_pix(int x, int y, int nr, int color, int front)
 	sdl_pixel(x, y, color, x_offset, y_offset);
 }
 
-void dd_draw_rain_pix(int x, int y, int nr, int color, int front)
+void render_draw_rain_pix(int x, int y, int nr, int color, int front)
 {
 	int sy;
 
@@ -569,7 +766,7 @@ void dd_draw_rain_pix(int x, int y, int nr, int color, int front)
 	sdl_pixel(x, y, color, x_offset, y_offset);
 }
 
-void dd_draw_bless(int x, int y, int ticker, int strength, int front)
+void render_draw_bless(int x, int y, int ticker, int strength, int front)
 {
 	int step, nr;
 	double light;
@@ -592,19 +789,20 @@ void dd_draw_bless(int x, int y, int ticker, int strength, int front)
 	}
 
 	for (step = 0; step < strength * 10; step += 17) {
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 0, IRGB((int)(24 * light), (int)(24 * light), (int)(31 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 1, IRGB((int)(20 * light), (int)(20 * light), (int)(28 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 2, IRGB((int)(16 * light), (int)(16 * light), (int)(24 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 3, IRGB((int)(12 * light), (int)(12 * light), (int)(20 * light)), front);
-		dd_draw_bless_pix(x, y, ticker + step + 4, IRGB((int)(8 * light), (int)(8 * light), (int)(16 * light)), front);
+		render_draw_bless_pix(
+		    x, y, ticker + step + 4, IRGB((int)(8 * light), (int)(8 * light), (int)(16 * light)), front);
 	}
 }
 
-void dd_draw_potion(int x, int y, int ticker, int strength, int front)
+void render_draw_potion(int x, int y, int ticker, int strength, int front)
 {
 	int step, nr;
 	double light;
@@ -628,30 +826,31 @@ void dd_draw_potion(int x, int y, int ticker, int strength, int front)
 	}
 
 	for (step = 0; step < strength * 10; step += 17) {
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 0, IRGB((int)(31 * light), (int)(24 * light), (int)(24 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 1, IRGB((int)(28 * light), (int)(20 * light), (int)(20 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 2, IRGB((int)(24 * light), (int)(16 * light), (int)(16 * light)), front);
-		dd_draw_bless_pix(
+		render_draw_bless_pix(
 		    x, y, ticker + step + 3, IRGB((int)(20 * light), (int)(12 * light), (int)(12 * light)), front);
-		dd_draw_bless_pix(x, y, ticker + step + 4, IRGB((int)(16 * light), (int)(8 * light), (int)(8 * light)), front);
+		render_draw_bless_pix(
+		    x, y, ticker + step + 4, IRGB((int)(16 * light), (int)(8 * light), (int)(8 * light)), front);
 	}
 }
 
-void dd_draw_rain(int x, int y, int ticker, int strength, int front)
+void render_draw_rain(int x, int y, int ticker, int strength, int front)
 {
 	int step;
 
 	for (step = -(strength * 100); step < 0; step += 237) {
-		dd_draw_rain_pix(x, y, -ticker + step + 0, IRGB(31, 24, 16), front);
-		dd_draw_rain_pix(x, y, -ticker + step + 1, IRGB(24, 16, 8), front);
-		dd_draw_rain_pix(x, y, -ticker + step + 2, IRGB(16, 8, 0), front);
+		render_draw_rain_pix(x, y, -ticker + step + 0, IRGB(31, 24, 16), front);
+		render_draw_rain_pix(x, y, -ticker + step + 1, IRGB(24, 16, 8), front);
+		render_draw_rain_pix(x, y, -ticker + step + 2, IRGB(16, 8, 0), front);
 	}
 }
 
-void dd_create_letter(unsigned char *rawrun, int sx, int sy, int val, char letter[64][64])
+void render_create_letter(unsigned char *rawrun, int sx, int sy, int val, char letter[64][64])
 {
 	int x = sx, y = sy;
 
@@ -669,7 +868,7 @@ void dd_create_letter(unsigned char *rawrun, int sx, int sy, int val, char lette
 	}
 }
 
-char *dd_create_rawrun(char letter[64][64])
+char *render_create_rawrun(char letter[64][64])
 {
 	char *ptr, *fon, *last;
 	int x, y, step;
@@ -696,22 +895,22 @@ char *dd_create_rawrun(char letter[64][64])
 	return fon;
 }
 
-void create_shade_font(DDFONT *src, DDFONT *dst)
+void create_shade_font(RenderFont *src, RenderFont *dst)
 {
 	char letter[64][64];
 	int c;
 
 	for (c = 0; c < 128; c++) {
 		bzero(letter, sizeof(letter));
-		dd_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 5, 2, letter);
-		dd_create_letter(src[c].raw, sdl_scale * 5, sdl_scale * 4, 2, letter);
-		dd_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 4, 1, letter);
-		dst[c].raw = dd_create_rawrun(letter);
+		render_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 5, 2, letter);
+		render_create_letter(src[c].raw, sdl_scale * 5, sdl_scale * 4, 2, letter);
+		render_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 4, 1, letter);
+		dst[c].raw = render_create_rawrun(letter);
 		dst[c].dim = src[c].dim;
 	}
 }
 
-void create_frame_font(DDFONT *src, DDFONT *dst)
+void create_frame_font(RenderFont *src, RenderFont *dst)
 {
 	char letter[64][64];
 	int c, x, y;
@@ -720,16 +919,16 @@ void create_frame_font(DDFONT *src, DDFONT *dst)
 		bzero(letter, sizeof(letter));
 		for (y = 0; y <= sdl_scale * 2; y += sdl_scale) {
 			for (x = 0; x <= sdl_scale * 2; x += sdl_scale) {
-				dd_create_letter(src[c].raw, sdl_scale * 3 + x, sdl_scale * 3 + y, 2, letter);
+				render_create_letter(src[c].raw, sdl_scale * 3 + x, sdl_scale * 3 + y, 2, letter);
 			}
 		}
-		dd_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 4, 1, letter);
-		dst[c].raw = dd_create_rawrun(letter);
+		render_create_letter(src[c].raw, sdl_scale * 4, sdl_scale * 4, 1, letter);
+		dst[c].raw = render_create_rawrun(letter);
 		dst[c].dim = src[c].dim;
 	}
 }
 
-int dd_create_font_png(DDFONT *dst, uint32_t *pixel, int dx, int dy, int yoff, int scale)
+int render_create_font_png(RenderFont *dst, uint32_t *pixel, int dx, int dy, int yoff, int scale)
 {
 	int c, x, y, sx, sy;
 	char letter[64][64];
@@ -751,12 +950,17 @@ int dd_create_font_png(DDFONT *dst, uint32_t *pixel, int dx, int dy, int yoff, i
 				}
 			}
 		}
-		dst[c].raw = dd_create_rawrun(letter);
+		dst[c].raw = render_create_rawrun(letter);
 	}
 	return 1;
 }
 
-void dd_create_font(void)
+/**
+ * Create font textures from PNG files.
+ * Loads scaled font textures based on sdl_scale setting.
+ * Creates normal, shaded, and framed variants for all three font sizes.
+ */
+void render_create_font(void)
 {
 	uint32_t *pixel;
 	int dx, dy;
@@ -773,16 +977,16 @@ void dd_create_font(void)
 		} else if (sdl_scale == 4) {
 			pixel = sdl_load_png("res/font4x.png", &dx, &dy);
 		} else {
-			fail("Scale not supported in dd_create_font!");
+			fail("Scale not supported in render_create_font!");
 			pixel = NULL;
 		}
 		if (!pixel) {
 			return;
 		}
 
-		dd_create_font_png(fonta, pixel, dx, dy, 40 * sdl_scale, sdl_scale);
-		dd_create_font_png(fontb, pixel, dx, dy, 0, sdl_scale);
-		dd_create_font_png(fontc, pixel, dx, dy, 80 * sdl_scale, sdl_scale);
+		render_create_font_png(fonta, pixel, dx, dy, 40 * sdl_scale, sdl_scale);
+		render_create_font_png(fontb, pixel, dx, dy, 0, sdl_scale);
+		render_create_font_png(fontc, pixel, dx, dy, 80 * sdl_scale, sdl_scale);
 #ifdef SDL_FAST_MALLOC
 		free(pixel);
 #else
@@ -790,25 +994,25 @@ void dd_create_font(void)
 #endif
 	}
 
-	fonta_shaded = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fonta_shaded = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_shade_font(fonta, fonta_shaded);
-	fontb_shaded = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fontb_shaded = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_shade_font(fontb, fontb_shaded);
-	fontc_shaded = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fontc_shaded = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_shade_font(fontc, fontc_shaded);
 
-	fonta_framed = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fonta_framed = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_frame_font(fonta, fonta_framed);
-	fontb_framed = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fontb_framed = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_frame_font(fontb, fontb_framed);
-	fontc_framed = xmalloc(sizeof(DDFONT) * 128, MEM_GLOB);
+	fontc_framed = xmalloc(sizeof(RenderFont) * 128, MEM_GLOB);
 	create_frame_font(fontc, fontc_framed);
 }
 
-DDFONT *textfont = fonta;
+RenderFont *textfont = fonta;
 int textdisplay_dy = 10;
 
-int dd_drawtext_char(int sx, int sy, int c, unsigned short int color)
+int render_text_char(int sx, int sy, int c, unsigned short int color)
 {
 	if (c > 127 || c < 0) {
 		return 0;
@@ -818,7 +1022,7 @@ int dd_drawtext_char(int sx, int sy, int c, unsigned short int color)
 	       sx;
 }
 
-int dd_text_len(const char *text)
+int render_text_len_internal(const char *text)
 {
 	int x;
 	const char *c;
@@ -830,7 +1034,7 @@ int dd_text_len(const char *text)
 	return (int)(x + 0.5f);
 }
 
-int dd_char_len(char c)
+int render_char_len(char c)
 {
 	return textfont[c].dim;
 }
@@ -858,7 +1062,11 @@ struct letter *text = NULL;
 
 unsigned short palette[256];
 
-void dd_init_text(void)
+/**
+ * Initialize chat window text system.
+ * Allocates text buffer and sets up color palette for different message types.
+ */
+void render_init_text(void)
 {
 	text = xmalloc(sizeof(struct letter) * MAXTEXTLINES * MAXTEXTLETTERS, MEM_GLOB);
 	palette[0] = IRGB(31, 31, 31); // normal white text (talk, game messages)
@@ -883,7 +1091,7 @@ void dd_init_text(void)
 	palette[17] = IRGB(31, 31, 31); // fake white text (hidden links)
 }
 
-void dd_set_textfont(int nr)
+void render_set_textfont(int nr)
 {
 	switch (nr) {
 	case 0:
@@ -899,7 +1107,11 @@ void dd_set_textfont(int nr)
 	textnextline = textdisplayline = textlines = 0;
 }
 
-void dd_display_text(void)
+/**
+ * Render the chat window text.
+ * Displays visible lines from the circular text buffer with color coding and links.
+ */
+void render_display_text(void)
 {
 	int n, m, rn, x, y, pos;
 	char buf[256], *bp;
@@ -922,9 +1134,9 @@ void dd_display_text(void)
 				if (bp != buf) {
 					*bp = 0;
 					if (game_options & GO_LARGE) {
-						x = dd_drawtext(x, y, palette[lastcolor], DD_BIG, buf);
+						x = render_text(x, y, palette[lastcolor], RENDER_TEXT_BIG, buf);
 					} else {
-						x = dd_drawtext(x, y, palette[lastcolor], 0, buf);
+						x = render_text(x, y, palette[lastcolor], 0, buf);
 					}
 				}
 				bp = buf;
@@ -949,15 +1161,21 @@ void dd_display_text(void)
 		if (bp != buf) {
 			*bp = 0;
 			if (game_options & GO_LARGE) {
-				dd_drawtext(x, y, palette[lastcolor], DD_BIG, buf);
+				render_text(x, y, palette[lastcolor], RENDER_TEXT_BIG, buf);
 			} else {
-				dd_drawtext(x, y, palette[lastcolor], 0, buf);
+				render_text(x, y, palette[lastcolor], 0, buf);
 			}
 		}
 	}
 }
 
-void dd_add_text(char *ptr)
+/**
+ * Add a line of text to the chat window.
+ * Handles word wrapping, color codes, and clickable links.
+ *
+ * @param ptr Text string (may contain color codes)
+ */
+void render_add_text(char *ptr)
 {
 	int n, m, pos, color = 0, link = 0;
 	int x = 0, tmp;
@@ -970,7 +1188,7 @@ void dd_add_text(char *ptr)
 		while (*ptr == ' ') {
 			ptr++;
 		}
-		while (*ptr == DDT) {
+		while (*ptr == RENDER_TEXT_TERMINATOR) {
 			ptr++;
 			switch (*ptr) {
 			case 'c':
@@ -1001,12 +1219,12 @@ void dd_add_text(char *ptr)
 		}
 
 		n = 0;
-		while (*ptr && *ptr != ' ' && *ptr != DDT && n < 49) {
+		while (*ptr && *ptr != ' ' && *ptr != RENDER_TEXT_TERMINATOR && n < 49) {
 			buf[n++] = *ptr++;
 		}
 		buf[n] = 0;
 
-		if (x + (tmp = dd_text_len(buf)) >= TEXTDISPLAY_SX) {
+		if (x + (tmp = render_text_len_internal(buf)) >= TEXTDISPLAY_SX) {
 			if (textdisplayline == (textnextline + (MAXTEXTLINES - TEXTDISPLAYLINES)) % MAXTEXTLINES) {
 				textdisplayline = (textdisplayline + 1) % MAXTEXTLINES;
 			}
@@ -1057,12 +1275,21 @@ void dd_add_text(char *ptr)
 	textlines++;
 }
 
-int dd_text_init_done(void)
+int render_text_init_done(void)
 {
 	return text != NULL;
 }
 
-int dd_scantext(int x, int y, char *hit)
+/**
+ * Check if mouse is over clickable text in chat window.
+ * Extracts the clicked text link if found.
+ *
+ * @param x Mouse X coordinate
+ * @param y Mouse Y coordinate
+ * @param hit Buffer to store clicked text (output parameter)
+ * @return Link type (1 or 2) if over link, 0 otherwise
+ */
+int render_scantext(int x, int y, char *hit)
 {
 	int n, m, pos, panic = 0, tmp = 0;
 	int dx, link;
@@ -1128,17 +1355,17 @@ int dd_scantext(int x, int y, char *hit)
 	return 0;
 }
 
-void dd_list_text(void)
+void render_list_text(void)
 {
 	note("textlines=%d, textdisplayline=%d", textlines, textdisplayline);
 }
 
-void dd_sceweup(void)
+void render_sceweup(void)
 {
 	textdisplayline = textlines + rand() % 16;
 }
 
-void dd_text_lineup(void)
+void render_text_lineup(void)
 {
 	int tmp;
 
@@ -1157,7 +1384,7 @@ void dd_text_lineup(void)
 	}
 }
 
-void dd_text_linedown(void)
+void render_text_linedown(void)
 {
 	int tmp;
 
@@ -1175,36 +1402,53 @@ void dd_text_linedown(void)
 	// printf("down: tmp=%d (%d)\n",tmp,(textnextline+MAXTEXTLINES-TEXTDISPLAYLINES+1)%MAXTEXTLINES); fflush(stdout);
 }
 
-void dd_text_pageup(void)
+void render_text_pageup(void)
 {
 	int n;
 
 	for (n = 0; n < TEXTDISPLAYLINES; n++) {
-		dd_text_lineup();
+		render_text_lineup();
 	}
 }
 
-void dd_text_pagedown(void)
+void render_text_pagedown(void)
 {
 	int n;
 
 	for (n = 0; n < TEXTDISPLAYLINES; n++) {
-		dd_text_linedown();
+		render_text_linedown();
 	}
 }
 
-void dd_set_offset(int x, int y)
+/**
+ * Set global rendering offset.
+ * Used for window scaling and positioning.
+ *
+ * @param x X offset in pixels
+ * @param y Y offset in pixels
+ */
+void render_set_offset(int x, int y)
 {
 	x_offset = x;
 	y_offset = y;
 }
 
-int dd_offset_x(void)
+/**
+ * Get current X rendering offset.
+ *
+ * @return X offset in pixels
+ */
+int render_offset_x(void)
 {
 	return x_offset;
 }
 
-int dd_offset_y(void)
+/**
+ * Get current Y rendering offset.
+ *
+ * @return Y offset in pixels
+ */
+int render_offset_y(void)
 {
 	return y_offset;
 }

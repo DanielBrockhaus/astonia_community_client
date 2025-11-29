@@ -45,31 +45,36 @@ void display_mouseover(void)
 
 	if (mousey >= doty(DOT_SSP) && mousey <= doty(DOT_SSP) + 53) {
 		if (mousex >= dotx(DOT_SSP) + 28 && mousex <= dotx(DOT_SSP) + 35) {
-			dd_drawtext_nl(mousex, mousey - 16, 0xffff, DD_BIG | DD_FRAME | DD_CENTER, hover_rage_text);
+			render_text_nl(mousex, mousey - 16, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER,
+			    hover_rage_text);
 		}
 		if (mousex >= dotx(DOT_SSP) + 18 && mousex <= dotx(DOT_SSP) + 25) {
-			dd_drawtext_nl(mousex, mousey - 16, 0xffff, DD_BIG | DD_FRAME | DD_CENTER, hover_bless_text);
+			render_text_nl(mousex, mousey - 16, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER,
+			    hover_bless_text);
 		}
 		if (mousex >= dotx(DOT_SSP) + 8 && mousex <= dotx(DOT_SSP) + 15) {
-			dd_drawtext_nl(mousex, mousey - 16, 0xffff, DD_BIG | DD_FRAME | DD_CENTER, hover_freeze_text);
+			render_text_nl(mousex, mousey - 16, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER,
+			    hover_freeze_text);
 		}
 		if (mousex >= dotx(DOT_SSP) - 2 && mousex <= dotx(DOT_SSP) + 5) {
-			dd_drawtext_nl(mousex, mousey - 16, 0xffff, DD_BIG | DD_FRAME | DD_CENTER, hover_potion_text);
+			render_text_nl(mousex, mousey - 16, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED | RENDER_ALIGN_CENTER,
+			    hover_potion_text);
 		}
 	}
 
 	if (mousex >= dotx(DOT_BOT) + 25 && mousex <= dotx(DOT_BOT) + 135) {
 		if (mousey >= doty(DOT_TOP) + 5 && mousey <= doty(DOT_TOP) + 13) {
-			dd_drawtext_nl(mousex + 16, mousey - 4, 0xffff, DD_BIG | DD_FRAME, hover_level_text);
+			render_text_nl(mousex + 16, mousey - 4, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED, hover_level_text);
 		}
 		if (mousey >= doty(DOT_TOP) + 22 && mousey <= doty(DOT_TOP) + 30) {
-			dd_drawtext_nl(mousex + 16, mousey - 4, 0xffff, DD_BIG | DD_FRAME, hover_rank_text);
+			render_text_nl(mousex + 16, mousey - 4, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED, hover_rank_text);
 		}
 	}
 
 	if (mousex >= dotx(DOT_TOP) + 728 && mousex <= dotx(DOT_TOP) + 772 && mousey >= doty(DOT_TOP) + 7 &&
 	    mousey <= doty(DOT_TOP) + 17) {
-		dd_drawtext_nl(mousex - 16, mousey - 4, 0xffff, DD_BIG | DD_FRAME | DD_RIGHT, hover_time_text);
+		render_text_nl(
+		    mousex - 16, mousey - 4, 0xffff, RENDER_TEXT_BIG | RENDER_TEXT_FRAMED | RENDER_TEXT_RIGHT, hover_time_text);
 	}
 
 	display_hover_update();
@@ -102,7 +107,7 @@ static int textlength(char *text)
 	char *c, buf[4];
 
 	for (x = 0, c = text; *c; c++) {
-		if (c[0] == DDT) {
+		if (c[0] == RENDER_TEXT_TERMINATOR) {
 			if (c[1] == 'c') {
 				if (isdigit(c[2])) {
 					if (isdigit(c[3])) {
@@ -119,7 +124,7 @@ static int textlength(char *text)
 		}
 		buf[0] = *c;
 		buf[1] = 0;
-		x += dd_textlength(0, buf);
+		x += render_text_length(0, buf);
 	}
 	return x;
 }
@@ -130,7 +135,8 @@ int hover_capture_text(char *line)
 		line++;
 	}
 
-	if (line[0] == DDT && line[1] == DDT && line[2] == DDT && strncmp(line + 3, "ITEMDESC", 8) == 0) {
+	if (line[0] == RENDER_TEXT_TERMINATOR && line[1] == RENDER_TEXT_TERMINATOR && line[2] == RENDER_TEXT_TERMINATOR &&
+	    strncmp(line + 3, "ITEMDESC", 8) == 0) {
 		last_invsel = atoi(line + 11);
 		if (last_invsel >= 1000) {
 			last_invsel = last_invsel % 1000 + INVENTORYSIZE;
@@ -145,11 +151,11 @@ int hover_capture_text(char *line)
 		return 1;
 	}
 
-	if (line[0] == DDT && line[1] == 'c' && line[2] == '5' && last_look) {
+	if (line[0] == RENDER_TEXT_TERMINATOR && line[1] == 'c' && line[2] == '5' && last_look) {
 		capture = 1;
 	}
 
-	if (line[0] == DDT && line[1] == 'c' && line[2] == '5' && line[3] == '.') {
+	if (line[0] == RENDER_TEXT_TERMINATOR && line[1] == 'c' && line[2] == '5' && line[3] == '.') {
 		capture = last_look = 0;
 		last_right_click_invsel = -1;
 		return 1;
@@ -261,14 +267,14 @@ static int display_hover(void)
 			sy = doty(DOT_BR) - hi[slot].cnt * 10 - 8;
 		}
 
-		dd_shaded_rect(sx, sy, sx + hi[slot].width + 8, sy + hi[slot].cnt * 10 + 8, 0x0000, 150);
+		render_shaded_rect(sx, sy, sx + hi[slot].width + 8, sy + hi[slot].cnt * 10 + 8, 0x0000, 150);
 
 		for (int n = 0; n < hi[slot].cnt; n++) {
 			int x = sx + 4;
 			int col = IRGB(24, 24, 24);
 
 			for (int i = 0; hi[slot].desc[n][i]; i++) {
-				if (hi[slot].desc[n][i] == DDT) {
+				if (hi[slot].desc[n][i] == RENDER_TEXT_TERMINATOR) {
 					if (hi[slot].desc[n][i + 1] == 'c') {
 						if (isdigit(hi[slot].desc[n][i + 2])) {
 							if (hi[slot].desc[n][i + 2] == '5') {
@@ -290,7 +296,7 @@ static int display_hover(void)
 				}
 				buf[0] = hi[slot].desc[n][i];
 				buf[1] = 0;
-				x = dd_drawtext(x, sy + n * 10 + 4, col, 0, buf);
+				x = render_text(x, sy + n * 10 + 4, col, 0, buf);
 			}
 		}
 		return 0;
@@ -478,7 +484,7 @@ static int display_hover_skill(void)
 			height += 10; // add a free line if there are more lines to display
 		}
 
-		height += dd_drawtext_break_length(0, 0, width - 12, 0xffff, 0, game_skilldesc[v]);
+		height += render_text_break_length(0, 0, width - 12, 0xffff, 0, game_skilldesc[v]);
 
 		int sx = mousex + 8;
 		if (sx < dotx(DOT_TL)) {
@@ -496,65 +502,65 @@ static int display_hover_skill(void)
 			sy = doty(DOT_BR) - height - 8;
 		}
 
-		dd_shaded_rect(sx, sy, sx + width + 8, sy + height + 8, 0x0000, 150);
+		render_shaded_rect(sx, sy, sx + width + 8, sy + height + 8, 0x0000, 150);
 
-		sy = dd_drawtext_break(sx + 4, sy + 4, sx + width - 8, 0xffff, 0, game_skilldesc[v]) + 10;
+		sy = render_text_break(sx + 4, sy + 4, sx + width - 8, 0xffff, 0, game_skilldesc[v]) + 10;
 
 		if (base) {
 			if (cap && v != V_SPEED) {
-				dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from (%s+%s+%s) (capped at %d)", base, vbasename(v1),
+				render_text_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from (%s+%s+%s) (capped at %d)", base, vbasename(v1),
 				    vbasename(v2), vbasename(v3), cap);
 			} else {
-				dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from (%s+%s+%s)", base, vbasename(v1), vbasename(v2),
+				render_text_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from (%s+%s+%s)", base, vbasename(v1), vbasename(v2),
 				    vbasename(v3));
 			}
 			sy += 10;
 		}
 		if (v == V_SPEED && value[0][V_SPEEDSKILL]) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from Speedskill", value[0][V_SPEEDSKILL] / 2);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from Speedskill", value[0][V_SPEEDSKILL] / 2);
 			sy += 10;
 		}
 		if (athlete) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from Athlete", athlete);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d from Athlete", athlete);
 			sy += 10;
 		}
 		if (tactics) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d hidden bonus from tactics", tactics);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gets +%d hidden bonus from tactics", tactics);
 			sy += 10;
 		}
 		if (offense) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to offense", offense);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to offense", offense);
 			sy += 10;
 		}
 		if (defense) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to defense", defense);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to defense", defense);
 			sy += 10;
 		}
 		if (immune) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d hidden bonus to immunity", immune);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d hidden bonus to immunity", immune);
 			sy += 10;
 		}
 		if (spells) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d hidden bonus to spell power", spells);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d hidden bonus to spell power", spells);
 			sy += 10;
 		}
 		if (speed) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to speed", speed);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to speed", speed);
 			sy += 10;
 		}
 		if (armor) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%.2f to armor value", armor / 20.0f);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%.2f to armor value", armor / 20.0f);
 			sy += 10;
 		}
 		if (weapon) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to weapon value", weapon);
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "Gives +%d to weapon value", weapon);
 			sy += 10;
 		}
 		if (raisecost) {
-			dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "%s exp to raise", nicenumber(raisecost));
+			render_text_fmt(sx + 4, sy, 0xffff, 0, "%s exp to raise", nicenumber(raisecost));
 			sy += 10;
 			if (unused >= 0) {
-				dd_drawtext_fmt(sx + 4, sy, 0xffff, 0, "You have %s unused exp", nicenumber(unused));
+				render_text_fmt(sx + 4, sy, 0xffff, 0, "You have %s unused exp", nicenumber(unused));
 			}
 		}
 

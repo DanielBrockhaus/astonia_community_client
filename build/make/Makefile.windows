@@ -55,7 +55,7 @@ ASTONIA_NET_LIB=$(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/libastonia_
 OBJS	=		src/gui/gui_core.o src/gui/gui_input.o src/gui/gui_display.o src/gui/gui_inventory.o src/gui/gui_buttons.o src/gui/gui_map.o\
 			src/client/client.o src/client/protocol.o src/client/skill.o\
 			src/game/game_core.o src/game/game_effects.o src/game/game_lighting.o src/game/game_display.o\
-			src/game/dd.o src/game/font.o src/game/main.o src/game/sprite.o\
+			src/game/render.o src/game/font.o src/game/main.o src/game/sprite.o\
 			src/modder/modder.o\
 			src/sdl/sdl_core.o src/sdl/sdl_texture.o src/sdl/sdl_image.o src/sdl/sdl_effects.o src/sdl/sdl_draw.o src/sdl/sound.o\
 			src/game/resource.o src/helper/helper.o\
@@ -89,7 +89,7 @@ bin/convert.exe:	src/helper/convert.c
 src/client/client.o:	src/client/client.c src/astonia.h src/client/client.h src/client/client_private.h src/sdl/sdl.h
 src/client/protocol.o: src/client/protocol.c src/astonia.h src/client/client.h src/client/client_private.h src/gui/gui.h src/modder/modder.h src/client/protocol.h
 
-src/game/dd.o:		src/game/dd.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/sdl/sdl.h
+src/game/render.o:		src/game/render.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/sdl/sdl.h
 src/game/font.o:	src/game/font.c src/game/game.h src/game/game_private.h
 src/game/game.o:    	src/game/game.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/gui/gui.h
 src/game/main.o:	src/game/main.c src/astonia.h src/game/game.h src/game/game_private.h src/client/client.h src/gui/gui.h src/sdl/sdl.h src/modder/modder.h

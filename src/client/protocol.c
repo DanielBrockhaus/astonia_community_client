@@ -1711,7 +1711,7 @@ void cmd_text(char *text)
 
 	buf[0] = CL_TEXT;
 
-	for (len = 0; text[len] && text[len] != DDT && len < 254; len++) {
+	for (len = 0; text[len] && text[len] != RENDER_TEXT_TERMINATOR && len < 254; len++) {
 		buf[len + 2] = text[len];
 	}
 

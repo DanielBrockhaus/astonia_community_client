@@ -32,19 +32,19 @@
 #define MAXCHARS      2048
 #define MAXEF         64
 
-#define DD_OFFSET 0 // this has to be zero, so bzero on the structures default this
-#define DD_CENTER 1 // also used in dd_drawtext
-#define DD_NORMAL 2
+#define RENDER_ALIGN_OFFSET 0 // this has to be zero, so bzero on the structures default this
+#define RENDER_ALIGN_CENTER 1 // also used in render_text
+#define RENDER_ALIGN_NORMAL 2
 
-#define DD_LEFT    0
-#define DD_CENTER  1
-#define DD_RIGHT   2
-#define DD_SHADE   4
-#define DD_LARGE   0
-#define DD_SMALL   8
-#define DD_FRAME   16
-#define DD_BIG     32
-#define DD_NOCACHE 64
+#define RENDER_TEXT_LEFT    0
+#define RENDER_ALIGN_CENTER 1
+#define RENDER_TEXT_RIGHT   2
+#define RENDER_TEXT_SHADED  4
+#define RENDER_TEXT_LARGE   0
+#define RENDER_TEXT_SMALL   8
+#define RENDER_TEXT_FRAMED  16
+#define RENDER_TEXT_BIG     32
+#define RENDER_TEXT_NOCACHE 64
 
 #define IGET_R(c)     ((((unsigned short int)(c)) >> 10) & 0x1F)
 #define IGET_G(c)     ((((unsigned short int)(c)) >> 5) & 0x1F)
@@ -167,8 +167,8 @@
 #define SV_MOD4 61
 #define SV_MOD5 62
 
-#define DDFX_NLIGHT 15
-#define DDFX_BRIGHT 0
+#define RENDERFX_NORMAL_LIGHT 15
+#define RENDERFX_BRIGHT       0
 
 #define XRES 800
 #define YRES (__yres)
@@ -183,8 +183,8 @@ struct ddfx {
 	char clight, sat; // lightness, saturation
 	unsigned short c1, c2, c3, shine; // color replacer
 
-	char light; // videocache_fx:       0=bright(DDFX_BRIGHT) 1=almost black; 15=normal (DDFX_NLIGHT)
-	char freeze; // videocache_fx:       0 to DDFX_MAX_FREEZE-1  !!! exclusive DDFX_MAX_FREEZE
+	char light; // videocache_fx:       0=bright(RENDERFX_BRIGHT) 1=almost black; 15=normal (RENDERFX_NORMAL_LIGHT)
+	char freeze; // videocache_fx:       0 to RENDERFX_MAX_FREEZE-1  !!! exclusive RENDERFX_MAX_FREEZE
 
 	char ml, ll, rl, ul, dl;
 
@@ -195,7 +195,7 @@ struct ddfx {
 	unsigned char alpha;
 };
 
-typedef struct ddfx DDFX;
+typedef struct ddfx RenderFX;
 
 struct complex_sprite {
 	unsigned int sprite;

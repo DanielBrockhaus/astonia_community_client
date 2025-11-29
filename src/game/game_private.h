@@ -19,15 +19,20 @@ typedef struct quicks QUICK;
 #define GMEGRD_LAYADD 500
 #define TOP_LAY       1000
 
-#define DDFX_MAX_FREEZE 8
+// Maximum number of animation freeze frames
+#define RENDERFX_MAX_FREEZE 8
 
-#define DD_LARGE_CHARSET "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.;:+-*/~@#'\"?!&%()[]=<>|_$"
-#define DD_SMALL_CHARSET "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-"
+// Character sets for font rendering
+#define RENDER_LARGE_CHARSET                                                                                           \
+	"abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,.;:+-*/~@#'\"?!&%()[]=<>|_$"
+#define RENDER_SMALL_CHARSET "abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+-"
 
-#define DD__SHADEFONT 128
-#define DD__FRAMEFONT 256
+// Internal font rendering flags (not for public use)
+#define RENDER__SHADED_FONT 128 // Internal: use shaded font variant
+#define RENDER__FRAMED_FONT 256 // Internal: use framed font variant
 
-#define DDT '\xB0' // draw text terminator - (zero stays one, too)
+// Text rendering terminator character
+#define RENDER_TEXT_TERMINATOR '\xB0' // Text terminator character (zero also works)
 
 #define DL_STEP 128
 
@@ -57,7 +62,7 @@ struct dl {
 	int x, y, h; // scrx=x scry=y-h sorted bye x,y ;) normally used for height, but also misused to place doors right
 	// int movy;
 
-	DDFX ddfx;
+	RenderFX renderfx;
 
 	// functions to call
 	char call;
@@ -65,32 +70,39 @@ struct dl {
 };
 typedef struct dl DL;
 
-#ifndef HAVE_DDFONT
-#define HAVE_DDFONT
+/**
+ * Font glyph structure for bitmap font rendering.
+ * Stores run-length encoded glyph data for efficient rendering.
+ */
+#ifndef HAVE_RENDERFONT
+#define HAVE_RENDERFONT
 
-struct ddfont {
-	int dim;
-	unsigned char *raw;
+struct renderfont {
+	int dim; // Character width in pixels
+	unsigned char *raw; // Run-length encoded glyph bitmap data
 };
 #endif
-struct ddfont;
-typedef struct ddfont DDFONT;
+struct renderfont;
+typedef struct renderfont RenderFont;
 
+// Color conversion tables and palettes
 extern unsigned short rgbcolorkey;
 extern unsigned short rgbcolorkey2;
 extern unsigned short scrcolorkey;
 extern unsigned short *rgb2scr;
 extern unsigned short *scr2rgb;
 extern unsigned short **rgbfx_light;
-extern DDFONT fonta[];
-extern DDFONT *fonta_shaded;
-extern DDFONT *fonta_framed;
-extern DDFONT fontb[];
-extern DDFONT *fontb_shaded;
-extern DDFONT *fontb_framed;
-extern DDFONT fontc[];
-extern DDFONT *fontc_shaded;
-extern DDFONT *fontc_framed;
+
+// Font variants (normal, small, big) with shaded and framed versions
+extern RenderFont fonta[]; // Normal font
+extern RenderFont *fonta_shaded; // Normal font with shadow
+extern RenderFont *fonta_framed; // Normal font with outline
+extern RenderFont fontb[]; // Small font
+extern RenderFont *fontb_shaded; // Small font with shadow
+extern RenderFont *fontb_framed; // Small font with outline
+extern RenderFont fontc[]; // Big font
+extern RenderFont *fontc_shaded; // Big font with shadow
+extern RenderFont *fontc_framed; // Big font with outline
 
 int is_top_sprite(int sprite, int itemhint);
 extern int (*is_cut_sprite)(int sprite);
@@ -110,19 +122,26 @@ DLL_EXPORT int _get_lay_sprite(int sprite, int lay);
 extern int (*get_offset_sprite)(int sprite, int *px, int *py);
 DLL_EXPORT int _get_offset_sprite(int sprite, int *px, int *py);
 
-int dd_init(void);
-int dd_exit(void);
-void dd_draw_bless(int x, int y, int ticker, int strength, int front);
-void dd_draw_potion(int x, int y, int ticker, int strength, int front);
-void dd_draw_rain(int x, int y, int ticker, int strength, int front);
-void dd_draw_curve(int cx, int cy, int nr, int size, unsigned short col);
-void dd_display_pulseback(int fx, int fy, int tx, int ty);
-int dd_text_init_done(void);
-void dd_add_text(char *ptr);
-void dd_set_textfont(int nr);
-void dd_create_font(void);
-void dd_init_text(void);
-void dd_display_strike(int fx, int fy, int tx, int ty);
+// Rendering system initialization and cleanup
+int render_init(void);
+int render_exit(void);
+
+// Font management
+void render_create_font(void);
+void render_init_text(void);
+void render_set_textfont(int nr);
+int render_text_init_done(void);
+
+// Chat window text management
+void render_add_text(char *ptr);
+
+// Special effects rendering
+void render_draw_bless(int x, int y, int ticker, int strength, int front);
+void render_draw_potion(int x, int y, int ticker, int strength, int front);
+void render_draw_rain(int x, int y, int ticker, int strength, int front);
+void render_draw_curve(int cx, int cy, int nr, int size, unsigned short col);
+void render_display_strike(int fx, int fy, int tx, int ty);
+void render_display_pulseback(int fx, int fy, int tx, int ty);
 
 // Game module internal declarations - shared between game_*.c files
 

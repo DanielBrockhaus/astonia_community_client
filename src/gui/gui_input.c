@@ -92,7 +92,7 @@ void gui_sdl_keyproc(int wparam)
 	case SDLK_F10:
 		display_vc ^= 1;
 		list_mem();
-		dd_list_text();
+		render_list_text();
 		return;
 
 	case SDLK_F11:
@@ -254,10 +254,10 @@ void gui_sdl_keyproc(int wparam)
 		return;
 
 	case SDLK_PAGEUP:
-		dd_text_pageup();
+		render_text_pageup();
 		break;
 	case SDLK_PAGEDOWN:
-		dd_text_pagedown();
+		render_text_pagedown();
 		break;
 
 	case '+':
@@ -272,7 +272,7 @@ void gui_sdl_keyproc(int wparam)
 		}
 		break;
 
-		// case '<':               dd_sceweup(); break;
+		// case '<':               render_sceweup(); break;
 
 	case SDLK_INSERT:
 		if (vk_shift && !vk_control && !vk_alt) {
@@ -302,8 +302,8 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 
 		mousex /= sdl_scale;
 		mousey /= sdl_scale;
-		mousex -= dd_offset_x();
-		mousey -= dd_offset_y();
+		mousex -= render_offset_x();
+		mousey -= render_offset_y();
 
 		if (butsel != -1 && vk_lbut && (but[butsel].flags & BUTF_MOVEEXEC)) {
 			exec_cmd(lcmd, 0);
@@ -358,7 +358,7 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 
 		if (capbut != -1) {
 			sdl_set_cursor_pos(
-			    (but[capbut].x + dd_offset_x()) * sdl_scale, (but[capbut].y + dd_offset_y()) * sdl_scale);
+			    (but[capbut].x + render_offset_x()) * sdl_scale, (but[capbut].y + render_offset_y()) * sdl_scale);
 			sdl_capture_mouse(0);
 			sdl_show_cursor(1);
 			amod_mouse_capture(0);
@@ -426,15 +426,15 @@ void gui_sdl_mouseproc(int x, int y, int what, int clicks)
 		if (mousex >= dotx(DOT_TXT) && mousex < dotx(DOT_TX2) && mousey >= doty(DOT_TXT) &&
 		    mousey < doty(DOT_TX2)) { // chat
 			while (delta > 0) {
-				dd_text_lineup();
-				dd_text_lineup();
-				dd_text_lineup();
+				render_text_lineup();
+				render_text_lineup();
+				render_text_lineup();
 				delta--;
 			}
 			while (delta < 0) {
-				dd_text_linedown();
-				dd_text_linedown();
-				dd_text_linedown();
+				render_text_linedown();
+				render_text_linedown();
+				render_text_linedown();
 				delta++;
 			}
 			break;

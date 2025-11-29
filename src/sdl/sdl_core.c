@@ -204,7 +204,7 @@ int sdl_init(int width, int height, char *title)
 			YRES = YRES1 - off;
 		}
 
-		dd_set_offset((width / sdl_scale - XRES) / 2, (height / sdl_scale - YRES) / 2);
+		render_set_offset((width / sdl_scale - XRES) / 2, (height / sdl_scale - YRES) / 2);
 	}
 	if (game_options & GO_NOTSET) {
 		if (YRES >= 620) {

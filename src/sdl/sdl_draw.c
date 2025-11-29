@@ -17,18 +17,18 @@
 #include "sdl/sdl.h"
 #include "sdl/sdl_private.h"
 
-#define DD_LEFT    0
-#define DD_CENTER  1
-#define DD_RIGHT   2
-#define DD_SHADE   4
-#define DD_LARGE   0
-#define DD_SMALL   8
-#define DD_FRAME   16
-#define DD_BIG     32
-#define DD_NOCACHE 64
+#define RENDER_TEXT_LEFT    0
+#define RENDER_ALIGN_CENTER 1
+#define RENDER_TEXT_RIGHT   2
+#define RENDER_TEXT_SHADED  4
+#define RENDER_TEXT_LARGE   0
+#define RENDER_TEXT_SMALL   8
+#define RENDER_TEXT_FRAMED  16
+#define RENDER_TEXT_BIG     32
+#define RENDER_TEXT_NOCACHE 64
 
-#define DD__SHADEFONT 128
-#define DD__FRAMEFONT 256
+#define RENDER__SHADED_FONT 128
+#define RENDER__FRAMED_FONT 256
 
 #define R16TO32(color) (int)(((((color) >> 10) & 31) / 31.0f) * 255.0f)
 #define G16TO32(color) (int)(((((color) >> 5) & 31) / 31.0f) * 255.0f)
@@ -88,7 +88,7 @@ void sdl_blit(int stx, int sx, int sy, int clipsx, int clipsy, int clipex, int c
 	}
 }
 
-SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color, int flags)
+SDL_Texture *sdl_maketext(const char *text, struct renderfont *font, uint32_t color, int flags)
 {
 	uint32_t *pixel, *dst;
 	unsigned char *rawrun;
@@ -100,7 +100,7 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 		sizex += font[*c].dim * sdl_scale;
 	}
 
-	if (flags & (DD__FRAMEFONT | DD__SHADEFONT)) {
+	if (flags & (RENDER__FRAMED_FONT | RENDER__SHADED_FONT)) {
 		sizex += sdl_scale * 2;
 	}
 
@@ -113,7 +113,7 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 		return NULL;
 	}
 
-	while (*text && *text != DDT) {
+	while (*text && *text != RENDER_TEXT_TERMINATOR) {
 		if (*text < 0) {
 			note("PANIC: char over limit");
 			text++;
@@ -176,8 +176,8 @@ SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color,
 	return texture;
 }
 
-int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct ddfont *font, int clipsx,
-    int clipsy, int clipex, int clipey, int x_offset, int y_offset)
+int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text, struct renderfont *font,
+    int clipsx, int clipsy, int clipex, int clipey, int x_offset, int y_offset)
 {
 	int dx, stx;
 	SDL_Texture *tex;
@@ -193,7 +193,7 @@ int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char
 	b = B16TO32(color);
 	a = 255;
 
-	if (flags & DD_NOCACHE) {
+	if (flags & RENDER_TEXT_NOCACHE) {
 		tex = sdl_maketext(text, font, IRGBA(r, g, b, a), flags);
 	} else {
 		stx = sdl_tx_load(
@@ -206,15 +206,15 @@ int sdl_drawtext(int sx, int sy, unsigned short int color, int flags, const char
 	}
 
 	if (tex) {
-		if (flags & DD_CENTER) {
+		if (flags & RENDER_ALIGN_CENTER) {
 			sx -= dx / 2;
-		} else if (flags & DD_RIGHT) {
+		} else if (flags & RENDER_TEXT_RIGHT) {
 			sx -= dx;
 		}
 
 		sdl_blit_tex(tex, sx, sy, clipsx, clipsy, clipex, clipey, x_offset, y_offset);
 
-		if (flags & DD_NOCACHE) {
+		if (flags & RENDER_TEXT_NOCACHE) {
 			SDL_DestroyTexture(tex);
 		}
 	}

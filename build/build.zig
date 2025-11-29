@@ -59,7 +59,7 @@ pub fn build(b: *std.Build) void {
         "src/game/game_effects.c",
         "src/game/game_lighting.c",
         "src/game/game_display.c",
-        "src/game/dd.c",
+        "src/game/render.c",
         "src/game/font.c",
         "src/game/main.c",
         "src/game/sprite.c",
