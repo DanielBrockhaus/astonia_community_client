@@ -34,13 +34,13 @@ OBJS	=		src/gui/gui_core.o src/gui/gui_input.o src/gui/gui_display.o src/gui/gui
 			src/game/memory_linux.o src/game/version.o
 
 bin/moac:	$(OBJS) $(ASTONIA_NET_LIB)
+		mkdir -p bin
 		cp $(ASTONIA_NET_LIB) bin/
 		$(CC) $(LDFLAGS) -o bin/moac $(OBJS) $(LIBS) -Lbin -lastonia_net
 
 $(ASTONIA_NET_LIB):
 		rustup target add $(ASTONIA_NET_TGT)
-		export RUSTFLAGS="$(RUST_CPU_FLAGS)"
-		cargo build --release --manifest-path $(ASTONIA_NET_DIR)/Cargo.toml --target $(ASTONIA_NET_TGT)
+		cd $(ASTONIA_NET_DIR) && RUSTFLAGS="$(RUST_CPU_FLAGS)" cargo build --release --target $(ASTONIA_NET_TGT)
 
 bin/amod.so:	src/amod/amod.o bin/moac
 		$(CC) $(LDFLAGS) -shared -o bin/amod.so src/amod/amod.o
