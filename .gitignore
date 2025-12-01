@@ -56,3 +56,7 @@ asan-report.txt.*
 ubsan-report.txt.*
 *-sanitizer.o
 *-coverage.o
+
+# Distribution packages
+windows_client.zip
+linux_client.tar.gz
