@@ -1,0 +1,60 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+.git-blame-ignore-revs
+.github
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# AI assistant configs
+.claude
+.gemini
+
+# Build artifacts (will be generated in container)
+bin/
+lib/
+*.o
+*.exe
+*.dll
+*.a
+
+# Rust build artifacts
+astonia_net/target/
+**/target/
+
+# Coverage and profiling
+*.gcda
+*.gcno
+*.gcov
+*.gcov.json.gz
+*.profraw
+*.profdata
+coverage.info
+coverage-filtered.info
+coverage-html/
+
+# Analysis and reports
+compile_commands.json
+valgrind-report.txt
+asan-report.txt.*
+ubsan-report.txt.*
+.clang-tidy-*
+
+# Documentation and non-essential files
+*.md
+LICENSE
+eula.txt
+*.zip
+
+# Windows-specific
+*.bat
+create_shortcut.bat
+
+# Temporary Dockerfile copies (actual Dockerfiles are in build/containers/)
+Dockerfile.*
