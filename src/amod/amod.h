@@ -38,22 +38,22 @@ DLL_IMPORT int fail(const char *format, ...) __attribute__((format(printf, 1, 2)
 DLL_IMPORT void paranoia(const char *format, ...) __attribute__((format(printf, 1, 2)));
 DLL_IMPORT void addline(const char *format, ...) __attribute__((format(printf, 1, 2)));
 // game, drawing
-DLL_IMPORT void dd_push_clip(void);
-DLL_IMPORT void dd_pop_clip(void);
-DLL_IMPORT void dd_more_clip(int sx, int sy, int ex, int ey);
-DLL_IMPORT void dd_copysprite(int sprite, int scrx, int scry, int light, int align);
-DLL_IMPORT int dd_copysprite_fx(DDFX *ddfx, int scrx, int scry);
-DLL_IMPORT void dd_rect(int sx, int sy, int ex, int ey, unsigned short int color);
-DLL_IMPORT void dd_line(int fx, int fy, int tx, int ty, unsigned short col);
-DLL_IMPORT int dd_textlength(int flags, const char *text);
-DLL_IMPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text);
-DLL_IMPORT int dd_drawtext_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
-DLL_IMPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
-DLL_IMPORT void dd_pixel(int x, int y, unsigned short col);
-DLL_IMPORT int dd_drawtext_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...);
-DLL_IMPORT int dd_drawtext_break_fmt(
+DLL_IMPORT void render_push_clip(void);
+DLL_IMPORT void render_pop_clip(void);
+DLL_IMPORT void render_more_clip(int sx, int sy, int ex, int ey);
+DLL_IMPORT void render_sprite(int sprite, int scrx, int scry, int light, int align);
+DLL_IMPORT int render_sprite_fx(RenderFX *ddfx, int scrx, int scry);
+DLL_IMPORT void render_rect(int sx, int sy, int ex, int ey, unsigned short int color);
+DLL_IMPORT void render_line(int fx, int fy, int tx, int ty, unsigned short col);
+DLL_IMPORT int render_text_length(int flags, const char *text);
+DLL_IMPORT int render_text(int sx, int sy, unsigned short int color, int flags, const char *text);
+DLL_IMPORT int render_text_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
+DLL_IMPORT int render_text_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
+DLL_IMPORT void render_pixel(int x, int y, unsigned short col);
+DLL_IMPORT int render_text_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...);
+DLL_IMPORT int render_text_break_fmt(
     int sx, int sy, int breakx, unsigned short int color, int flags, const char *format, ...);
-DLL_IMPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags, const char *ptr);
+DLL_IMPORT int render_text_nl(int x, int y, int unsigned short color, int flags, const char *ptr);
 // gui, dots and buttons
 DLL_IMPORT int dotx(int didx);
 DLL_IMPORT int doty(int didx);

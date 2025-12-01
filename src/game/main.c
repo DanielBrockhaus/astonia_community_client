@@ -156,8 +156,8 @@ DLL_EXPORT void addline(const char *format, ...)
 	buf[sizeof(buf) - 1] = 0;
 	va_end(va);
 
-	if (dd_text_init_done()) {
-		dd_add_text(buf);
+	if (render_text_init_done()) {
+		render_add_text(buf);
 	}
 }
 
@@ -873,16 +873,16 @@ int main(int argc, char *argv[])
 
 	sprintf(buf, "Astonia 3 v%d.%d.%d", (VERSION >> 16) & 255, (VERSION >> 8) & 255, (VERSION) & 255);
 	if (!sdl_init(want_width, want_height, buf)) {
-		dd_exit();
+		render_exit();
 		return -1;
 	}
 
-	dd_init();
+	render_init();
 	init_sound();
 
 	if (game_options & GO_LARGE) {
 		namesize = 0;
-		dd_set_textfont(1);
+		render_set_textfont(1);
 	}
 
 	main_init();
@@ -896,7 +896,7 @@ int main(int argc, char *argv[])
 	amod_exit();
 	main_exit();
 	sound_exit();
-	dd_exit();
+	render_exit();
 	sdl_exit();
 
 	list_mem();

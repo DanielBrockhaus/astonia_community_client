@@ -162,9 +162,9 @@ void display_teleport(void)
 	}
 
 	if (!clan_offset) {
-		dd_copysprite(53519, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
+		render_sprite(53519, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
 	} else {
-		dd_copysprite(53520, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
+		render_sprite(53520, dotx(DOT_TEL) + 520 / 2, doty(DOT_TEL) + 320 / 2, 14, 0);
 	}
 
 	for (n = 0; n < 64; n++) {

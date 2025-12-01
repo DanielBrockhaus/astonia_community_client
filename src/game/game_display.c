@@ -149,7 +149,7 @@ static void display_game_spells(void)
 				case 1: // shield
 					if (tick - ceffect[nr].shield.start < 3) {
 						dl = dl_next_set(GME_LAY, 1002 + tick - ceffect[nr].shield.start, scrx + map[mn].xadd,
-						    scry + map[mn].yadd + 1, DDFX_NLIGHT);
+						    scry + map[mn].yadd + 1, RENDERFX_NORMAL_LIGHT);
 						if (!dl) {
 							note("error in shield #1");
 							break;
@@ -160,12 +160,12 @@ static void display_game_spells(void)
 				case 5: // flash
 					x = scrx + map[mn].xadd + cos(2 * M_PI * (now % 1000) / 1000.0) * 16;
 					y = scry + map[mn].yadd + sin(2 * M_PI * (now % 1000) / 1000.0) * 8;
-					dl = dl_next_set(GME_LAY, 1006, x, y, DDFX_NLIGHT); // shade
+					dl = dl_next_set(GME_LAY, 1006, x, y, RENDERFX_NORMAL_LIGHT); // shade
 					if (!dl) {
 						note("error in flash #1");
 						break;
 					}
-					dl = dl_next_set(GME_LAY, 1005, x, y, DDFX_NLIGHT); // small lightningball
+					dl = dl_next_set(GME_LAY, 1005, x, y, RENDERFX_NORMAL_LIGHT); // small lightningball
 					if (!dl) {
 						note("error in flash #2");
 						break;
@@ -217,7 +217,7 @@ static void display_game_spells(void)
 						}
 
 						dl = dl_next_set(GME_LAY2, min(sprite + tick - ceffect[nr].explode.start, sprite + 7), x,
-						    y - dx, DDFX_NLIGHT);
+						    y - dx, RENDERFX_NORMAL_LIGHT);
 
 						if (!dl) {
 							note("error in explosion #1");
@@ -226,24 +226,24 @@ static void display_game_spells(void)
 						dl->h = dx;
 						if (ceffect[nr].explode.base < 50450 || ceffect[nr].explode.base > 50454) {
 							if (map[mn].flags & CMF_UNDERWATER) {
-								dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-								dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+								dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+								dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 							}
 							break;
 						}
 						if (ceffect[nr].explode.base == 50451) {
-							dl->ddfx.c1 = IRGB(16, 12, 0);
+							dl->renderfx.c1 = IRGB(16, 12, 0);
 						}
 
 						dl = dl_next_set(GME_LAY2, min(sprite + 8 + tick - ceffect[nr].explode.start, sprite + 15), x,
-						    y + dx, DDFX_NLIGHT);
+						    y + dx, RENDERFX_NORMAL_LIGHT);
 						if (!dl) {
 							note("error in explosion #2");
 							break;
 						}
 						dl->h = dx;
 						if (ceffect[nr].explode.base == 50451) {
-							dl->ddfx.c1 = IRGB(16, 12, 0);
+							dl->renderfx.c1 = IRGB(16, 12, 0);
 						}
 					}
 
@@ -255,7 +255,7 @@ static void display_game_spells(void)
 					for (x1 = 0; x1 < 4; x1++) {
 						x = scrx + map[mn].xadd + cos(alpha + x1 * M_PI / 2) * 15;
 						y = scry + map[mn].yadd + sin(alpha + x1 * M_PI / 2) * 15 / 2;
-						dl = dl_next_set(GME_LAY, 1020 + (tick / 4 + x1) % 4, x, y, DDFX_NLIGHT);
+						dl = dl_next_set(GME_LAY, 1020 + (tick / 4 + x1) % 4, x, y, RENDERFX_NORMAL_LIGHT);
 						if (!dl) {
 							note("error in warcry #1");
 							break;
@@ -273,7 +273,8 @@ static void display_game_spells(void)
 					break;
 
 				case 10: // heal
-					dl = dl_next_set(GME_LAY, 50114, scrx + map[mn].xadd, scry + map[mn].yadd + 1, DDFX_NLIGHT);
+					dl = dl_next_set(
+					    GME_LAY, 50114, scrx + map[mn].xadd, scry + map[mn].yadd + 1, RENDERFX_NORMAL_LIGHT);
 					if (!dl) {
 						note("error in heal #1");
 						break;
@@ -283,26 +284,27 @@ static void display_game_spells(void)
 				case 12: // burn //
 					x = scrx + map[mn].xadd;
 					y = scry + map[mn].yadd - 3;
-					dl = dl_next_set(GME_LAY, 1024 + ((tick) % 10), x, y, DDFX_NLIGHT); // burn behind
+					dl = dl_next_set(GME_LAY, 1024 + ((tick) % 10), x, y, RENDERFX_NORMAL_LIGHT); // burn behind
 					if (!dl) {
 						note("error in bun #1");
 						break;
 					}
 					if (map[mn].flags & CMF_UNDERWATER) {
-						dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-						dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+						dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+						dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 					}
 
 					x = scrx + map[mn].xadd;
 					y = scry + map[mn].yadd + 3;
-					dl = dl_next_set(GME_LAY, 1024 + ((5 + tick) % 10), x, y, DDFX_NLIGHT); // small lightningball
+					dl = dl_next_set(
+					    GME_LAY, 1024 + ((5 + tick) % 10), x, y, RENDERFX_NORMAL_LIGHT); // small lightningball
 					if (!dl) {
 						note("error in burn #2");
 						break;
 					}
 					if (map[mn].flags & CMF_UNDERWATER) {
-						dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-						dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+						dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+						dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 					}
 
 					break;
@@ -310,7 +312,8 @@ static void display_game_spells(void)
 					if (tick - ceffect[nr].mist.start < 24) {
 						x = scrx;
 						y = scry;
-						dl = dl_next_set(GME_LAY + 1, 1034 + (tick - ceffect[nr].mist.start), x, y, DDFX_NLIGHT);
+						dl = dl_next_set(
+						    GME_LAY + 1, 1034 + (tick - ceffect[nr].mist.start), x, y, RENDERFX_NORMAL_LIGHT);
 						if (!dl) {
 							note("error in mist #1");
 							break;
@@ -377,19 +380,19 @@ static void display_game_spells(void)
 					break;
 				case 23: // fire ringlet
 					if (tick - ceffect[nr].firering.start < 7) {
-						dl = dl_next_set(
-						    GME_LAY, 51601 + (tick - ceffect[nr].firering.start) * 2, scrx, scry + 20, DDFX_NLIGHT);
+						dl = dl_next_set(GME_LAY, 51601 + (tick - ceffect[nr].firering.start) * 2, scrx, scry + 20,
+						    RENDERFX_NORMAL_LIGHT);
 						dl->h = 40;
 						if (map[mn].flags & CMF_UNDERWATER) {
-							dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-							dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+							dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+							dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 						}
-						dl = dl_next_set(
-						    GME_LAY, 51600 + (tick - ceffect[nr].firering.start) * 2, scrx, scry, DDFX_NLIGHT);
+						dl = dl_next_set(GME_LAY, 51600 + (tick - ceffect[nr].firering.start) * 2, scrx, scry,
+						    RENDERFX_NORMAL_LIGHT);
 						dl->h = 20;
 						if (map[mn].flags & CMF_UNDERWATER) {
-							dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-							dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+							dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+							dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 						}
 					}
 					break;
@@ -431,12 +434,12 @@ static void display_game_spells2(void)
 				break;
 			}
 
-			dl = dl_next_set(GME_LAY, 1008, x, y, DDFX_NLIGHT); // shade
+			dl = dl_next_set(GME_LAY, 1008, x, y, RENDERFX_NORMAL_LIGHT); // shade
 			if (!dl) {
 				note("error in ball #1");
 				break;
 			}
-			dl = dl_next_set(GME_LAY, 1000, x, y, DDFX_NLIGHT); // lightningball
+			dl = dl_next_set(GME_LAY, 1000, x, y, RENDERFX_NORMAL_LIGHT); // lightningball
 			if (!dl) {
 				note("error in ball #2");
 				break;
@@ -455,23 +458,23 @@ static void display_game_spells2(void)
 				break;
 			}
 
-			dl = dl_next_set(GME_LAY, 1007, x, y, DDFX_NLIGHT); // shade
+			dl = dl_next_set(GME_LAY, 1007, x, y, RENDERFX_NORMAL_LIGHT); // shade
 			if (!dl) {
 				note("error in fireball #1");
 				break;
 			}
 			if (map[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
-			dl = dl_next_set(GME_LAY, 1001, x, y, DDFX_NLIGHT); // fireball
+			dl = dl_next_set(GME_LAY, 1001, x, y, RENDERFX_NORMAL_LIGHT); // fireball
 			if (!dl) {
 				note("error in fireball #2");
 				break;
 			}
 			if (map[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 			dl->h = 20;
 			break;
@@ -487,12 +490,12 @@ static void display_game_spells2(void)
 				break;
 			}
 
-			dl = dl_next_set(GME_LAY, 50281, x, y, DDFX_NLIGHT); // shade
+			dl = dl_next_set(GME_LAY, 50281, x, y, RENDERFX_NORMAL_LIGHT); // shade
 			if (!dl) {
 				note("error in edemonball #1");
 				break;
 			}
-			dl = dl_next_set(GME_LAY, 50264, x, y, DDFX_NLIGHT); // edemonball
+			dl = dl_next_set(GME_LAY, 50264, x, y, RENDERFX_NORMAL_LIGHT); // edemonball
 			if (!dl) {
 				note("error in edemonball #2");
 				break;
@@ -500,10 +503,10 @@ static void display_game_spells2(void)
 			dl->h = 10;
 
 			if (ceffect[nr].edemonball.base == 1) {
-				dl->ddfx.c1 = IRGB(16, 12, 0);
+				dl->renderfx.c1 = IRGB(16, 12, 0);
 			}
-			// else if (ceffect[nr].edemonball.base==2) dl->ddfx.tint=EDEMONBALL_TINT3;
-			// else if (ceffect[nr].edemonball.base==3) dl->ddfx.tint=EDEMONBALL_TINT4;
+			// else if (ceffect[nr].edemonball.base==2) dl->renderfx.tint=EDEMONBALL_TINT3;
+			// else if (ceffect[nr].edemonball.base==3) dl->renderfx.tint=EDEMONBALL_TINT4;
 
 			break;
 		}
@@ -638,12 +641,12 @@ static void display_game_names(void)
 		y = scry + 4 + map[mn].yadd + get_chr_height(map[mn].csprite) - 25 + get_sink(mn, map);
 
 		col = whitecolor;
-		frame = DD_FRAME;
+		frame = RENDER_TEXT_FRAMED;
 
 		if (player[map[mn].cn].clan) {
 			col = clancolor[player[map[mn].cn].clan];
 			if (player[map[mn].cn].clan == 3) {
-				frame = DD_WFRAME;
+				frame = RENDER_TEXT_WFRAME;
 			}
 		}
 
@@ -660,34 +663,35 @@ static void display_game_names(void)
 			sign = " -";
 		}
 
-		if (namesize != DD_SMALL) {
+		if (namesize != RENDER_TEXT_SMALL) {
 			y -= 3;
 		}
-		dd_drawtext_fmt(x, y, col, DD_CENTER | namesize | frame, "%s%s", player[map[mn].cn].name, sign);
+		render_text_fmt(x, y, col, RENDER_ALIGN_CENTER | namesize | frame, "%s%s", player[map[mn].cn].name, sign);
 
 
-		if (namesize != DD_SMALL) {
+		if (namesize != RENDER_TEXT_SMALL) {
 			y += 3;
 		}
 		y += 12;
-		dd_drawtext(x, y, whitecolor, DD_CENTER | DD_SMALL | DD_FRAME, roman(player[map[mn].cn].level));
+		render_text(x, y, whitecolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED,
+		    roman(player[map[mn].cn].level));
 
 
 		x -= 12;
 		y -= 6;
 		if (map[mn].health > 1) {
-			dd_rect(x, y, x + 25, y + 1, blackcolor);
-			dd_rect(x, y, x + map[mn].health / 4, y + 1, healthcolor);
+			render_rect(x, y, x + 25, y + 1, blackcolor);
+			render_rect(x, y, x + map[mn].health / 4, y + 1, healthcolor);
 			y++;
 		}
 		if (map[mn].shield > 1) {
-			dd_rect(x, y, x + 25, y + 1, blackcolor);
-			dd_rect(x, y, x + map[mn].shield / 4, y + 1, shieldcolor);
+			render_rect(x, y, x + 25, y + 1, blackcolor);
+			render_rect(x, y, x + map[mn].shield / 4, y + 1, shieldcolor);
 			y++;
 		}
 		if (map[mn].mana > 1) {
-			dd_rect(x, y, x + 25, y + 1, blackcolor);
-			dd_rect(x, y, x + map[mn].mana / 4, y + 1, manacolor);
+			render_rect(x, y, x + 25, y + 1, blackcolor);
+			render_rect(x, y, x + map[mn].mana / 4, y + 1, manacolor);
 		}
 	}
 }
@@ -779,9 +783,9 @@ static void display_game_act(void)
 		int scrx, scry;
 		mtos(mapx, mapy, &scrx, &scry);
 		if (acttyp == 0) {
-			dl_next_set(GNDSEL_LAY, 5, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSEL_LAY, 5, scrx, scry, RENDERFX_NORMAL_LIGHT);
 		} else {
-			dd_drawtext(scrx, scry, textcolor, DD_CENTER | DD_SMALL | DD_FRAME, actstr);
+			render_text(scrx, scry, textcolor, RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, actstr);
 		}
 	}
 }
@@ -860,7 +864,7 @@ void display_game_map(struct map *cmap)
 
 		// field is invisible - draw a black square and ignore everything else
 		if (!light) {
-			dl_next_set(GNDSTR_LAY, 0, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSTR_LAY, 0, scrx, scry, RENDERFX_NORMAL_LIGHT);
 			continue;
 		}
 
@@ -873,45 +877,45 @@ void display_game_map(struct map *cmap)
 			}
 
 			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ll = cmap[mna].rlight;
+				dl->renderfx.ll = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ll = light;
+				dl->renderfx.ll = light;
 			}
 			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.rl = cmap[mna].rlight;
+				dl->renderfx.rl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.rl = light;
+				dl->renderfx.rl = light;
 			}
 			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ul = cmap[mna].rlight;
+				dl->renderfx.ul = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ul = light;
+				dl->renderfx.ul = light;
 			}
 			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.dl = cmap[mna].rlight;
+				dl->renderfx.dl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.dl = light;
+				dl->renderfx.dl = light;
 			}
 
-			dl->ddfx.scale = cmap[mn].rg.scale;
-			dl->ddfx.cr = cmap[mn].rg.cr;
-			dl->ddfx.cg = cmap[mn].rg.cg;
-			dl->ddfx.cb = cmap[mn].rg.cb;
-			dl->ddfx.clight = cmap[mn].rg.light;
-			dl->ddfx.sat = cmap[mn].rg.sat;
-			dl->ddfx.c1 = cmap[mn].rg.c1;
-			dl->ddfx.c2 = cmap[mn].rg.c2;
-			dl->ddfx.c3 = cmap[mn].rg.c3;
-			dl->ddfx.shine = cmap[mn].rg.shine;
+			dl->renderfx.scale = cmap[mn].rg.scale;
+			dl->renderfx.cr = cmap[mn].rg.cr;
+			dl->renderfx.cg = cmap[mn].rg.cg;
+			dl->renderfx.cb = cmap[mn].rg.cb;
+			dl->renderfx.clight = cmap[mn].rg.light;
+			dl->renderfx.sat = cmap[mn].rg.sat;
+			dl->renderfx.c1 = cmap[mn].rg.c1;
+			dl->renderfx.c2 = cmap[mn].rg.c2;
+			dl->renderfx.c3 = cmap[mn].rg.c3;
+			dl->renderfx.shine = cmap[mn].rg.shine;
 			dl->h = -10;
 
 			if (cmap[mn].flags & CMF_INFRA) {
-				dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+				dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 			}
 			if (cmap[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 
 			gsprite_cnt++;
@@ -926,60 +930,60 @@ void display_game_map(struct map *cmap)
 			}
 
 			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ll = cmap[mna].rlight;
+				dl->renderfx.ll = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ll = light;
+				dl->renderfx.ll = light;
 			}
 			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.rl = cmap[mna].rlight;
+				dl->renderfx.rl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.rl = light;
+				dl->renderfx.rl = light;
 			}
 			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ul = cmap[mna].rlight;
+				dl->renderfx.ul = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ul = light;
+				dl->renderfx.ul = light;
 			}
 			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.dl = cmap[mna].rlight;
+				dl->renderfx.dl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.dl = light;
+				dl->renderfx.dl = light;
 			}
 
-			dl->ddfx.scale = cmap[mn].rg2.scale;
-			dl->ddfx.cr = cmap[mn].rg2.cr;
-			dl->ddfx.cg = cmap[mn].rg2.cg;
-			dl->ddfx.cb = cmap[mn].rg2.cb;
-			dl->ddfx.clight = cmap[mn].rg2.light;
-			dl->ddfx.sat = cmap[mn].rg2.sat;
-			dl->ddfx.c1 = cmap[mn].rg2.c1;
-			dl->ddfx.c2 = cmap[mn].rg2.c2;
-			dl->ddfx.c3 = cmap[mn].rg2.c3;
-			dl->ddfx.shine = cmap[mn].rg2.shine;
+			dl->renderfx.scale = cmap[mn].rg2.scale;
+			dl->renderfx.cr = cmap[mn].rg2.cr;
+			dl->renderfx.cg = cmap[mn].rg2.cg;
+			dl->renderfx.cb = cmap[mn].rg2.cb;
+			dl->renderfx.clight = cmap[mn].rg2.light;
+			dl->renderfx.sat = cmap[mn].rg2.sat;
+			dl->renderfx.c1 = cmap[mn].rg2.c1;
+			dl->renderfx.c2 = cmap[mn].rg2.c2;
+			dl->renderfx.c3 = cmap[mn].rg2.c3;
+			dl->renderfx.shine = cmap[mn].rg2.shine;
 
 			if (cmap[mn].flags & CMF_INFRA) {
-				dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+				dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 			}
 			if (cmap[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 
 			g2sprite_cnt++;
 		}
 
 		if (cmap[mn].mmf & MMF_STRAIGHT_T) {
-			dl_next_set(GNDSTR_LAY, 50, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSTR_LAY, 50, scrx, scry, RENDERFX_NORMAL_LIGHT);
 		}
 		if (cmap[mn].mmf & MMF_STRAIGHT_B) {
-			dl_next_set(GNDSTR_LAY, 51, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSTR_LAY, 51, scrx, scry, RENDERFX_NORMAL_LIGHT);
 		}
 		if (cmap[mn].mmf & MMF_STRAIGHT_L) {
-			dl_next_set(GNDSTR_LAY, 52, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSTR_LAY, 52, scrx, scry, RENDERFX_NORMAL_LIGHT);
 		}
 		if (cmap[mn].mmf & MMF_STRAIGHT_R) {
-			dl_next_set(GNDSTR_LAY, 53, scrx, scry, DDFX_NLIGHT);
+			dl_next_set(GNDSTR_LAY, 53, scrx, scry, RENDERFX_NORMAL_LIGHT);
 		}
 
 		// blit fsprites
@@ -991,51 +995,51 @@ void display_game_map(struct map *cmap)
 			}
 			dl->h = -9;
 			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ll = cmap[mna].rlight;
+				dl->renderfx.ll = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ll = light;
+				dl->renderfx.ll = light;
 			}
 			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.rl = cmap[mna].rlight;
+				dl->renderfx.rl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.rl = light;
+				dl->renderfx.rl = light;
 			}
 			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ul = cmap[mna].rlight;
+				dl->renderfx.ul = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ul = light;
+				dl->renderfx.ul = light;
 			}
 			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.dl = cmap[mna].rlight;
+				dl->renderfx.dl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.dl = light;
+				dl->renderfx.dl = light;
 			}
 
 			if (no_lighting_sprite(cmap[mn].fsprite)) {
-				dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
+				dl->renderfx.ll = dl->renderfx.rl = dl->renderfx.ul = dl->renderfx.dl = dl->renderfx.ml;
 			}
 
 			// fsprite can increase the height of items and fsprite2
 			heightadd = is_yadd_sprite(cmap[mn].rf.sprite);
 
-			dl->ddfx.scale = cmap[mn].rf.scale;
-			dl->ddfx.cr = cmap[mn].rf.cr;
-			dl->ddfx.cg = cmap[mn].rf.cg;
-			dl->ddfx.cb = cmap[mn].rf.cb;
-			dl->ddfx.clight = cmap[mn].rf.light;
-			dl->ddfx.sat = cmap[mn].rf.sat;
-			dl->ddfx.c1 = cmap[mn].rf.c1;
-			dl->ddfx.c2 = cmap[mn].rf.c2;
-			dl->ddfx.c3 = cmap[mn].rf.c3;
-			dl->ddfx.shine = cmap[mn].rf.shine;
+			dl->renderfx.scale = cmap[mn].rf.scale;
+			dl->renderfx.cr = cmap[mn].rf.cr;
+			dl->renderfx.cg = cmap[mn].rf.cg;
+			dl->renderfx.cb = cmap[mn].rf.cb;
+			dl->renderfx.clight = cmap[mn].rf.light;
+			dl->renderfx.sat = cmap[mn].rf.sat;
+			dl->renderfx.c1 = cmap[mn].rf.c1;
+			dl->renderfx.c2 = cmap[mn].rf.c2;
+			dl->renderfx.c3 = cmap[mn].rf.c3;
+			dl->renderfx.shine = cmap[mn].rf.shine;
 
 			if (cmap[mn].flags & CMF_INFRA) {
-				dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+				dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 			}
 			if (cmap[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 
 			if (get_offset_sprite(cmap[mn].fsprite, &xoff, &yoff)) {
@@ -1057,51 +1061,51 @@ void display_game_map(struct map *cmap)
 			}
 			dl->h = 1;
 			if ((mna = quick[i].mn[3]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ll = cmap[mna].rlight;
+				dl->renderfx.ll = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ll = light;
+				dl->renderfx.ll = light;
 			}
 			if ((mna = quick[i].mn[5]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.rl = cmap[mna].rlight;
+				dl->renderfx.rl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.rl = light;
+				dl->renderfx.rl = light;
 			}
 			if ((mna = quick[i].mn[1]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.ul = cmap[mna].rlight;
+				dl->renderfx.ul = cmap[mna].rlight;
 			} else {
-				dl->ddfx.ul = light;
+				dl->renderfx.ul = light;
 			}
 			if ((mna = quick[i].mn[7]) != 0 && (cmap[mna].rlight)) {
-				dl->ddfx.dl = cmap[mna].rlight;
+				dl->renderfx.dl = cmap[mna].rlight;
 			} else {
-				dl->ddfx.dl = light;
+				dl->renderfx.dl = light;
 			}
 
 			if (no_lighting_sprite(cmap[mn].fsprite2)) {
-				dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
+				dl->renderfx.ll = dl->renderfx.rl = dl->renderfx.ul = dl->renderfx.dl = dl->renderfx.ml;
 			}
 
 			dl->y += 1;
 			dl->h += 1;
 			dl->h += heightadd;
-			dl->ddfx.scale = cmap[mn].rf2.scale;
-			dl->ddfx.cr = cmap[mn].rf2.cr;
-			dl->ddfx.cg = cmap[mn].rf2.cg;
-			dl->ddfx.cb = cmap[mn].rf2.cb;
-			dl->ddfx.clight = cmap[mn].rf2.light;
-			dl->ddfx.sat = cmap[mn].rf2.sat;
-			dl->ddfx.c1 = cmap[mn].rf2.c1;
-			dl->ddfx.c2 = cmap[mn].rf2.c2;
-			dl->ddfx.c3 = cmap[mn].rf2.c3;
-			dl->ddfx.shine = cmap[mn].rf2.shine;
+			dl->renderfx.scale = cmap[mn].rf2.scale;
+			dl->renderfx.cr = cmap[mn].rf2.cr;
+			dl->renderfx.cg = cmap[mn].rf2.cg;
+			dl->renderfx.cb = cmap[mn].rf2.cb;
+			dl->renderfx.clight = cmap[mn].rf2.light;
+			dl->renderfx.sat = cmap[mn].rf2.sat;
+			dl->renderfx.c1 = cmap[mn].rf2.c1;
+			dl->renderfx.c2 = cmap[mn].rf2.c2;
+			dl->renderfx.c3 = cmap[mn].rf2.c3;
+			dl->renderfx.shine = cmap[mn].rf2.shine;
 
 			if (cmap[mn].flags & CMF_INFRA) {
-				dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+				dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 			}
 			if (cmap[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 
 			if (get_offset_sprite(cmap[mn].fsprite2, &xoff, &yoff)) {
@@ -1115,7 +1119,7 @@ void display_game_map(struct map *cmap)
 		// blit items
 		if (cmap[mn].isprite) {
 			dl = dl_next_set(get_lay_sprite(cmap[mn].isprite, GME_LAY), cmap[mn].ri.sprite, scrx, scry - 8,
-			    itmsel == mn ? DDFX_BRIGHT : light);
+			    itmsel == mn ? RENDERFX_BRIGHT : light);
 			if (!dl) {
 				note("error in game #8 (%d,%d)", cmap[mn].ri.sprite, cmap[mn].isprite);
 				continue;
@@ -1124,45 +1128,45 @@ void display_game_map(struct map *cmap)
 
 #if 0
 	        // Disabled shaded lighting for items. It is often wrong and needs re-doing
-	        if ((mna=quick[i].mn[3])!=0 && (cmap[mna].rlight)) dl->ddfx.ll=cmap[mna].rlight;
-	        else dl->ddfx.ll=light;
-	        if ((mna=quick[i].mn[5])!=0 && (cmap[mna].rlight)) dl->ddfx.rl=cmap[mna].rlight;
-	        else dl->ddfx.rl=light;
-	        if ((mna=quick[i].mn[1])!=0 && (cmap[mna].rlight)) dl->ddfx.ul=cmap[mna].rlight;
-	        else dl->ddfx.ul=light;
-	        if ((mna=quick[i].mn[7])!=0 && (cmap[mna].rlight)) dl->ddfx.dl=cmap[mna].rlight;
-	        else dl->ddfx.dl=light;
+	        if ((mna=quick[i].mn[3])!=0 && (cmap[mna].rlight)) dl->renderfx.ll=cmap[mna].rlight;
+	        else dl->renderfx.ll=light;
+	        if ((mna=quick[i].mn[5])!=0 && (cmap[mna].rlight)) dl->renderfx.rl=cmap[mna].rlight;
+	        else dl->renderfx.rl=light;
+	        if ((mna=quick[i].mn[1])!=0 && (cmap[mna].rlight)) dl->renderfx.ul=cmap[mna].rlight;
+	        else dl->renderfx.ul=light;
+	        if ((mna=quick[i].mn[7])!=0 && (cmap[mna].rlight)) dl->renderfx.dl=cmap[mna].rlight;
+	        else dl->renderfx.dl=light;
 #else
-			dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl = dl->ddfx.ml;
+			dl->renderfx.ll = dl->renderfx.rl = dl->renderfx.ul = dl->renderfx.dl = dl->renderfx.ml;
 #endif
 
 			dl->h += heightadd - 8;
-			dl->ddfx.scale = cmap[mn].ri.scale;
-			dl->ddfx.cr = cmap[mn].ri.cr;
-			dl->ddfx.cg = cmap[mn].ri.cg;
-			dl->ddfx.cb = cmap[mn].ri.cb;
-			dl->ddfx.clight = cmap[mn].ri.light;
-			dl->ddfx.sat = cmap[mn].ri.sat;
-			dl->ddfx.c1 = cmap[mn].ri.c1;
-			dl->ddfx.c2 = cmap[mn].ri.c2;
-			dl->ddfx.c3 = cmap[mn].ri.c3;
-			dl->ddfx.shine = cmap[mn].ri.shine;
+			dl->renderfx.scale = cmap[mn].ri.scale;
+			dl->renderfx.cr = cmap[mn].ri.cr;
+			dl->renderfx.cg = cmap[mn].ri.cg;
+			dl->renderfx.cb = cmap[mn].ri.cb;
+			dl->renderfx.clight = cmap[mn].ri.light;
+			dl->renderfx.sat = cmap[mn].ri.sat;
+			dl->renderfx.c1 = cmap[mn].ri.c1;
+			dl->renderfx.c2 = cmap[mn].ri.c2;
+			dl->renderfx.c3 = cmap[mn].ri.c3;
+			dl->renderfx.shine = cmap[mn].ri.shine;
 
 			if (cmap[mn].flags & CMF_INFRA) {
-				dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+				dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 			}
 			if (cmap[mn].flags & CMF_UNDERWATER) {
-				dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-				dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+				dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+				dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 			}
 
 			if (cmap[mn].flags & CMF_TAKE) {
-				dl->ddfx.sink = min(12, cmap[mn].sink);
+				dl->renderfx.sink = min(12, cmap[mn].sink);
 				dl->y += min(6, cmap[mn].sink / 2);
 				dl->h += -min(6, cmap[mn].sink / 2);
 			} else if (cmap[mn].flags & CMF_USE) {
-				dl->ddfx.sink = min(20, cmap[mn].sink);
+				dl->renderfx.sink = min(20, cmap[mn].sink);
 				dl->y += min(10, cmap[mn].sink / 2);
 				dl->h += -min(10, cmap[mn].sink / 2);
 			}
@@ -1178,26 +1182,26 @@ void display_game_map(struct map *cmap)
 		// blit chars
 		if (cmap[mn].csprite) {
 			dl = dl_next_set(GME_LAY, cmap[mn].rc.sprite, scrx + cmap[mn].xadd, scry + cmap[mn].yadd,
-			    chrsel == mn ? DDFX_BRIGHT : light);
+			    chrsel == mn ? RENDERFX_BRIGHT : light);
 			if (!dl) {
 				note("error in game #9");
 				continue;
 			}
 			sink = get_sink(mn, cmap);
-			dl->ddfx.sink = sink;
+			dl->renderfx.sink = sink;
 			dl->y += sink / 2;
 			dl->h = -sink / 2;
-			dl->ddfx.scale = cmap[mn].rc.scale;
+			dl->renderfx.scale = cmap[mn].rc.scale;
 			// addline("sprite=%d, scale=%d",cmap[mn].rc.sprite,cmap[mn].rc.scale);
-			dl->ddfx.cr = cmap[mn].rc.cr;
-			dl->ddfx.cg = cmap[mn].rc.cg;
-			dl->ddfx.cb = cmap[mn].rc.cb;
-			dl->ddfx.clight = cmap[mn].rc.light;
-			dl->ddfx.sat = cmap[mn].rc.sat;
-			dl->ddfx.c1 = cmap[mn].rc.c1;
-			dl->ddfx.c2 = cmap[mn].rc.c2;
-			dl->ddfx.c3 = cmap[mn].rc.c3;
-			dl->ddfx.shine = cmap[mn].rc.shine;
+			dl->renderfx.cr = cmap[mn].rc.cr;
+			dl->renderfx.cg = cmap[mn].rc.cg;
+			dl->renderfx.cb = cmap[mn].rc.cb;
+			dl->renderfx.clight = cmap[mn].rc.light;
+			dl->renderfx.sat = cmap[mn].rc.sat;
+			dl->renderfx.c1 = cmap[mn].rc.c1;
+			dl->renderfx.c2 = cmap[mn].rc.c2;
+			dl->renderfx.c3 = cmap[mn].rc.c3;
+			dl->renderfx.shine = cmap[mn].rc.shine;
 
 			// check for spells on char
 			for (nr = 0; nr < MAXEF; nr++) {
@@ -1207,56 +1211,56 @@ void display_game_map(struct map *cmap)
 				if ((unsigned int)ceffect[nr].freeze.cn == map[mn].cn && ceffect[nr].generic.type == 11) { // freeze
 					int diff;
 
-					if ((diff = tick - ceffect[nr].freeze.start) < DDFX_MAX_FREEZE * 4) { // starting
-						dl->ddfx.freeze = diff / 4;
+					if ((diff = tick - ceffect[nr].freeze.start) < RENDERFX_MAX_FREEZE * 4) { // starting
+						dl->renderfx.freeze = diff / 4;
 					} else if (ceffect[nr].freeze.stop < tick) { // already finished
 						continue;
-					} else if ((diff = ceffect[nr].freeze.stop - tick) < DDFX_MAX_FREEZE * 4) { // ending
-						dl->ddfx.freeze = diff / 4;
+					} else if ((diff = ceffect[nr].freeze.stop - tick) < RENDERFX_MAX_FREEZE * 4) { // ending
+						dl->renderfx.freeze = diff / 4;
 					} else {
-						dl->ddfx.freeze = DDFX_MAX_FREEZE - 1; // running
+						dl->renderfx.freeze = RENDERFX_MAX_FREEZE - 1; // running
 					}
 				}
 				if ((unsigned int)ceffect[nr].curse.cn == map[mn].cn && ceffect[nr].generic.type == 18) { // curse
 
-					dl->ddfx.sat = min(20, dl->ddfx.sat + (ceffect[nr].curse.strength / 4) + 5);
-					dl->ddfx.clight = min(120, dl->ddfx.clight + ceffect[nr].curse.strength * 2 + 40);
-					dl->ddfx.cb = min(80, dl->ddfx.cb + ceffect[nr].curse.strength / 2 + 10);
+					dl->renderfx.sat = min(20, dl->renderfx.sat + (ceffect[nr].curse.strength / 4) + 5);
+					dl->renderfx.clight = min(120, dl->renderfx.clight + ceffect[nr].curse.strength * 2 + 40);
+					dl->renderfx.cb = min(80, dl->renderfx.cb + ceffect[nr].curse.strength / 2 + 10);
 				}
 				if ((unsigned int)ceffect[nr].cap.cn == map[mn].cn && ceffect[nr].generic.type == 19) { // palace cap
 
-					dl->ddfx.sat = min(20, dl->ddfx.sat + 20);
-					dl->ddfx.clight = min(120, dl->ddfx.clight + 80);
-					dl->ddfx.cb = min(80, dl->ddfx.cb + 80);
+					dl->renderfx.sat = min(20, dl->renderfx.sat + 20);
+					dl->renderfx.clight = min(120, dl->renderfx.clight + 80);
+					dl->renderfx.cb = min(80, dl->renderfx.cb + 80);
 				}
 				if ((unsigned int)ceffect[nr].lag.cn == map[mn].cn && ceffect[nr].generic.type == 20) { // lag
 
-					dl->ddfx.sat = min(20, dl->ddfx.sat + 20);
-					dl->ddfx.clight = max(-120, dl->ddfx.clight - 80);
+					dl->renderfx.sat = min(20, dl->renderfx.sat + 20);
+					dl->renderfx.clight = max(-120, dl->renderfx.clight - 80);
 				}
 			}
 			if (cmap[mn].gsprite == 51066) {
-				dl->ddfx.sat = 20;
-				dl->ddfx.cr = 80;
-				dl->ddfx.clight = -80;
-				dl->ddfx.shine = 50;
-				dl->ddfx.ml = dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl =
-				    chrsel == mn ? DDFX_BRIGHT : DDFX_NLIGHT;
+				dl->renderfx.sat = 20;
+				dl->renderfx.cr = 80;
+				dl->renderfx.clight = -80;
+				dl->renderfx.shine = 50;
+				dl->renderfx.ml = dl->renderfx.ll = dl->renderfx.rl = dl->renderfx.ul = dl->renderfx.dl =
+				    chrsel == mn ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
 			} else if (cmap[mn].gsprite == 51067) {
-				dl->ddfx.sat = 20;
-				dl->ddfx.cb = 80;
-				dl->ddfx.clight = -80;
-				dl->ddfx.shine = 50;
-				dl->ddfx.ml = dl->ddfx.ll = dl->ddfx.rl = dl->ddfx.ul = dl->ddfx.dl =
-				    chrsel == mn ? DDFX_BRIGHT : DDFX_NLIGHT;
+				dl->renderfx.sat = 20;
+				dl->renderfx.cb = 80;
+				dl->renderfx.clight = -80;
+				dl->renderfx.shine = 50;
+				dl->renderfx.ml = dl->renderfx.ll = dl->renderfx.rl = dl->renderfx.ul = dl->renderfx.dl =
+				    chrsel == mn ? RENDERFX_BRIGHT : RENDERFX_NORMAL_LIGHT;
 			} else {
 				if (cmap[mn].flags & CMF_INFRA) {
-					dl->ddfx.cr = min(120, dl->ddfx.cr + 80);
-					dl->ddfx.sat = min(20, dl->ddfx.sat + 15);
+					dl->renderfx.cr = min(120, dl->renderfx.cr + 80);
+					dl->renderfx.sat = min(20, dl->renderfx.sat + 15);
 				}
 				if (cmap[mn].flags & CMF_UNDERWATER) {
-					dl->ddfx.cb = min(120, dl->ddfx.cb + 80);
-					dl->ddfx.sat = min(20, dl->ddfx.sat + 10);
+					dl->renderfx.cb = min(120, dl->renderfx.cb + 80);
+					dl->renderfx.sat = min(20, dl->renderfx.sat + 10);
 				}
 			}
 
@@ -1282,7 +1286,7 @@ void display_game_map(struct map *cmap)
 			} else {
 				sprite = SPR_FIELD;
 			}
-			dl = dl_next_set(GNDSEL_LAY, sprite, scrx, scry, DDFX_NLIGHT);
+			dl = dl_next_set(GNDSEL_LAY, sprite, scrx, scry, RENDERFX_NORMAL_LIGHT);
 			if (!dl) {
 				note("error in game #10");
 			}
@@ -1328,7 +1332,8 @@ void display_pents(void)
 		} else {
 			yoff = 0;
 		}
-		dd_drawtext(dotx(DOT_BOT) + 550, doty(DOT_BOT) - 80 + n * 10 - yoff, col, DD_SMALL | DD_FRAME, pent_str[n] + 1);
+		render_text(dotx(DOT_BOT) + 550, doty(DOT_BOT) - 80 + n * 10 - yoff, col,
+		    RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, pent_str[n] + 1);
 	}
 }
 

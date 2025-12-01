@@ -135,7 +135,7 @@ unsigned char fontb_124[] = /* | */ {255};
 unsigned char fontb_125[] = /* } */ {255};
 unsigned char fontb_126[] = /* ~ */ {255};
 unsigned char fontb_127[] = /*   */ {255};
-DDFONT fontb[] = {
+RenderFont fontb[] = {
     {0, fontb_000},
     {0, fontb_001},
     {0, fontb_002},
@@ -425,7 +425,7 @@ unsigned char fonta_124[] = /* | */ {0, 254, 0, 254, 0, 254, 0, 254, 0, 254, 0, 
 unsigned char fonta_125[] = /* } */ {255};
 unsigned char fonta_126[] = /* ~ */ {2, 1, 254, 2, 254, 1, 254, 0, 1, 254, 1, 254, 1, 254, 2, 254, 2, 1, 255};
 unsigned char fonta_127[] = /*   */ {255};
-DDFONT fonta[] = {
+RenderFont fonta[] = {
     {0, fonta_000},
     {0, fonta_001},
     {0, fonta_002},
@@ -741,7 +741,7 @@ unsigned char fontc_124[] = /* | */ {0, 254, 0, 254, 0, 254, 0, 254, 0, 254, 0, 
 unsigned char fontc_125[] = /* } */ {255};
 unsigned char fontc_126[] = /* ~ */ {254, 254, 254, 254, 1, 1, 3, 254, 0, 3, 1, 255};
 unsigned char fontc_127[] = /*   */ {255};
-DDFONT fontc[] = {
+RenderFont fontc[] = {
     {0, fontc_000},
     {0, fontc_001},
     {0, fontc_002},

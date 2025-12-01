@@ -80,13 +80,13 @@ struct sdl_image {
 #ifndef HAVE_DDFONT
 #define HAVE_DDFONT
 
-struct ddfont {
+struct renderfont {
 	int dim;
 	unsigned char *raw;
 };
 #endif
 
-#define DDT '\xB0' // draw text terminator - (zero stays one, too)
+#define RENDER_TEXT_TERMINATOR '\xB0' // draw text terminator - (zero stays one, too)
 
 int sdl_ic_load(int sprite);
 int sdl_pre_backgnd(void *ptr);
@@ -181,6 +181,6 @@ uint32_t sdl_colorbalance(uint32_t irgb, char cr, char cg, char cb, char light, 
 // ============================================================================
 // Internal functions from sdl_draw.c
 // ============================================================================
-SDL_Texture *sdl_maketext(const char *text, struct ddfont *font, uint32_t color, int flags);
+SDL_Texture *sdl_maketext(const char *text, struct renderfont *font, uint32_t color, int flags);
 
 #endif // SDL_PRIVATE_H

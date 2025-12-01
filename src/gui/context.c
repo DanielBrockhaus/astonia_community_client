@@ -330,15 +330,15 @@ void context_display(int mx, int my)
 
 		d_y = menu.linecnt * 10 + 8;
 
-		dd_shaded_rect(c_x, c_y, c_x + MENUWIDTH, c_y + d_y, 0x0000, 95);
+		render_shaded_rect(c_x, c_y, c_x + MENUWIDTH, c_y + d_y, 0x0000, 95);
 		x = c_x + 4;
 		y = c_y + 4;
 
 		for (n = 0; n < menu.linecnt; n++) {
 			if (mousex > c_x && mousex < c_x + MENUWIDTH && mousey >= c_y + n * 10 + 4 && mousey < c_y + n * 10 + 14) {
-				dd_drawtext(x, y, whitecolor, DD_LEFT, menu.line[n]);
+				render_text(x, y, whitecolor, RENDER_TEXT_LEFT, menu.line[n]);
 			} else {
-				dd_drawtext(x, y, graycolor, DD_LEFT, menu.line[n]);
+				render_text(x, y, graycolor, RENDER_TEXT_LEFT, menu.line[n]);
 			}
 			y += 10;
 		}

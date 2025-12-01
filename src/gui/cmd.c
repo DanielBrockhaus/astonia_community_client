@@ -384,29 +384,29 @@ void display_cmd(void)
 	}
 
 	for (x = 0, n = cmdcursor; n > cmddisplay; n--) {
-		x += dd_char_len(cmdline[n]);
+		x += render_char_len(cmdline[n]);
 		if (x > dotx(DOT_TX2) - dotx(DOT_TXT) - 16) {
 			cmddisplay = n;
 			break;
 		}
 	}
 	if (context_key_enabled()) {
-		dd_shaded_rect(
+		render_shaded_rect(
 		    dotx(DOT_TXT) - 1, doty(DOT_TX2) - 2, dotx(DOT_TX2) + 1, doty(DOT_TX2) + 8, IRGB(15, 15, 15), 95);
 	}
 
 	for (x = 0, n = cmddisplay; n < MAXCMDLINE; n++) {
 		if (cmdline[n]) {
-			tmp = dd_drawtext_char(dotx(DOT_TXT) + x, doty(DOT_TX2) - 1, cmdline[n], IRGB(31, 31, 31));
+			tmp = render_text_char(dotx(DOT_TXT) + x, doty(DOT_TX2) - 1, cmdline[n], IRGB(31, 31, 31));
 		} else {
 			tmp = 0;
 		}
 		if (n == cmdcursor) {
 			if (cmdline[n]) {
-				dd_shaded_rect(dotx(DOT_TXT) + x - 1, doty(DOT_TX2) - 2, dotx(DOT_TXT) + x + tmp + 1, doty(DOT_TX2) + 8,
-				    0xffe0, 95);
+				render_shaded_rect(dotx(DOT_TXT) + x - 1, doty(DOT_TX2) - 2, dotx(DOT_TXT) + x + tmp + 1,
+				    doty(DOT_TX2) + 8, 0xffe0, 95);
 			} else {
-				dd_shaded_rect(
+				render_shaded_rect(
 				    dotx(DOT_TXT) + x, doty(DOT_TX2) - 2, dotx(DOT_TXT) + x + 4, doty(DOT_TX2) + 8, 0xffe0, 95);
 			}
 		}

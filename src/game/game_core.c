@@ -27,7 +27,7 @@ static DL *dllist = NULL;
 static DL **dlsort = NULL;
 static int dlused = 0, dlmax = 0;
 static int stat_dlsortcalls, stat_dlused;
-int namesize = DD_SMALL;
+int namesize = RENDER_TEXT_SMALL;
 
 DL *dl_next(void)
 {
@@ -60,28 +60,28 @@ DL *dl_next(void)
 		return dl_next();
 	}
 
-	dlsort[dlused - 1]->ddfx.sink = 0;
-	dlsort[dlused - 1]->ddfx.scale = 100;
-	dlsort[dlused - 1]->ddfx.cr = dlsort[dlused - 1]->ddfx.cg = dlsort[dlused - 1]->ddfx.cb =
-	    dlsort[dlused - 1]->ddfx.clight = dlsort[dlused - 1]->ddfx.sat = 0;
-	dlsort[dlused - 1]->ddfx.c1 = 0;
-	dlsort[dlused - 1]->ddfx.c2 = 0;
-	dlsort[dlused - 1]->ddfx.c3 = 0;
-	dlsort[dlused - 1]->ddfx.shine = 0;
+	dlsort[dlused - 1]->renderfx.sink = 0;
+	dlsort[dlused - 1]->renderfx.scale = 100;
+	dlsort[dlused - 1]->renderfx.cr = dlsort[dlused - 1]->renderfx.cg = dlsort[dlused - 1]->renderfx.cb =
+	    dlsort[dlused - 1]->renderfx.clight = dlsort[dlused - 1]->renderfx.sat = 0;
+	dlsort[dlused - 1]->renderfx.c1 = 0;
+	dlsort[dlused - 1]->renderfx.c2 = 0;
+	dlsort[dlused - 1]->renderfx.c3 = 0;
+	dlsort[dlused - 1]->renderfx.shine = 0;
 	return dlsort[dlused - 1];
 }
 
 DL *dl_next_set(int layer, int sprite, int scrx, int scry, int light)
 {
 	DL *dl;
-	DDFX *ddfx;
+	RenderFX *ddfx;
 
 	if (sprite > MAXSPRITE || sprite < 0) {
 		note("trying to add illegal sprite %d in dl_next_set", sprite);
 		return NULL;
 	}
 
-	ddfx = &(dl = dl_next())->ddfx;
+	ddfx = &(dl = dl_next())->renderfx;
 
 	dl->x = scrx;
 	dl->y = scry;
@@ -135,12 +135,12 @@ int dl_qcmp(const void *ca, const void *cb)
 		return diff;
 	}
 
-	return a->ddfx.sprite - b->ddfx.sprite;
+	return a->renderfx.sprite - b->renderfx.sprite;
 }
 
 void draw_pixel(int x, int y, int color)
 {
-	dd_pixel(x, y, color);
+	render_pixel(x, y, color);
 }
 
 void dl_play(void)
@@ -158,15 +158,15 @@ void dl_play(void)
 
 	for (d = 0; d < dlused && !quit; d++) {
 		if (dlsort[d]->call == 0) {
-			dd_copysprite_fx(&dlsort[d]->ddfx, dlsort[d]->x, dlsort[d]->y - dlsort[d]->h);
+			render_sprite_fx(&dlsort[d]->renderfx, dlsort[d]->x, dlsort[d]->y - dlsort[d]->h);
 		} else {
 			switch (dlsort[d]->call) {
 			case DLC_STRIKE:
-				dd_display_strike(dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2);
+				render_display_strike(dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2);
 				break;
 			case DLC_NUMBER:
-				dd_drawtext_fmt(dlsort[d]->call_x1, dlsort[d]->call_y1, 0xffff, DD_CENTER | DD_SMALL | DD_FRAME, "%d",
-				    dlsort[d]->call_x2);
+				render_text_fmt(dlsort[d]->call_x1, dlsort[d]->call_y1, 0xffff,
+				    RENDER_ALIGN_CENTER | RENDER_TEXT_SMALL | RENDER_TEXT_FRAMED, "%d", dlsort[d]->call_x2);
 				break;
 			case DLC_DUMMY:
 				break;
@@ -174,23 +174,24 @@ void dl_play(void)
 				draw_pixel(dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2);
 				break;
 			case DLC_BLESS:
-				dd_draw_bless(
+				render_draw_bless(
 				    dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2, dlsort[d]->call_x3);
 				break;
 			case DLC_POTION:
-				dd_draw_potion(
+				render_draw_potion(
 				    dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2, dlsort[d]->call_x3);
 				break;
 			case DLC_RAIN:
-				dd_draw_rain(
+				render_draw_rain(
 				    dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2, dlsort[d]->call_x3);
 				break;
 			case DLC_PULSE:
-				dd_draw_curve(
+				render_draw_curve(
 				    dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2, dlsort[d]->call_x3);
 				break;
 			case DLC_PULSEBACK:
-				dd_display_pulseback(dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2);
+				render_display_pulseback(
+				    dlsort[d]->call_x1, dlsort[d]->call_y1, dlsort[d]->call_x2, dlsort[d]->call_y2);
 				break;
 			}
 		}
@@ -211,11 +212,11 @@ void dl_prefetch(int attick)
 
 	for (d = 0; d < dlused && !quit; d++) {
 		if (dlsort[d]->call == 0) {
-			sdl_pre_add(attick, dlsort[d]->ddfx.sprite, dlsort[d]->ddfx.sink, dlsort[d]->ddfx.freeze,
-			    dlsort[d]->ddfx.scale, dlsort[d]->ddfx.cr, dlsort[d]->ddfx.cg, dlsort[d]->ddfx.cb,
-			    dlsort[d]->ddfx.clight, dlsort[d]->ddfx.sat, dlsort[d]->ddfx.c1, dlsort[d]->ddfx.c2, dlsort[d]->ddfx.c3,
-			    dlsort[d]->ddfx.shine, dlsort[d]->ddfx.ml, dlsort[d]->ddfx.ll, dlsort[d]->ddfx.rl, dlsort[d]->ddfx.ul,
-			    dlsort[d]->ddfx.dl);
+			sdl_pre_add(attick, dlsort[d]->renderfx.sprite, dlsort[d]->renderfx.sink, dlsort[d]->renderfx.freeze,
+			    dlsort[d]->renderfx.scale, dlsort[d]->renderfx.cr, dlsort[d]->renderfx.cg, dlsort[d]->renderfx.cb,
+			    dlsort[d]->renderfx.clight, dlsort[d]->renderfx.sat, dlsort[d]->renderfx.c1, dlsort[d]->renderfx.c2,
+			    dlsort[d]->renderfx.c3, dlsort[d]->renderfx.shine, dlsort[d]->renderfx.ml, dlsort[d]->renderfx.ll,
+			    dlsort[d]->renderfx.rl, dlsort[d]->renderfx.ul, dlsort[d]->renderfx.dl);
 		}
 	}
 
@@ -283,7 +284,7 @@ void show_bubbles(void)
 		}
 		spr += bubble[n].type * 3;
 
-		dl = dl_next_set(GME_LAY, 1140 + spr, bubble[n].cx - offx, bubble[n].origy - offy, DDFX_NLIGHT);
+		dl = dl_next_set(GME_LAY, 1140 + spr, bubble[n].cx - offx, bubble[n].origy - offy, RENDERFX_NORMAL_LIGHT);
 		dl->h = bubble[n].origy - bubble[n].cy;
 		bubble[n].state++;
 		bubble[n].cx += 2 - RANDOM(5);

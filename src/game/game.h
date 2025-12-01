@@ -4,20 +4,24 @@
 
 #include "dll.h"
 
-#define DD_OFFSET 0 // this has to be zero, so bzero on the structures default this
-#define DD_CENTER 1 // also used in dd_drawtext
-#define DD_NORMAL 2
+// Sprite alignment constants
+#define RENDER_ALIGN_OFFSET 0 // Use sprite's built-in offset (must be zero for bzero default)
+#define RENDER_ALIGN_CENTER 1 // Center sprite at position (also used in text rendering)
+#define RENDER_ALIGN_NORMAL 2 // Normal positioning without offset
 
-#define DD_LEFT    0
-#define DD_CENTER  1
-#define DD_RIGHT   2
-#define DD_SHADE   4
-#define DD_LARGE   0
-#define DD_SMALL   8
-#define DD_FRAME   16
-#define DD_BIG     32
-#define DD_NOCACHE 64
-#define DD_WFRAME  (DD_FRAME | 512)
+// Text alignment constants
+#define RENDER_TEXT_LEFT   0 // Left-aligned text
+#define RENDER_TEXT_CENTER 1 // Centered text
+#define RENDER_TEXT_RIGHT  2 // Right-aligned text
+
+// Text style flags (can be combined with bitwise OR)
+#define RENDER_TEXT_SHADED  4 // Draw text with shadow
+#define RENDER_TEXT_LARGE   0 // Large font size (default)
+#define RENDER_TEXT_SMALL   8 // Small font size
+#define RENDER_TEXT_FRAMED  16 // Draw text with black outline
+#define RENDER_TEXT_BIG     32 // Big font size
+#define RENDER_TEXT_NOCACHE 64 // Don't cache text rendering
+#define RENDER_TEXT_WFRAME  (RENDER_TEXT_FRAMED | 512) // White frame variant
 
 #define SPR_WALK 11
 
@@ -40,8 +44,9 @@
 #define SPR_GOLD_BEG 100
 #define SPR_GOLD_END 109
 
-#define DDFX_NLIGHT 15
-#define DDFX_BRIGHT 0
+// Lighting effect constants
+#define RENDERFX_NORMAL_LIGHT 15 // Normal lighting level
+#define RENDERFX_BRIGHT       0 // Maximum brightness
 
 #define MMF_SIGHTBLOCK (1 << 1) // indicates sight block (set_map_lights)
 #define MMF_DOOR       (1 << 2) // a door - helpful when cutting sprites - (set_map_sprites)
@@ -58,29 +63,33 @@
 #define IGET_B(c)     ((((unsigned short int)(c)) >> 0) & 0x1F)
 #define IRGB(r, g, b) (((r) << 10) | ((g) << 5) | ((b) << 0))
 
-struct ddfx {
-	int sprite; // sprite_fx:           primary sprite number - should be the first entry cause dl_qcmp sorts the by
-	            // this
+/**
+ * Rendering effects structure for sprite rendering.
+ * Contains all parameters needed to render a sprite with various effects including
+ * lighting, scaling, color manipulation, and alpha blending.
+ */
+struct renderfx {
+	int sprite; // Primary sprite number (must be first for dl_qcmp sorting)
 
-	signed char sink;
-	unsigned char scale; // scale in percent
-	char cr, cg, cb; // color balancing
-	char clight, sat; // lightness, saturation
-	unsigned short c1, c2, c3, shine; // color replacer
+	signed char sink; // Vertical sink amount for sprite positioning
+	unsigned char scale; // Scale percentage (100 = normal size)
+	char cr, cg, cb; // Color balance adjustments (red, green, blue)
+	char clight, sat; // Lightness and saturation adjustments
+	unsigned short c1, c2, c3, shine; // Color replacement values
 
-	char light; // videocache_fx:       0=bright(DDFX_BRIGHT) 1=almost black; 15=normal (DDFX_NLIGHT)
-	char freeze; // videocache_fx:       0 to DDFX_MAX_FREEZE-1  !!! exclusive DDFX_MAX_FREEZE
+	char light; // Lighting level: 0=bright (RENDERFX_BRIGHT), 15=normal (RENDERFX_NORMAL_LIGHT)
+	char freeze; // Animation freeze frame: 0 to RENDERFX_MAX_FREEZE-1
 
-	char ml, ll, rl, ul, dl;
+	char ml, ll, rl, ul, dl; // Multi-directional lighting (main, left, right, up, down)
 
-	char align; // blitpos_fx:          DDFX_NORMAL, DDFX_OFFSET, DDFX_CENTER
-	short int clipsx, clipex; // blitpos_fx:          additional x - clipping around the offset
-	short int clipsy, clipey; // blitpos_fx:          additional y - clipping around the offset
+	char align; // Alignment mode: RENDER_ALIGN_OFFSET, RENDER_ALIGN_CENTER, RENDER_ALIGN_NORMAL
+	short int clipsx, clipex; // Additional X clipping bounds around the offset
+	short int clipsy, clipey; // Additional Y clipping bounds around the offset
 
-	unsigned char alpha;
+	unsigned char alpha; // Alpha transparency value (0-255)
 };
 
-typedef struct ddfx DDFX;
+typedef struct renderfx RenderFX;
 
 extern float mouse_scale; // mouse input needs to be scaled by this factor because the display window is stretched
 extern char user_keys[10];
@@ -89,38 +98,49 @@ extern int stom_off_x, stom_off_y;
 extern int __textdisplay_sy;
 extern int x_offset, y_offset;
 
-DLL_EXPORT int dd_textlength(int flags, const char *text);
-int dd_textlen(int flags, const char *text, int n);
-DLL_EXPORT int dd_drawtext(int sx, int sy, unsigned short int color, int flags, const char *text);
-DLL_EXPORT int dd_drawtext_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...)
+// Text rendering functions
+DLL_EXPORT int render_text_length(int flags, const char *text);
+int render_text_len(int flags, const char *text, int n);
+DLL_EXPORT int render_text(int sx, int sy, unsigned short int color, int flags, const char *text);
+DLL_EXPORT int render_text_fmt(int sx, int sy, unsigned short int color, int flags, const char *format, ...)
     __attribute__((format(printf, 5, 6)));
-DLL_EXPORT int dd_drawtext_break_fmt(int sx, int sy, int breakx, unsigned short int color, int flags,
+DLL_EXPORT int render_text_break_fmt(int sx, int sy, int breakx, unsigned short int color, int flags,
     const char *format, ...) __attribute__((format(printf, 6, 7)));
-DLL_EXPORT int dd_drawtext_nl(int x, int y, int unsigned short color, int flags, const char *ptr);
-DLL_EXPORT int dd_copysprite_fx(DDFX *ddfx, int scrx, int scry);
-DLL_EXPORT void dd_copysprite(int sprite, int scrx, int scry, int light, int align);
-void dd_copysprite_callfx(int sprite, int scrx, int scry, int light, int mli, int align);
-DLL_EXPORT int dd_drawtext_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
-DLL_EXPORT int dd_drawtext_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
-DLL_EXPORT void dd_rect(int sx, int sy, int ex, int ey, unsigned short int color);
-DLL_EXPORT void dd_push_clip(void);
-DLL_EXPORT void dd_pop_clip(void);
-DLL_EXPORT void dd_more_clip(int sx, int sy, int ex, int ey);
-void dd_set_clip(int sx, int sy, int ex, int ey);
-void dd_text_pageup(void);
-void dd_text_pagedown(void);
-DLL_EXPORT void dd_line(int fx, int fy, int tx, int ty, unsigned short col);
-void dd_display_text(void);
-int dd_scantext(int x, int y, char *hit);
-int dd_char_len(char c);
-int dd_drawtext_char(int sx, int sy, int c, unsigned short int color);
-void dd_shaded_rect(int sx, int sy, int ex, int ey, unsigned short color, unsigned short alpha);
-void dd_text_lineup(void);
-void dd_text_linedown(void);
-int dd_offset_x(void);
-int dd_offset_y(void);
-void dd_list_text(void);
-DLL_EXPORT void dd_pixel(int x, int y, unsigned short col);
+DLL_EXPORT int render_text_nl(int x, int y, int unsigned short color, int flags, const char *ptr);
+DLL_EXPORT int render_text_break(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
+DLL_EXPORT int render_text_break_length(int x, int y, int breakx, unsigned short color, int flags, const char *ptr);
+int render_text_char(int sx, int sy, int c, unsigned short int color);
+int render_char_len(char c);
+
+// Sprite rendering functions
+DLL_EXPORT int render_sprite_fx(RenderFX *fx, int scrx, int scry);
+DLL_EXPORT void render_sprite(int sprite, int scrx, int scry, int light, int align);
+void render_sprite_callfx(int sprite, int scrx, int scry, int light, int mli, int align);
+
+// Primitive drawing functions
+DLL_EXPORT void render_rect(int sx, int sy, int ex, int ey, unsigned short int color);
+void render_shaded_rect(int sx, int sy, int ex, int ey, unsigned short color, unsigned short alpha);
+DLL_EXPORT void render_line(int fx, int fy, int tx, int ty, unsigned short col);
+DLL_EXPORT void render_pixel(int x, int y, unsigned short col);
+
+// Clipping functions
+DLL_EXPORT void render_push_clip(void);
+DLL_EXPORT void render_pop_clip(void);
+DLL_EXPORT void render_more_clip(int sx, int sy, int ex, int ey);
+void render_set_clip(int sx, int sy, int ex, int ey);
+
+// Chat window text functions
+void render_display_text(void);
+void render_text_pageup(void);
+void render_text_pagedown(void);
+void render_text_lineup(void);
+void render_text_linedown(void);
+int render_scantext(int x, int y, char *hit);
+void render_list_text(void);
+
+// Offset functions
+int render_offset_x(void);
+int render_offset_y(void);
 extern int (*trans_asprite)(int mn, int sprite, int attick, unsigned char *pscale, unsigned char *pcr,
     unsigned char *pcg, unsigned char *pcb, unsigned char *plight, unsigned char *psat, unsigned short *pc1,
     unsigned short *pc2, unsigned short *pc3, unsigned short *pshine);

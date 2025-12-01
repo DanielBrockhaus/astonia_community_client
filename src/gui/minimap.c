@@ -164,24 +164,24 @@ static uint32_t pix_col(int x, int y)
 
 static void draw_center(int x, int y)
 {
-	dd_pixel(x, y, IRGB(31, 8, 8));
-	dd_pixel(x + 1, y, IRGB(31, 8, 8));
-	dd_pixel(x, y + 1, IRGB(31, 8, 8));
-	dd_pixel(x - 1, y, IRGB(31, 8, 8));
-	dd_pixel(x, y - 1, IRGB(31, 8, 8));
+	render_pixel(x, y, IRGB(31, 8, 8));
+	render_pixel(x + 1, y, IRGB(31, 8, 8));
+	render_pixel(x, y + 1, IRGB(31, 8, 8));
+	render_pixel(x - 1, y, IRGB(31, 8, 8));
+	render_pixel(x, y - 1, IRGB(31, 8, 8));
 }
 
 static void draw_center2(int x, int y)
 {
 	int i;
 
-	dd_pixel(x, y, IRGB(31, 8, 8));
+	render_pixel(x, y, IRGB(31, 8, 8));
 
 	for (i = 0; i < 3; i++) {
-		dd_pixel(x + i, y, IRGB(31, 8, 8));
-		dd_pixel(x, y + i, IRGB(31, 8, 8));
-		dd_pixel(x - i, y, IRGB(31, 8, 8));
-		dd_pixel(x, y - i, IRGB(31, 8, 8));
+		render_pixel(x + i, y, IRGB(31, 8, 8));
+		render_pixel(x, y + i, IRGB(31, 8, 8));
+		render_pixel(x - i, y, IRGB(31, 8, 8));
+		render_pixel(x, y - i, IRGB(31, 8, 8));
 	}
 }
 
@@ -243,12 +243,12 @@ void display_minimap(void)
 			draw_center2(sx + (originx - x) * 3 + 2, sy + (originy - y) * 3 + 2);
 		}
 
-		dd_line(sx, sy, sx, sy + MAXMAP, 0xffff);
-		dd_line(sx, sy + MAXMAP, sx + MAXMAP, sy + MAXMAP, 0xffff);
-		dd_line(sx + MAXMAP, sy + MAXMAP, sx + MAXMAP, sy, 0xffff);
-		dd_line(sx + MAXMAP, sy, sx, sy, 0xffff);
+		render_line(sx, sy, sx, sy + MAXMAP, 0xffff);
+		render_line(sx, sy + MAXMAP, sx + MAXMAP, sy + MAXMAP, 0xffff);
+		render_line(sx + MAXMAP, sy + MAXMAP, sx + MAXMAP, sy, 0xffff);
+		render_line(sx + MAXMAP, sy, sx, sy, 0xffff);
 
-		dd_drawtext(sx + 6, sy + 6, 0xffff, 0, "N");
+		render_text(sx + 6, sy + 6, 0xffff, 0, "N");
 	}
 
 	if (orx != originx || ory != originy) {
@@ -298,7 +298,7 @@ void display_minimap(void)
 			sdl_render_circle((mx + MINIMAP + x_offset) * sdl_scale, (my + MINIMAP + y_offset) * sdl_scale,
 			    (MINIMAP)*sdl_scale + i, 0xffffffff);
 		}
-		dd_drawtext(mx + MINIMAP, my + 4, 0xffff, 0, "N");
+		render_text(mx + MINIMAP, my + 4, 0xffff, 0, "N");
 	}
 }
 
