@@ -25,7 +25,7 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 shift 2>/dev/null || true
-ARGS="$@"
+ARGS=("$@")
 
 echo "Binary: $BINARY"
 echo "Args: $ARGS"
@@ -44,7 +44,7 @@ valgrind --tool=massif \
     --time-unit=ms \
     --detailed-freq=1 \
     --max-snapshots=100 \
-    $BINARY $ARGS
+    $BINARY "${ARGS[@]}"
 
 echo ""
 echo "=== Profiling Complete ==="

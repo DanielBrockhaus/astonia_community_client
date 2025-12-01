@@ -11,7 +11,7 @@
 
 static inline uint32_t load_ulong(const void *p)
 {
-	unsigned long v;
+	uint32_t v;
 	memcpy(&v, p, sizeof v);
 	return v;
 }

@@ -30,7 +30,7 @@ if [ ! -f "$BINARY" ]; then
 fi
 
 shift 2>/dev/null || true
-ARGS="$@"
+ARGS=("$@")
 
 echo "Binary: $BINARY"
 echo "Args: $ARGS"
@@ -45,7 +45,7 @@ echo ""
 # - Call graph recording (-g) for function call hierarchy
 # - High frequency sampling (-F 997) to catch more detail
 # - Record all events (not just the main thread)
-sudo perf record -g -F 997 --call-graph dwarf -o perf.data -- $BINARY $ARGS
+sudo perf record -g -F 997 --call-graph dwarf -o perf.data -- $BINARY "${ARGS[@]}"
 
 echo ""
 echo "=== Profiling Complete ==="
