@@ -1,0 +1,69 @@
+FROM archlinux:latest
+
+# Minimal Windows build environment with Clang
+# Use this for CI/CD and production builds
+
+# Configure MSYS2 clang64 repository
+RUN cat >> /etc/pacman.conf <<EOF
+
+[clang64]
+SigLevel = Optional TrustAll
+Server = https://mirror.msys2.org/mingw/clang64
+EOF
+
+# Install minimal build essentials
+RUN pacman -Syu --noconfirm \
+    base-devel \
+    make \
+    clang \
+    lld \
+    && pacman -Scc --noconfirm
+
+# Install Clang Windows cross-compilation toolchain
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-clang \
+    mingw-w64-clang-x86_64-lld \
+    mingw-w64-clang-x86_64-compiler-rt \
+    mingw-w64-binutils \
+    && pacman -Scc --noconfirm
+
+# Install required libraries
+RUN pacman -S --noconfirm \
+    mingw-w64-clang-x86_64-SDL2 \
+    mingw-w64-clang-x86_64-SDL2_mixer \
+    mingw-w64-clang-x86_64-zlib \
+    mingw-w64-clang-x86_64-libpng \
+    mingw-w64-clang-x86_64-libzip \
+    mingw-w64-clang-x86_64-dwarfstack \
+    && pacman -Scc --noconfirm
+
+# Install Rust for astonia_net component
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup target add x86_64-pc-windows-gnullvm
+
+# Note: Cargo config for Windows cross-compilation is already in astonia_net/.cargo/config.toml
+
+# Create sdl2-config wrapper for the build environment
+RUN mkdir -p /clang64/bin && \
+    printf '#!/bin/bash\n\
+case "$1" in\n\
+  --cflags) echo "-I/clang64/include/SDL2" ;;\n\
+  --libs) echo "-L/clang64/lib -lSDL2main -lSDL2" ;;\n\
+  --prefix) echo "/clang64" ;;\n\
+esac\n' > /clang64/bin/sdl2-config && \
+    chmod +x /clang64/bin/sdl2-config
+
+# Set build environment variables - toolchain configuration only
+# Project-specific flags are in Makefile.windows
+ENV CC="clang" \
+    CXX="clang++" \
+    AR="llvm-ar" \
+    RANLIB="llvm-ranlib" \
+    TARGET="x86_64-w64-mingw32" \
+    SYSROOT="/clang64" \
+    WIN32_WINNT="0x0601" \
+    WINDRES="x86_64-w64-mingw32-windres --preprocessor=clang --preprocessor-arg=--target=x86_64-w64-mingw32 --preprocessor-arg=-E --preprocessor-arg=-xc --preprocessor-arg=-DRC_INVOKED"
+
+WORKDIR /app
+ENTRYPOINT ["make", "-f", "build/make/Makefile.windows"]
