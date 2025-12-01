@@ -24,7 +24,10 @@ runs:
         echo "Detected Ubuntu version: $UBUNTU_VERSION"
 
         # Add LLVM repository GPG key
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        # Ensure the directory for trusted GPG keys exists
+        sudo mkdir -p /etc/apt/trusted.gpg.d/
+        # Add LLVM repository GPG key
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/llvm-snapshot.gpg
 
         # Add LLVM repository for the detected Ubuntu version
         sudo add-apt-repository "deb http://apt.llvm.org/$UBUNTU_VERSION/ llvm-toolchain-$UBUNTU_VERSION-${{ inputs.llvm-version }} main"
