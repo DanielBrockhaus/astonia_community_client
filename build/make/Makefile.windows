@@ -303,9 +303,44 @@ clean:
 	-rm -rf astonia_net/target
 
 distrib:
-	$(LDD) bin/moac.exe | grep clang | awk 'NF == 4 { system("cp " $$3 " bin") }'
-	cp $(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/astonia_net.dll bin/
-	zip windows_client.zip -r bin res create_shortcut.bat eula.txt
+	@echo "Copying required DLLs to bin directory..."
+	@# Function to recursively find and copy DLL dependencies
+	@# Create a temporary file to track processed DLLs
+	@rm -f /tmp/dll_processed.txt
+	@touch /tmp/dll_processed.txt
+	@# Copy initial DLLs and recursively find their dependencies
+	@bash -c ' \
+		process_dll() { \
+			local dll_path="$$1"; \
+			local dll_name=$$(basename "$$dll_path"); \
+			if grep -Fxq "$$dll_name" /tmp/dll_processed.txt 2>/dev/null; then \
+				return; \
+			fi; \
+			echo "$$dll_name" >> /tmp/dll_processed.txt; \
+			if [ -f "$$dll_path" ]; then \
+				echo "  Copying $$dll_name..."; \
+				cp "$$dll_path" bin/ 2>/dev/null || true; \
+				x86_64-w64-mingw32-objdump -p "$$dll_path" 2>/dev/null | grep "DLL Name:" | awk "{print \$$3}" | while read dep_dll; do \
+					dep_path=$$(find $(SYSROOT) -name "$$dep_dll" 2>/dev/null | head -n1); \
+					if [ -n "$$dep_path" ]; then \
+						process_dll "$$dep_path"; \
+					fi; \
+				done; \
+			fi; \
+		}; \
+		export -f process_dll; \
+		x86_64-w64-mingw32-objdump -p bin/moac.exe 2>/dev/null | grep "DLL Name:" | awk "{print \$$3}" | while read dll; do \
+			dll_path=$$(find $(SYSROOT) -name "$$dll" 2>/dev/null | head -n1); \
+			if [ -n "$$dll_path" ]; then \
+				process_dll "$$dll_path"; \
+			fi; \
+		done; \
+		process_dll "$(ASTONIA_NET_DIR)/target/$(ASTONIA_NET_TGT)/release/astonia_net.dll"; \
+	'
+	@rm -f /tmp/dll_processed.txt
+	@echo "Creating distribution archive..."
+	@zip -q windows_client.zip -r bin res create_shortcut.bat eula.txt
+	@echo "Distribution package created: windows_client.zip"
 
 
 amod:		bin/amod.dll bin/moac.exe
