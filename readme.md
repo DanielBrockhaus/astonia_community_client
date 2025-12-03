@@ -24,8 +24,8 @@ Install dependencies:
 ```bash
 pacman -Syu
 pacman -Sy mingw-w64-clang-x86_64-clang mingw-w64-clang-x86_64-SDL2 mingw-w64-clang-x86_64-libpng mingw-w64-clang-x86_64-SDL2_mixer mingw-w64-clang-x86_64-libzip make zip mingw-w64-clang-x86_64-dwarfstack mingw-w64-clang-x86_64-zig mingw-w64-clang-x86_64-rustup
-rustup toolchain install stable-x86_64-pc-windows-gnu
-rustup default stable-x86_64-pc-windows-gnu
+rustup toolchain install stable-x86_64-pc-windows-gnullvm
+rustup default stable-x86_64-pc-windows-gnullvm
 ```
 
 ### Linux
